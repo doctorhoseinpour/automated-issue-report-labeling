@@ -284,8 +284,11 @@ if [[ "$SKIP_PHASE2" -eq 0 ]]; then
     echo "    VTAG evaluation exists. SKIPPING."
   else
     mkdir -p "$VTAG_EVAL_DIR"
+    VTAG_PRED_DIR="$RESULTS_30K/vtag/predictions"
+    mkdir -p "$VTAG_PRED_DIR"
     "$PYTHON_BIN" "$SCRIPT_DIR/vtag.py" \
       --neighbors_csv "$NEIGHBORS_30K/neighbors_k${VTAG_K}.csv" \
+      --output_dir "$VTAG_PRED_DIR" \
       --voting similarity \
       --ks "$VTAG_K" \
       --eval_dir "$VTAG_EVAL_DIR"

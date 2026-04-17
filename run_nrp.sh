@@ -64,10 +64,23 @@ if [[ ! -f "$DATASET_30K" ]]; then
   exit 1
 fi
 
+EMBED_MODEL="sentence-transformers/all-MiniLM-L6-v2"
+NEIGHBORS_30K="$RESULTS_30K/neighbors"
+
 if [[ ! -f "$TRAIN_30K" || ! -f "$TEST_30K" ]]; then
-  echo "ERROR: Train/test splits not found at $RESULTS_30K/neighbors/" >&2
-  echo "  Run run_local.sh Phase 2 first to build the FAISS index and splits." >&2
-  exit 1
+  echo ">>> Train/test splits not found. Building FAISS index for issues30k..."
+  mkdir -p "$NEIGHBORS_30K"
+
+  # Only need k values for fine-tune (no RAGTAG neighbors needed here),
+  # but build with a reasonable k so the splits are compatible
+  "$PYTHON_BIN" "$SCRIPT_DIR/build_and_query_index.py" \
+    --dataset "$DATASET_30K" \
+    --top_ks "3" \
+    --test_size "$TEST_SIZE_30K" \
+    --embedding_model "$EMBED_MODEL" \
+    --output_dir "$NEIGHBORS_30K"
+
+  echo "  Splits built: $TRAIN_30K, $TEST_30K"
 fi
 
 echo ""

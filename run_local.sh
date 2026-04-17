@@ -160,6 +160,49 @@ if [[ "$SKIP_PHASE1" -eq 0 ]]; then
     done
   done
 
+  # --- Aggregate ablation results ---
+  echo ""
+  echo ">>> Aggregating Phase 1 results..."
+  "$PYTHON_BIN" - "$ABLATION_DIR" <<'PYAGG'
+import sys, os, pandas as pd
+
+results_dir = sys.argv[1]
+eval_dfs, cost_dfs = [], []
+
+for root, dirs, files in os.walk(results_dir):
+    for f in files:
+        fp = os.path.join(root, f)
+        rel = os.path.relpath(fp, results_dir)
+        if f.startswith("eval_") and f.endswith(".csv"):
+            try:
+                df = pd.read_csv(fp)
+                parts = rel.split(os.sep)
+                df["seed"] = parts[1] if len(parts) > 1 else "unknown"
+                eval_dfs.append(df)
+            except Exception as e:
+                print(f"  WARN: {fp}: {e}")
+        if f == "cost_metrics.csv":
+            try:
+                df = pd.read_csv(fp)
+                parts = rel.split(os.sep)
+                df["seed"] = parts[1] if len(parts) > 1 else "unknown"
+                cost_dfs.append(df)
+            except Exception as e:
+                print(f"  WARN: {fp}: {e}")
+
+if eval_dfs:
+    all_evals = pd.concat(eval_dfs, ignore_index=True)
+    out = os.path.join(results_dir, "all_results.csv")
+    all_evals.to_csv(out, index=False)
+    print(f"  Wrote {out} ({len(all_evals)} rows)")
+
+if cost_dfs:
+    all_costs = pd.concat(cost_dfs, ignore_index=True)
+    out = os.path.join(results_dir, "all_cost_metrics.csv")
+    all_costs.to_csv(out, index=False)
+    print(f"  Wrote {out} ({len(all_costs)} rows)")
+PYAGG
+
   echo ""
   echo ">>> Phase 1 complete. Results: $ABLATION_DIR/"
 fi
@@ -246,8 +289,11 @@ if [[ "$SKIP_PHASE2" -eq 0 ]]; then
     echo "    VTAG evaluation exists. SKIPPING."
   else
     mkdir -p "$VTAG_EVAL_DIR"
+    VTAG_PRED_DIR="$RESULTS_30K/vtag/predictions"
+    mkdir -p "$VTAG_PRED_DIR"
     "$PYTHON_BIN" "$SCRIPT_DIR/vtag.py" \
       --neighbors_csv "$NEIGHBORS_30K/neighbors_k${VTAG_K}.csv" \
+      --output_dir "$VTAG_PRED_DIR" \
       --voting similarity \
       --ks "$VTAG_K" \
       --eval_dir "$VTAG_EVAL_DIR"
@@ -339,6 +385,57 @@ if [[ "$SKIP_PHASE2" -eq 0 ]]; then
         --model_name "$model"
     fi
   done
+
+  # --- Aggregate 30k results ---
+  echo ""
+  echo ">>> Aggregating Phase 2 results..."
+  "$PYTHON_BIN" - "$RESULTS_30K" <<'PYAGG'
+import sys, os, pandas as pd
+
+results_dir = sys.argv[1]
+eval_dfs, cost_dfs = [], []
+
+for root, dirs, files in os.walk(results_dir):
+    for f in files:
+        fp = os.path.join(root, f)
+        rel = os.path.relpath(fp, results_dir)
+        if f.startswith("eval_") and f.endswith(".csv"):
+            try:
+                df = pd.read_csv(fp)
+                if "ragtag" in rel:
+                    df["approach"] = "ragtag"
+                elif "finetune_fixed" in rel:
+                    df["approach"] = "finetune_fixed"
+                elif "vtag" in rel:
+                    df["approach"] = "vtag"
+                eval_dfs.append(df)
+            except Exception as e:
+                print(f"  WARN: {fp}: {e}")
+        if f == "cost_metrics.csv":
+            try:
+                df = pd.read_csv(fp)
+                if "ragtag" in rel:
+                    df["approach"] = "ragtag"
+                elif "finetune_fixed" in rel:
+                    df["approach"] = "finetune_fixed"
+                elif "vtag" in rel:
+                    df["approach"] = "vtag"
+                cost_dfs.append(df)
+            except Exception as e:
+                print(f"  WARN: {fp}: {e}")
+
+if eval_dfs:
+    all_evals = pd.concat(eval_dfs, ignore_index=True)
+    out = os.path.join(results_dir, "all_results.csv")
+    all_evals.to_csv(out, index=False)
+    print(f"  Wrote {out} ({len(all_evals)} rows)")
+
+if cost_dfs:
+    all_costs = pd.concat(cost_dfs, ignore_index=True)
+    out = os.path.join(results_dir, "all_cost_metrics.csv")
+    all_costs.to_csv(out, index=False)
+    print(f"  Wrote {out} ({len(all_costs)} rows)")
+PYAGG
 
   echo ""
   echo ">>> Phase 2 (local portion) complete. Results: $RESULTS_30K/"
