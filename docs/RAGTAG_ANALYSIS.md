@@ -1,6 +1,6 @@
 # RAGTAG vs Fine-Tuning: Analysis on issues3k.csv
 
-**Generated:** 2026-04-16
+**Generated:** 2026-04-17
 **Dataset:** issues3k.csv (2,995 issues after dedup, 1,497 test / 1,498 train)
 **Models:** Llama-3.2-3B, Llama-3.1-8B (4-bit), Qwen2.5-14B (4-bit), Qwen2.5-32B (4-bit)
 **Context windows:** 2048, 4096, 8192
@@ -30,6 +30,26 @@ Best macro-F1 for each model across all approaches. RAGTAG optimized over k and 
 - **Best RAGTAG overall:** Qwen-32B at k=3, ctx=8192 → macro-F1 = 0.7775
 - **Best fixed fine-tune:** Qwen-14B → macro-F1 = 0.7387
 - **VTAG retrieval floor:** macro-F1 = 0.6451 @ k=16
+
+---
+
+## 1b. Zero-Shot Baseline: Model Capability Without Task-Specific Data
+
+Zero-shot (k=0) measures each model's inherent ability to classify issues with no examples and no training. It anchors the contribution of both RAGTAG (few-shot retrieval) and fine-tuning (gradient updates).
+
+| Model | Zero-Shot F1 | Best RAGTAG F1 | RAGTAG k | Δ (RAGTAG − ZS) | Fine-Tune F1 | Δ (FT − ZS) |
+|---|---|---|---|---|---|---|
+| Llama-3B | 0.5770 | 0.6743 | 3 | 0.0973 | 0.6669 | 0.0899 |
+| Llama-8B | 0.6201 | 0.7115 | 9 | 0.0914 | 0.6868 | 0.0667 |
+| Qwen-14B | 0.6691 | 0.7423 | 9 | 0.0732 | 0.7387 | 0.0696 |
+| Qwen-32B | 0.7006 | 0.7775 | 3 | 0.0769 | 0.7347 | 0.0341 |
+
+### Interpretation
+
+- **Average RAGTAG gain over zero-shot:** +0.0847 macro-F1
+- **Average fine-tune gain over zero-shot:** +0.0651 macro-F1
+- RAGTAG's gain comes entirely from retrieval-augmented few-shot examples — no gradient updates required.
+- Smaller models benefit more from RAGTAG: Llama-3B gains +0.0973 vs Qwen-32B gains +0.0769. Larger models have stronger zero-shot baselines, leaving less room for improvement.
 
 ---
 

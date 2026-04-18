@@ -7,6 +7,7 @@ Outputs: docs/RAGTAG_ANALYSIS.md
 
 Analyses produced:
   1. Headline table (best config per model vs fine-tune vs VTAG)
+  1b. Zero-shot baseline (model capability without task data)
   2. k × context heatmap per model
   3. Invalid rate analysis
   4. Cost-performance Pareto
@@ -151,6 +152,98 @@ def analysis_1_headline(perf, cost):
     out.append(f"- **VTAG retrieval floor:** macro-F1 = {best_vtag['f1_macro']:.4f} @ k={int(best_vtag['top_k'])}")
     out.append("")
 
+    return "\n".join(out)
+
+
+def analysis_1b_zeroshot(perf):
+    out = []
+    out.append("## 1b. Zero-Shot Baseline: Model Capability Without Task-Specific Data")
+    out.append("")
+    out.append("Zero-shot (k=0) measures each model's inherent ability to classify issues "
+               "with no examples and no training. It anchors the contribution of both RAGTAG "
+               "(few-shot retrieval) and fine-tuning (gradient updates).")
+    out.append("")
+
+    ragtag = perf[perf["approach"] == "ragtag"]
+    ft_fixed = perf[perf["approach"] == "finetune_fixed"]
+    vtag = perf[perf["approach"] == "vtag"]
+
+    # Use zero-shot from ctx=2048 (consistent, no truncation at k=0)
+    zs = ragtag[(ragtag["top_k"] == 0) & (ragtag["context_window"] == 2048)]
+
+    rows = []
+    for model in ragtag["model"].unique():
+        sname = short(model)
+
+        # Zero-shot
+        m_zs = zs[zs["model"] == model]
+        if len(m_zs) == 0:
+            continue
+        zs_f1 = m_zs.iloc[0]["f1_macro"]
+
+        # Best RAGTAG (k>0)
+        m_ragtag = ragtag[(ragtag["model"] == model) & (ragtag["top_k"] > 0)]
+        best_r = m_ragtag.loc[m_ragtag["f1_macro"].idxmax()]
+        ragtag_f1 = best_r["f1_macro"]
+
+        # Fine-tune
+        m_ft = ft_fixed[ft_fixed["model"] == model]
+        ft_f1 = m_ft.iloc[0]["f1_macro"] if len(m_ft) else None
+
+        row = {
+            "Model": sname,
+            "Zero-Shot F1": zs_f1,
+            "Best RAGTAG F1": ragtag_f1,
+            "RAGTAG k": int(best_r["top_k"]),
+            "Δ (RAGTAG − ZS)": ragtag_f1 - zs_f1,
+        }
+
+        if ft_f1 is not None:
+            row["Fine-Tune F1"] = ft_f1
+            row["Δ (FT − ZS)"] = ft_f1 - zs_f1
+        else:
+            row["Fine-Tune F1"] = np.nan
+            row["Δ (FT − ZS)"] = np.nan
+
+        rows.append(row)
+
+    tbl = pd.DataFrame(rows)
+    float_cols = ["Zero-Shot F1", "Best RAGTAG F1", "Fine-Tune F1",
+                  "Δ (RAGTAG − ZS)", "Δ (FT − ZS)"]
+    out.append(md_table(tbl, float_cols=float_cols))
+    out.append("")
+
+    # Delta formatting for Δ columns (show +/- sign)
+    # Already in the table as floats, md_table will format them
+
+    out.append("### Interpretation")
+    out.append("")
+
+    # Compute average gains
+    numeric_rows = [r for r in rows if isinstance(r["Δ (RAGTAG − ZS)"], float)]
+    avg_ragtag_gain = np.mean([r["Δ (RAGTAG − ZS)"] for r in numeric_rows])
+    ft_rows = [r for r in numeric_rows if isinstance(r["Δ (FT − ZS)"], float)]
+    avg_ft_gain = np.mean([r["Δ (FT − ZS)"] for r in ft_rows]) if ft_rows else 0
+
+    out.append(f"- **Average RAGTAG gain over zero-shot:** +{avg_ragtag_gain:.4f} macro-F1")
+    out.append(f"- **Average fine-tune gain over zero-shot:** +{avg_ft_gain:.4f} macro-F1")
+    out.append(f"- RAGTAG's gain comes entirely from retrieval-augmented few-shot examples — "
+               f"no gradient updates required.")
+
+    # Check if larger models have smaller gains (they already know more)
+    if len(numeric_rows) >= 2:
+        first_gain = numeric_rows[0]["Δ (RAGTAG − ZS)"]
+        last_gain = numeric_rows[-1]["Δ (RAGTAG − ZS)"]
+        if first_gain > last_gain:
+            out.append(f"- Smaller models benefit more from RAGTAG: "
+                       f"{numeric_rows[0]['Model']} gains +{first_gain:.4f} vs "
+                       f"{numeric_rows[-1]['Model']} gains +{last_gain:.4f}. "
+                       f"Larger models have stronger zero-shot baselines, leaving less room for improvement.")
+        else:
+            out.append(f"- Larger models benefit equally or more from RAGTAG, suggesting "
+                       f"they are better at leveraging few-shot examples.")
+
+    out.append("")
     return "\n".join(out)
 
 
@@ -827,6 +920,9 @@ def main():
         "---",
         "",
         analysis_1_headline(perf, cost),
+        "---",
+        "",
+        analysis_1b_zeroshot(perf),
         "---",
         "",
         analysis_2_heatmap(perf),
