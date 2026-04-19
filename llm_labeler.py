@@ -351,6 +351,22 @@ def print_gpu_stats(stage):
 # Run inference for one K value
 # ---------------------------------------------------------------------------
 
+def _debias_neighbors(neighbors: List[Dict[str, str]], margin: int) -> List[Dict[str, str]]:
+    """Remove bug neighbors when question count is close to or exceeds bug count.
+
+    If bug_count - question_count <= margin, drop all bug neighbors so the model
+    only sees question/feature evidence.  The model already defaults to 'bug'
+    from its parametric prior, so removing bug examples in borderline cases
+    forces it to rely on question evidence it would otherwise ignore.
+    """
+    bug_count = sum(1 for n in neighbors if n.get("label", "").strip().lower() in ("bug", "bugfix", "defect", "issue", "fix"))
+    question_count = sum(1 for n in neighbors if n.get("label", "").strip().lower() in ("question", "support", "howto", "help"))
+
+    if bug_count > 0 and bug_count - question_count <= margin:
+        return [n for n in neighbors if n.get("label", "").strip().lower() not in ("bug", "bugfix", "defect", "issue", "fix")]
+    return neighbors
+
+
 def run_one_k(
     test_issues: List[TestIssue],
     k: int,
@@ -363,6 +379,8 @@ def run_one_k(
     output_csv: str,
     log_file: Optional[str],
     inference_batch_size: int = 1,
+    debias_retrieval: bool = False,
+    debias_margin: int = 1,
 ):
     """Run inference for a single K value (or zero-shot). Model is already loaded."""
 
@@ -383,9 +401,16 @@ def run_one_k(
     print(f"\n  [{mode_label}] Starting inference: {len(test_issues)} issues (batch_size={inference_batch_size})")
 
     # --- Pre-build all prompts and truncation info ---
+    n_debiased = 0
     prepared = []
     for issue in test_issues:
         neighbors_for_prompt = issue.neighbors[:k] if not is_zero_shot else []
+
+        if debias_retrieval and neighbors_for_prompt:
+            original_len = len(neighbors_for_prompt)
+            neighbors_for_prompt = _debias_neighbors(neighbors_for_prompt, debias_margin)
+            if len(neighbors_for_prompt) < original_len:
+                n_debiased += 1
 
         messages, trunc = build_chat_messages(
             test_title=issue.title,
@@ -546,6 +571,8 @@ def run_one_k(
           f"Regex: {n_regex_parsed} ({100*n_regex_parsed/total:.1f}%)  "
           f"Invalid: {n_invalid} ({100*n_invalid/total:.1f}%)")
     print(f"    Truncated: {n_truncated} ({100*n_truncated/total:.1f}%)")
+    if debias_retrieval:
+        print(f"    Debiased: {n_debiased} ({100*n_debiased/total:.1f}%) — bug neighbors removed")
     print(f"    Time: {elapsed:.1f}s ({total/elapsed:.1f} issues/s)")
 
     # Collect cost stats
@@ -596,6 +623,12 @@ def main():
     parser.add_argument("--no_4bit", action="store_true")
     parser.add_argument("--cache_dir", default=None,
                         help="Directory to download/cache HuggingFace models (default: HF default cache)")
+    parser.add_argument("--debias_retrieval", action="store_true",
+                        help="Remove bug neighbors when question neighbors >= bug neighbors (within margin). "
+                             "Counteracts the model's inherent bug-prediction bias by letting retrieval "
+                             "show more question evidence in borderline cases.")
+    parser.add_argument("--debias_margin", type=int, default=1,
+                        help="Margin for debias trigger: activate when bug_count - question_count <= margin (default: 1)")
     args = parser.parse_args()
 
     if args.no_4bit:
@@ -623,6 +656,9 @@ def main():
     print(f"  thinking_model:  {args.thinking_model}")
     print(f"  inference_batch: {args.inference_batch_size}")
     print(f"  load_in_4bit:    {args.load_in_4bit}")
+    print(f"  debias_retrieval:{args.debias_retrieval}")
+    if args.debias_retrieval:
+        print(f"  debias_margin:   {args.debias_margin}")
     print(f"{'='*60}")
 
     # --- Load model ONCE ---
@@ -660,13 +696,26 @@ def main():
     # Load test issues with max_k neighbors (we'll slice per-k)
     max_k_file = os.path.join(args.neighbors_dir, f"neighbors_k{max_k}.csv")
     if not os.path.exists(max_k_file):
-        # Try to find any neighbor file
+        # Try to find any neighbor file with enough neighbors
         for k in sorted(real_ks, reverse=True):
             f = os.path.join(args.neighbors_dir, f"neighbors_k{k}.csv")
             if os.path.exists(f):
                 max_k_file = f
                 max_k = k
                 break
+        else:
+            # Last resort: use the largest available neighbor file
+            import glob
+            nb_files = sorted(glob.glob(os.path.join(args.neighbors_dir, "neighbors_k*.csv")))
+            if nb_files:
+                # Pick the one with the largest k
+                def extract_k(p):
+                    try: return int(os.path.basename(p).replace("neighbors_k","").replace(".csv",""))
+                    except: return 0
+                nb_files.sort(key=extract_k, reverse=True)
+                max_k_file = nb_files[0]
+                max_k = extract_k(max_k_file)
+                print(f"  Using largest available neighbor file: {max_k_file} (k={max_k})")
 
     print(f"\nLoading test issues from {max_k_file} (max_k={max_k})...")
     test_issues = load_test_issues(max_k_file, max_k)
@@ -710,6 +759,8 @@ def main():
             output_csv=output_csv,
             log_file=log_file,
             inference_batch_size=args.inference_batch_size,
+            debias_retrieval=args.debias_retrieval,
+            debias_margin=args.debias_margin,
         )
         total_time += elapsed
 

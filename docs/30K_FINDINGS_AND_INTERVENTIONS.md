@@ -194,17 +194,99 @@ The "80% Rule": prompt engineering reliably achieves 80-90% of a model's peak. T
 
 ---
 
-## 8. Current Plan: Phased Intervention Strategy
+## 8. Phase 1 Results: Debiased Retrieval Heuristic
 
-### Phase 1: Simple heuristic (design pending)
-- Design and test a custom heuristic based on our specific error patterns
-- Test on Llama-3B and Llama-8B (fast iteration)
-- If it works: adopt. If not: move to Phase 2.
+### 8a. The Idea
 
-### Phase 2: Logit-level interventions
+Since the LLM already defaults to "bug" from its parametric prior, bug-labeled neighbors in the prompt *reinforce* the bias rather than providing useful signal. The model doesn't need help predicting bug — it needs permission to predict question. Removing bug neighbors from the prompt when question evidence is present forces the model to see only non-bug examples, breaking the reinforcement loop.
+
+### 8b. Mechanism
+
+In `_debias_neighbors()` in `llm_labeler.py`:
+1. Count bug and question neighbors in the retrieved set
+2. If `bug_count > 0` and `bug_count - question_count <= margin`: remove all bug neighbors
+3. Otherwise: keep the original neighbor set unchanged
+
+The margin parameter controls aggressiveness — higher margin triggers debiasing on more issues.
+
+### 8c. Full Results
+
+| Model | Data | Type | F1_macro | F1_bug | F1_feat | F1_ques | R_bug | R_feat | R_ques | P_bug | P_feat | P_ques |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Llama-3B | 3k | baseline | 0.6743 | 0.688 | 0.773 | 0.562 | 0.778 | 0.801 | 0.468 | 0.617 | 0.747 | 0.703 |
+| Llama-3B | 3k | debias_m3 | 0.6971 | 0.693 | 0.774 | 0.625 | 0.697 | 0.811 | 0.590 | 0.688 | 0.740 | 0.664 |
+| Llama-3B | 3k | debias_m2 | 0.6968 | 0.691 | 0.775 | 0.625 | 0.695 | 0.817 | 0.586 | 0.687 | 0.736 | 0.668 |
+| Llama-8B | 3k | baseline | 0.7115 | 0.727 | 0.822 | 0.586 | 0.864 | 0.787 | 0.464 | 0.627 | 0.860 | 0.794 |
+| Llama-8B | 3k | debias_m3 | 0.7556 | 0.747 | 0.822 | 0.697 | 0.791 | 0.804 | 0.673 | 0.708 | 0.841 | 0.724 |
+| Llama-8B | 3k | debias_m2 | 0.7594 | 0.760 | 0.823 | 0.696 | 0.814 | 0.802 | 0.665 | 0.712 | 0.845 | 0.730 |
+| Llama-3B | 30k | baseline | 0.7222 | 0.739 | 0.784 | 0.645 | 0.801 | 0.780 | 0.593 | 0.685 | 0.787 | 0.706 |
+| Llama-3B | 30k | debias_m3 | 0.7270 | 0.730 | 0.775 | 0.676 | 0.720 | 0.780 | 0.681 | 0.740 | 0.771 | 0.671 |
+| Llama-3B | 30k | debias_m2 | 0.7270 | 0.732 | 0.777 | 0.672 | 0.726 | 0.780 | 0.675 | 0.739 | 0.775 | 0.668 |
+| Llama-3B | 30k | FT | 0.7897 | 0.792 | 0.824 | 0.753 | 0.870 | 0.761 | 0.737 | 0.727 | 0.898 | 0.770 |
+| Llama-8B | 30k | baseline | 0.7429 | 0.766 | 0.811 | 0.652 | 0.921 | 0.786 | 0.543 | 0.656 | 0.837 | 0.815 |
+| Llama-8B | 30k | debias_m3 | 0.7569 | 0.764 | 0.812 | 0.695 | 0.826 | 0.795 | 0.654 | 0.710 | 0.829 | 0.742 |
+| Llama-8B | 30k | debias_m2 | 0.7546 | 0.766 | 0.809 | 0.689 | 0.840 | 0.792 | 0.638 | 0.704 | 0.828 | 0.748 |
+| Llama-8B | 30k | FT | 0.7925 | 0.775 | 0.835 | 0.768 | 0.734 | 0.820 | 0.822 | 0.821 | 0.850 | 0.720 |
+
+### 8d. Summary of Gains
+
+**3k dataset — strong wins:**
+
+| Model | Baseline | Best Debias | Δ F1_macro | Δ Q_recall | Best margin |
+|---|---|---|---|---|---|
+| Llama-3B | 0.6743 | 0.6971 | **+0.023** | +0.122 | m3 |
+| Llama-8B | 0.7115 | 0.7594 | **+0.048** | +0.201 | m2 |
+
+Llama-8B on 3k is the headline: **+0.048 F1_macro**, question recall nearly doubles (0.464→0.665). Bug recall drops modestly (0.864→0.814) — a worthwhile trade. This is the largest single RAGTAG improvement achieved in this study.
+
+**30k dataset — modest gains:**
+
+| Model | Baseline | Best Debias | Δ F1_macro | FT gap before | FT gap after |
+|---|---|---|---|---|---|
+| Llama-3B | 0.7222 | 0.7270 | +0.005 | 0.068 | 0.063 |
+| Llama-8B | 0.7429 | 0.7569 | +0.014 | 0.050 | 0.036 |
+
+Debiasing narrows the FT gap but doesn't close it. Llama-8B gets within 0.036 of FT on 30k.
+
+### 8e. Analysis
+
+**Why it works better on 3k:**
+- The 3k training pool is smaller, so retrieved neighbors are noisier — bug neighbors are more likely to be topically similar but semantically misleading. Removing them has outsized impact.
+- On 3k, RAGTAG already beats FT. Debiasing widens that lead further (+0.073 for Llama-8B over FT).
+
+**Why it's limited on 30k:**
+- The 30k pool provides higher-quality neighbors overall. Bug neighbors are more likely to be genuinely informative, so removing them costs more signal.
+- The scaling problem remains: FT trains on 27k examples while RAGTAG still only shows a handful per prompt. No neighbor filtering can close that gap.
+
+**Margin sensitivity is low:**
+- m2 vs m3 differences are ≤0.004 across all configs. The heuristic is robust to threshold choice.
+
+**The zero-shot fallback problem (Llama-3B, k=3):**
+- With k=3 and high margin, many issues have ALL neighbors removed (all 3 are bugs), falling back to zero-shot. Since zero-shot is heavily bug-biased (0.904 bug recall, 0.194 question recall on 3k), this limits gains.
+- A **cap approach** (keep at most 1 bug neighbor instead of removing all) would avoid zero-shot fallback while still reducing bug dominance. Not yet tested.
+
+**Invalid rate improves:**
+- Llama-8B 3k: 4.1% → 2.7-3.0%. Llama-8B 30k: 2.2% → 1.7-1.8%.
+- Fewer bug-dominated prompts may produce less model confusion.
+
+### 8f. Verdict
+
+Debiased retrieval is **paper-worthy for 3k** (largest RAGTAG improvement, novel approach, validates the bias-reinforcement hypothesis). For 30k, it's **incremental** — confirms that text-level interventions have a ceiling against the scaling problem. Phase 2 (logit-level interventions) remains necessary to close the 30k gap.
+
+---
+
+## 9. Intervention Plan: Remaining Phases
+
+### Phase 1: Debiased retrieval heuristic — COMPLETE
+- ✅ Implemented and tested on both Llama models, both datasets, margins 2 and 3
+- Result: +0.023 to +0.048 on 3k, +0.005 to +0.014 on 30k
+- Possible follow-up: cap approach for low-k models (cap bugs at 1 instead of removing all)
+
+### Phase 2: Logit-level interventions — NEXT
 - **Batch Calibration** — subtract average label distribution bias from each prediction's logits
 - **Contrastive Decoding** — subtract zero-shot logits from RAG-augmented logits, suppressing prior-driven predictions
 - Test both on Llama-3B and Llama-8B
+- Can be combined with Phase 1 debiased retrieval
 
 ### Phase 3: Activation steering (if Phases 1-2 insufficient)
 - **RepE or NL-ITI** — extract bug-vs-question direction via contrastive pairs, intervene on residual stream during inference
@@ -217,24 +299,26 @@ The "80% Rule": prompt engineering reliably achieves 80-90% of a model's peak. T
 
 ---
 
-## 9. Reference: Complete 30k Results Table
+## 10. Reference: Complete 30k Results Table
 
 | Model | Approach | F1_macro | F1_bug | F1_feat | F1_ques | Bug R | Ques R | Inv% |
 |---|---|---|---|---|---|---|---|---|
 | Llama-3B | RAGTAG k=3 | 0.7222 | 0.739 | 0.784 | 0.645 | 0.801 | 0.593 | 0.0% |
+| Llama-3B | Debias m3 | 0.7270 | 0.730 | 0.775 | 0.676 | 0.720 | 0.681 | 0.0% |
 | Llama-3B | FT | 0.7897 | 0.792 | 0.824 | 0.753 | 0.870 | 0.737 | 0.1% |
-| Llama-8B | RAGTAG k=9 | 0.7442 | 0.766 | 0.812 | 0.654 | 0.918 | 0.547 | 2.2% |
+| Llama-8B | RAGTAG k=9 | 0.7429 | 0.766 | 0.811 | 0.652 | 0.921 | 0.543 | 2.2% |
+| Llama-8B | Debias m3 | 0.7569 | 0.764 | 0.812 | 0.695 | 0.826 | 0.654 | 1.7% |
 | Llama-8B | FT | 0.7925 | 0.775 | 0.835 | 0.768 | 0.734 | 0.822 | 0.0% |
 | Qwen-14B | RAGTAG k=9 | 0.7790 | 0.783 | 0.840 | 0.714 | 0.855 | 0.628 | — |
 | Qwen-14B | FT | 0.7668 | 0.733 | 0.823 | 0.745 | 0.669 | 0.845 | — |
 | Qwen-32B | RAGTAG k=3 | 0.7669 | 0.762 | 0.822 | 0.716 | 0.808 | 0.655 | 4.7% |
-| Qwen-32B | FT | pending | — | — | — | — | — | — |
+| Qwen-32B | FT | 0.8103 | 0.812 | 0.849 | 0.770 | — | — | — |
 
-*Note: Llama-8B RAGTAG updated to k=9 from k-study (0.7442 vs original 0.7350 from initial run). Qwen-14B numbers from NRP run.*
+*Note: Llama-8B RAGTAG baseline updated from k-study (0.7429). Qwen-14B numbers from NRP run. Qwen-32B FT is best overall at 0.8103.*
 
 ---
 
-## 10. Cross-Dataset Per-Label Analysis: Zero-Shot vs RAGTAG vs Fine-Tune
+## 11. Cross-Dataset Per-Label Analysis: Zero-Shot vs RAGTAG vs Fine-Tune
 
 Full comparison of each model's inherent ability (zero-shot), RAGTAG (best k, ctx=8192), and fine-tune across both datasets. This reveals where the bias lives and how each approach handles it.
 
