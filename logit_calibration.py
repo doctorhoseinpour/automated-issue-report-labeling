@@ -136,11 +136,12 @@ def extract_logits_batch(
     ).to("cuda")
     tokenizer.padding_side = orig_side
 
-    # Truncate from the LEFT if batch exceeds max_seq_length.
-    # Left-truncation preserves the right side (ending with "<label>")
-    # which is the critical part — we need the label token position intact.
     seq_len = inputs.input_ids.shape[1]
     if seq_len > max_seq_length:
+        # This shouldn't happen — build_chat_messages should have truncated
+        # the prompt content to fit. Warn rather than crash.
+        print(f"    WARNING: batch seq_len {seq_len} > max_seq_length {max_seq_length}, "
+              f"truncating from left (losing early prompt content)")
         inputs.input_ids = inputs.input_ids[:, -max_seq_length:]
         inputs.attention_mask = inputs.attention_mask[:, -max_seq_length:]
 
@@ -573,7 +574,11 @@ def main():
     test_issues = load_test_issues(max_k_file, max_k)
     print(f"  Loaded {len(test_issues)} test issues with up to {max_k} neighbors each")
 
-    max_prompt_tokens = args.max_seq_length - 20  # no max_new_tokens budget needed
+    # Conservative budget: reserve 100 tokens for chat template overhead
+    # (role markers, BOS/EOS, formatting). build_chat_messages does smart
+    # truncation (proportional neighbor body compression) within this budget,
+    # so every prompt will fit within max_seq_length after tokenization.
+    max_prompt_tokens = args.max_seq_length - 100
     os.makedirs(args.output_dir, exist_ok=True)
 
     # --- Run each k ---
