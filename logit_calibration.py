@@ -117,12 +117,14 @@ def extract_logits_batch(
     tokenizer,
     prompts: List[str],
     label_ids_tensor: torch.Tensor,
+    max_seq_length: int = 8192,
 ) -> torch.Tensor:
     """Run a batched forward pass and extract logits for the 3 label tokens.
 
     Args:
         prompts: list of N prompt strings (already include "<label>" suffix)
         label_ids_tensor: tensor of [bug_id, feature_id, question_id] on cuda
+        max_seq_length: maximum sequence length for the model
 
     Returns:
         logits: shape [N, 3] — raw logits for bug/feature/question per item
@@ -134,6 +136,14 @@ def extract_logits_batch(
     ).to("cuda")
     tokenizer.padding_side = orig_side
 
+    # Truncate from the LEFT if batch exceeds max_seq_length.
+    # Left-truncation preserves the right side (ending with "<label>")
+    # which is the critical part — we need the label token position intact.
+    seq_len = inputs.input_ids.shape[1]
+    if seq_len > max_seq_length:
+        inputs.input_ids = inputs.input_ids[:, -max_seq_length:]
+        inputs.attention_mask = inputs.attention_mask[:, -max_seq_length:]
+
     with torch.no_grad():
         outputs = model(
             input_ids=inputs.input_ids,
@@ -144,7 +154,7 @@ def extract_logits_batch(
     last_logits = outputs.logits[:, -1, :]       # [batch_size, vocab_size]
     label_logits = last_logits[:, label_ids_tensor]  # [batch_size, 3]
 
-    # Track prompt token counts
+    # Track prompt token counts (real tokens, excluding padding)
     prompt_tokens = [
         (inputs.attention_mask[i] != 0).sum().item()
         for i in range(len(prompts))
@@ -286,6 +296,7 @@ def run_calibration(
     cd_alpha: float,
     label_ids_tensor: torch.Tensor,
     max_prompt_tokens: int,
+    max_seq_length: int,
     output_csv: str,
     inference_batch_size: int = 4,
     debias_retrieval: bool = False,
@@ -311,7 +322,7 @@ def run_calibration(
                             desc=f"  k={k} RAG fwd", unit="batch", total=total_batches):
         batch = prepared[batch_start:batch_start + inference_batch_size]
         prompts = [item.rag_prompt for item in batch]
-        logits, ptoks = extract_logits_batch(model, tokenizer, prompts, label_ids_tensor)
+        logits, ptoks = extract_logits_batch(model, tokenizer, prompts, label_ids_tensor, max_seq_length)
         all_rag_logits.append(logits.cpu())
         all_rag_prompt_tokens.extend(ptoks)
 
@@ -327,7 +338,7 @@ def run_calibration(
                                 desc=f"  k={k} ZS fwd", unit="batch", total=total_batches):
             batch = prepared[batch_start:batch_start + inference_batch_size]
             prompts = [item.zs_prompt for item in batch]
-            logits, ptoks = extract_logits_batch(model, tokenizer, prompts, label_ids_tensor)
+            logits, ptoks = extract_logits_batch(model, tokenizer, prompts, label_ids_tensor, max_seq_length)
             zs_logit_parts.append(logits.cpu())
             all_zs_prompt_tokens.extend(ptoks)
         all_zs_logits = torch.cat(zs_logit_parts, dim=0)  # [N, 3]
@@ -594,6 +605,7 @@ def main():
             cd_alpha=args.cd_alpha,
             label_ids_tensor=label_ids_tensor,
             max_prompt_tokens=max_prompt_tokens,
+            max_seq_length=args.max_seq_length,
             output_csv=output_csv,
             inference_batch_size=args.inference_batch_size,
             debias_retrieval=args.debias_retrieval,
