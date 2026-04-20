@@ -574,11 +574,12 @@ def main():
     test_issues = load_test_issues(max_k_file, max_k)
     print(f"  Loaded {len(test_issues)} test issues with up to {max_k} neighbors each")
 
-    # Conservative budget: reserve 100 tokens for chat template overhead
-    # (role markers, BOS/EOS, formatting). build_chat_messages does smart
-    # truncation (proportional neighbor body compression) within this budget,
-    # so every prompt will fit within max_seq_length after tokenization.
-    max_prompt_tokens = args.max_seq_length - 100
+    # build_chat_messages internally reserves sys_tokens + 50 for overhead,
+    # but apply_chat_template adds more (role headers, BOS/EOS per message,
+    # etc.) and we append "<label>" after. Empirically the total template
+    # overhead can reach ~185 tokens beyond what build_chat_messages accounts
+    # for. Reserve 200 here to ensure no prompt exceeds max_seq_length.
+    max_prompt_tokens = args.max_seq_length - 200
     os.makedirs(args.output_dir, exist_ok=True)
 
     # --- Run each k ---
