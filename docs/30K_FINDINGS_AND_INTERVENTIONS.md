@@ -273,29 +273,114 @@ Debiasing narrows the FT gap but doesn't close it. Llama-8B gets within 0.036 of
 
 Debiased retrieval is **paper-worthy for 3k** (largest RAGTAG improvement, novel approach, validates the bias-reinforcement hypothesis). For 30k, it's **incremental** — confirms that text-level interventions have a ceiling against the scaling problem. Phase 2 (logit-level interventions) remains necessary to close the 30k gap.
 
+### 8g. Ablation: "Always Remove" vs Margin-Gated (3k only)
+
+**Question:** Is the margin condition necessary, or should we *always* remove bug neighbors?
+
+The "always" strategy removes all bug neighbors unconditionally and backfills with the next most-similar non-bug neighbors from a larger retrieval pool (k=16 from FAISS, filtered down to k=3 or k=9 for the prompt).
+
+| Model | Type | F1_macro | F1_bug | F1_feat | F1_ques | R_bug | R_ques |
+|---|---|---|---|---|---|---|---|
+| Llama-3B | baseline | 0.6743 | 0.688 | 0.773 | 0.562 | 0.778 | 0.468 |
+| Llama-3B | remove_m3 | 0.6971 | 0.693 | 0.774 | 0.625 | 0.697 | 0.590 |
+| Llama-3B | **replace_always** | **0.6431** | 0.563 | 0.751 | 0.615 | **0.485** | 0.651 |
+| Llama-8B | baseline | 0.7115 | 0.727 | 0.822 | 0.586 | 0.864 | 0.464 |
+| Llama-8B | remove_m3 | **0.7556** | 0.747 | 0.822 | 0.697 | 0.791 | 0.673 |
+| Llama-8B | **replace_always** | 0.7467 | 0.710 | 0.817 | 0.713 | **0.658** | **0.758** |
+
+**Result: "always" is too aggressive.** Bug recall collapses:
+- Llama-3B: 0.778 → **0.485** (−0.293). F1_macro drops below baseline.
+- Llama-8B: 0.864 → **0.658** (−0.206). F1_macro below remove_m3 despite best-ever question recall (0.758).
+
+**Why:** The model *does* use bug examples to correctly predict bugs. When every prompt has zero bug examples, true bugs get shown 2-3 question/feature neighbors that actively push the model away from "bug." Unlike zero-shot (no examples, parametric prior dominates), replacement examples give the model positive evidence for non-bug labels, overriding the prior.
+
+**Key insight:** The margin condition is not arbitrary — it protects true bugs from being overwhelmed by non-bug replacement examples. The margin ensures debiasing only fires on borderline cases (where bug evidence is weak), not on cases where the retrieval correctly identifies strong bug signal.
+
+**Decision:** "Always" mode abandoned. Margin-gated replacement with backfill (replace_m3) remains the strategy to test on 30k.
+
 ---
 
-## 9. Intervention Plan: Remaining Phases
+## 9. Phase 2 Results: Logit-Level Interventions — COMPLETE
 
-### Phase 1: Debiased retrieval heuristic — COMPLETE
-- ✅ Implemented and tested on both Llama models, both datasets, margins 2 and 3
-- Result: +0.023 to +0.048 on 3k, +0.005 to +0.014 on 30k
-- Possible follow-up: cap approach for low-k models (cap bugs at 1 instead of removing all)
+### 9a. Batch Calibration (BC)
 
-### Phase 2: Logit-level interventions — NEXT
-- **Batch Calibration** — subtract average label distribution bias from each prediction's logits
-- **Contrastive Decoding** — subtract zero-shot logits from RAG-augmented logits, suppressing prior-driven predictions
-- Test both on Llama-3B and Llama-8B
-- Can be combined with Phase 1 debiased retrieval
+**Mechanism:** Extract logits for the three label tokens (bug/feature/question) via a single forward pass instead of `model.generate()`. Convert to softmax probabilities, compute the marginal distribution across all test items, then subtract the marginal and add 1/3 (uniform prior). Argmax on calibrated scores. Training-free, zero invalid predictions.
 
-### Phase 3: Activation steering (if Phases 1-2 insufficient)
-- **RepE or NL-ITI** — extract bug-vs-question direction via contrastive pairs, intervene on residual stream during inference
-- Most complex but theoretically strongest
+**Implementation:** `logit_calibration.py` — standalone script that imports shared code from `llm_labeler.py`. Uses `--method bc`. Label token IDs for Llama tokenizer: bug=2365, feature=13043, question=7998.
 
-### Success criteria
-- Close the FT gap by >=50% (from ~0.06 to <=0.03 macro-F1)
-- Improve question F1 by >=0.05 without destroying bug recall
-- Method must be training-free (no weight updates to the LLM)
+**Results:**
+
+| Model | Dataset | Baseline | BC | Δ F1_macro |
+|---|---|---|---|---|
+| Llama-3B | 3k | 0.6743 | 0.6834 | **+0.009** |
+| Llama-8B | 3k | 0.7115 | 0.7419 | **+0.030** |
+| Llama-3B | 30k | 0.7222 | 0.7260 | +0.004 |
+| Llama-8B | 30k | 0.7429 | 0.7492 | +0.006 |
+
+**Per-class detail (3k):**
+
+| Model | Method | F1_bug | F1_feat | F1_ques | R_bug | R_ques |
+|---|---|---|---|---|---|---|
+| Llama-3B | baseline | 0.688 | 0.773 | 0.562 | 0.778 | 0.468 |
+| Llama-3B | BC | 0.691 | 0.773 | 0.587 | 0.760 | 0.522 |
+| Llama-8B | baseline | 0.727 | 0.822 | 0.586 | 0.864 | 0.464 |
+| Llama-8B | BC | 0.764 | 0.824 | 0.638 | 0.916 | 0.538 |
+
+**Analysis:** BC provides consistent but modest improvement. It shifts probability mass from bug toward question (the marginal reveals bug is over-represented in the raw softmax distribution). Effect is larger on 3k than 30k, and larger on 8B than 3B. Does not come close to closing the FT gap on 30k.
+
+### 9b. Contrastive Decoding (CD)
+
+**Mechanism:** Run two forward passes — one with RAG context (full prompt with neighbors), one zero-shot (no neighbors). Subtract zero-shot logits from RAG logits: `cd_logits = rag_logits - alpha * zs_logits`. The idea: whatever the model predicts without context is its parametric prior; subtracting it should isolate the signal from retrieval. Alpha controls subtraction strength.
+
+**Results (3k, alpha sweep):**
+
+| Model | Baseline | CD α=0.5 | CD α=0.75 | CD α=1.0 |
+|---|---|---|---|---|
+| Llama-3B | 0.6743 | 0.6220 | 0.5354 | **0.4203** |
+| Llama-8B | 0.7115 | 0.6469 | 0.4661 | **0.3125** |
+
+**Results (30k, α=1.0 only):**
+
+| Model | Baseline | CD α=1.0 |
+|---|---|---|
+| Llama-3B | 0.7222 | **0.3881** |
+| Llama-8B | 0.7429 | **0.2637** |
+
+**CD is catastrophically destructive at every alpha tested.** Higher alpha = worse. The 8B model at α=1.0 on 30k drops to 0.264 — near random. Bug recall collapses (0.11 for 8B on 30k) while question recall rises (0.50-0.67), confirming the mechanism is "working" directionally but far too aggressively.
+
+**Why CD fails here:** Unlike language modeling (where CD was designed), classification logits for 3 tokens don't have the entropy headroom for contrastive subtraction. The zero-shot logits and RAG logits are highly correlated — both are dominated by the same label space geometry. Subtracting one from the other doesn't isolate retrieval signal; it mostly adds noise and destroys the decision boundary.
+
+### 9c. BC+CD Combined (30k)
+
+| Model | Baseline | BC+CD α=1.0 |
+|---|---|---|
+| Llama-3B | 0.7222 | **0.3884** |
+| Llama-8B | not completed (run killed) | — |
+
+CD's destructive effect dominates the combination. BC cannot rescue logits that CD has already corrupted.
+
+### 9d. Phase 2 Verdict
+
+**BC is mildly useful but insufficient.** Best single gain: +0.030 (Llama-8B, 3k). On 30k, gains are negligible (+0.004 to +0.006).
+
+**CD is harmful and should not be used for classification tasks.** The method was designed for open-ended generation where the logit space has thousands of tokens with rich distributional structure. In a 3-class classification setting, the logit space is too constrained — contrastive subtraction destroys more signal than it isolates.
+
+**Phase 3 (activation steering) was not pursued.** Given that BC barely moves the needle and CD actively hurts, and that the overall research direction has shifted away from gap-closing interventions toward data efficiency analysis, activation steering was deemed not worth the implementation complexity.
+
+### 9e. Intervention Summary (All Phases)
+
+| Intervention | Level | Best Δ (3k) | Best Δ (30k) | Verdict |
+|---|---|---|---|---|
+| Debiased retrieval (m3) | Prompt/retrieval | +0.048 | +0.014 | Paper-worthy for 3k |
+| Batch Calibration | Logit | +0.030 | +0.006 | Marginal |
+| Contrastive Decoding | Logit | −0.052 to −0.399 | −0.334 to −0.480 | Destructive |
+| BC+CD | Logit | not tested | −0.334 | Destructive |
+| Vote prior | Prompt | 0.000 | 0.000 | No effect |
+| Enhanced prompt | Prompt | −0.003 | 0.000 | No effect |
+| Post-hoc ensemble | Output | +0.013 | +0.013 | Marginal |
+| Model ensemble (3B+8B) | Output | — | +0.007 | Marginal |
+
+**Conclusion:** No training-free intervention closes the FT gap on 30k. The gap is structural — FT learns the decision boundary from thousands of gradient updates; RAGTAG is limited to k examples per inference. The research direction has pivoted from gap-closing to data efficiency analysis (see Section 12).
 
 ---
 
@@ -399,3 +484,76 @@ The recall analysis reveals a specific mechanism:
 3. This is fundamentally different from teaching the model what a question looks like — it already knows. The issue is that "bug" features in the input overwhelm "question" features in the activation space
 4. **Logit-level interventions (Batch Calibration, Contrastive Decoding)** directly address this by mathematically reducing the bug logit's dominance — they lower the threshold without changing the model's representations
 5. **The 3k FT overcorrection** on Llama-8B (bug recall 0.419) shows that even gradient-based methods struggle with calibration on small datasets — a logit correction that achieves balanced recall without training would be a genuine contribution
+
+---
+
+## 12. Fine-Tune Generalization Test: 30k FT → 3k Test Set
+
+**Question:** Does the 30k fine-tuned Llama-3B generalize to a different test distribution (the 3k test set)?
+
+**Setup:** Loaded saved LoRA adapters from `results/issues30k/unsloth_Llama_3_2_3B_Instruct/finetune_fixed/adapters_unsloth_Llama-3.2-3B-Instruct/` with `--skip_training`. Ran inference on the 3k test split (1,497 issues). No retraining.
+
+**Results:**
+
+| Config | Test Set | F1_macro | F1_bug | F1_feat | F1_ques | R_bug | R_ques |
+|---|---|---|---|---|---|---|---|
+| 30k FT on 30k (home turf) | 30k | 0.790 | 0.792 | 0.824 | 0.753 | 0.870 | 0.737 |
+| 30k FT on 3k (generalization) | 3k | 0.680 | 0.700 | 0.770 | 0.570 | 0.880 | 0.470 |
+| RAGTAG on 3k (no training) | 3k | 0.674 | 0.688 | 0.773 | 0.562 | 0.778 | 0.468 |
+| RAGTAG + BC on 3k | 3k | 0.683 | 0.691 | 0.773 | 0.587 | 0.760 | 0.522 |
+
+**Key findings:**
+
+1. **FT degrades -0.110 F1_macro on out-of-distribution data.** The model learned the 30k distribution but doesn't generalize cleanly. The biggest casualty is question recall: 0.737 → 0.470.
+
+2. **The parametric bug bias resurfaces.** On its home turf (30k), FT achieves balanced recall (R_bug=0.87, R_ques=0.74, gap=0.13). On the 3k test set, the recall imbalance returns (R_bug=0.88, R_ques=0.47, gap=0.41) — nearly identical to the zero-shot pattern. Fine-tuning suppresses the bias on its own distribution, but the bias is not "cured" — it resurfaces on unfamiliar data.
+
+3. **30k FT on 3k barely beats RAGTAG on 3k.** The gap is just +0.006 (0.680 vs 0.674). With BC calibration, RAGTAG actually surpasses FT (0.683 vs 0.680). A model fine-tuned on 10x more data, tested on a different dataset, ties or loses to training-free RAGTAG on that dataset.
+
+4. **Implication for practitioners:** FT's advantage is partly in-distribution memorization. If your deployment data doesn't perfectly match your training data (common in real-world software projects where issue patterns evolve), FT's edge disappears. RAGTAG, being retrieval-based, naturally adapts to whatever neighbors are available — it doesn't overfit to a training distribution.
+
+---
+
+## 13. Research Direction Pivot: Data Efficiency Analysis
+
+**Date:** 2026-04-20
+
+### Why we're pivoting
+
+All training-free interventions (Sections 5, 8, 9) have failed to close the FT gap on 30k. The gap is structural: FT learns from thousands of gradient updates; RAGTAG is limited to k examples per inference. No logit correction, prompt engineering, or retrieval heuristic can bridge that fundamental asymmetry at scale.
+
+However, the project already has a strong narrative without closing the gap:
+- RAGTAG wins on 3k across all 4 models (no training needed)
+- RAGTAG wins on 30k for Qwen-14B (larger models may never need FT)
+- FT doesn't generalize well (Section 12: -0.11 on out-of-distribution data)
+- FT is unstable on small data (Llama-8B 3k: bug recall collapses to 0.419)
+
+### The new question
+
+Instead of "can we close the gap?", the paper should ask: **"At what data scale does fine-tuning overtake RAGTAG?"**
+
+### Planned experiment: Data Efficiency Curve
+
+- Take the 30k training pool (~27k examples)
+- Subsample at log-spaced intervals: 1k, 3k, 9k, 27k (already have)
+- For each size: build FAISS index (RAGTAG) / fine-tune from scratch (FT)
+- Same held-out 3,000 test issues throughout
+- Run on Llama-3B (primary) + Llama-8B at 2-3 validation points
+- FT with multiple random seeds (2-3) to capture variance — RAGTAG is deterministic
+
+**Why not Qwen models:** Qwen-14B shows no crossover (RAGTAG wins at both endpoints). Qwen-32B requires A100 hardware, outside the consumer GPU target scenario. Endpoint behavior for both Qwen models is already established in Section 10/11.
+
+### Expected output
+
+A crossover plot showing:
+- RAGTAG F1 curve (expected: gentle upward slope, limited by k-example ceiling)
+- FT F1 curve with error bars (expected: steep rise, eventually overtaking RAGTAG)
+- The crossover point = the practical recommendation ("below X labeled examples, use RAGTAG")
+
+### Supporting arguments already in hand
+
+- FT instability at small pool sizes (Llama-8B 3k overcorrection, Section 10b finding 4)
+- FT generalization failure (Section 12)
+- RAGTAG's compute advantage (no training, shared FAISS index across models)
+- RAGTAG's model portability (same index serves 4 different LLMs)
+- RAGTAG's instant adaptability (add new data to index, no retraining)
