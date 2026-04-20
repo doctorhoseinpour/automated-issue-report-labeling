@@ -489,8 +489,8 @@ def main():
                         help="Save raw and calibrated logits to CSV")
 
     # Batching
-    parser.add_argument("--inference_batch_size", type=int, default=4,
-                        help="Forward pass batch size (default: 4)")
+    parser.add_argument("--inference_batch_size", type=int, default=1,
+                        help="Forward pass batch size (default: 1)")
 
     args = parser.parse_args()
 

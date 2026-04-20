@@ -18,7 +18,7 @@ cd "$SCRIPT_DIR"
 
 PYTHON="${PYTHON_BIN:-venv/bin/python}"
 CTX=8192
-BATCH_SIZE=4
+BATCH_SIZE=1
 
 MODEL_3B="unsloth/Llama-3.2-3B-Instruct"
 MODEL_8B="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit"
