@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # ============================================================================
-# run_server.sh — Run all remote experiments on OSC A100
+# run_server.sh — Run all remote experiments on NRP/OSC GPU server
 # ============================================================================
 # Usage:
 #   nohup bash run_server.sh > server_log.txt 2>&1 &
+#
+# Passes --nrp to redirect HF model cache to ./hf_cache/ (avoids slow NFS).
 # ============================================================================
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
@@ -17,11 +19,11 @@ echo "============================================================"
 
 # --- Experiment 1: Qwen FT at 1.5k, 3k, 9k, 15k ---
 echo -e "\n[1/2] Data efficiency — Qwen fine-tuning"
-bash run_data_efficiency.sh --mode remote
+bash run_data_efficiency.sh --mode remote --nrp
 
 # --- Experiment 2: Qwen debias on 30k ---
 echo -e "\n[2/2] Debiased retrieval — Qwen on 30k"
-bash run_debias_qwen.sh --skip_3k
+bash run_debias_qwen.sh --skip_3k --nrp
 
 echo -e "\n============================================================"
 echo "  All server experiments complete — $(date)"
