@@ -1,38 +1,37 @@
 # Portable requirements for remote server (A100/A6000).
-# Install torch FIRST with the correct CUDA index for your server:
+#
+# Setup:
+#   python3 -m venv venv && source venv/bin/activate
+#   pip install --upgrade pip
 #   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-# Then:
 #   pip install -r requirements-server.txt
 #
-# This file omits nvidia-cuda-* and hardware-specific packages that are
-# pulled automatically by torch and vary by CUDA version. The pinned
-# requirements.txt is kept for local reproducibility.
+# unsloth handles its own transformers/tokenizers versions — do not pin them here.
 
-# LLM & fine-tuning
-unsloth>=2026.4.0
-unsloth_zoo>=2026.4.0
-transformers>=5.0.0
-trl>=0.24.0
-peft>=0.19.0
-accelerate>=1.10.0
-bitsandbytes>=0.49.0
-datasets>=4.0.0
+# LLM & fine-tuning (unsloth pulls transformers, tokenizers, etc.)
+unsloth
+unsloth_zoo
+trl
+peft
+accelerate
+bitsandbytes
+datasets
 
 # FAISS retrieval
-faiss-cpu>=1.13.0
+faiss-cpu
 
 # Embeddings
-sentence-transformers>=5.0.0
-langchain-community>=0.4.0
-langchain-core>=1.2.0
+sentence-transformers
+langchain-community
+langchain-core
 
 # Data & evaluation
-pandas>=3.0.0
-numpy>=2.0.0
-scikit-learn>=1.8.0
+pandas
+numpy
+scikit-learn
 
 # Utilities
-psutil>=7.0.0
-tqdm>=4.60.0
-PyYAML>=6.0.0
-safetensors>=0.7.0
+psutil
+tqdm
+PyYAML
+safetensors
