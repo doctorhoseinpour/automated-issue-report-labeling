@@ -91,16 +91,19 @@ On 30k (~27k train), fine-tuning pulls ahead for smaller models:
 
 ---
 
-## Slide 7: Failed Interventions
+## Slide 7: Failed Interventions — Six Approaches, Four Levels
 
-| Intervention | Level | Result | Why It Failed |
-|---|---|---|---|
-| Vote prior injection | Prompt | Zero effect | LLM ignores statistical evidence |
-| Enhanced system prompt | Prompt | No improvement | Small models can't follow meta-reasoning |
-| Post-hoc ensemble | Output | +0.010 max | Margins too slim for strong rules |
-| Model ensemble (3B+8B) | Output | +0.007 over best | Two biased models can't unbias each other |
+| # | Intervention | Level | Result | Why It Failed |
+|---|---|---|---|---|
+| 1 | Vote prior injection | Prompt | Zero effect | LLM ignores statistical evidence in text |
+| 2 | Enhanced system prompt | Prompt | No improvement | Small models can't follow meta-reasoning |
+| 3 | Post-hoc ensemble (RAGTAG+VTAG) | Output | +0.010 max | Margins too slim for reliable rules |
+| 4 | Model ensemble (3B+8B) | Output | +0.007 over best single | Two biased models can't unbias each other |
+| 5 | Batch Calibration (BC) | Logit | +0.009 to +0.030 | Consistent but modest — re-scales logits but doesn't fix the underlying geometry |
+| 6 | Contrastive Decoding (CD) | Logit | **Catastrophic** (F1 drops to 0.26–0.42) | Amplifies noise; subtracting amateur logits destroys good signal |
 
-**Pattern:** All text-level and output-level interventions fail. The bias is geometric — it lives in the activation space, not text interpretation.
+- BC+CD combined: CD dominates destructively, negating BC gains
+- **Pattern:** Prompt-level, output-level, and logit-level interventions all fail to overcome the parametric bug bias. The bias is geometric — it lives in the activation space, not in text interpretation or output probabilities.
 
 ---
 
@@ -110,22 +113,27 @@ On 30k (~27k train), fine-tuning pulls ahead for smaller models:
 
 **Mechanism:** If `bug_count - question_count <= margin(3)`: remove all bug neighbors.
 
-**3k Results:**
+**3k Results (all 4 models complete):**
 
 | Model | Baseline F1 | Debias F1 | Delta | Question Recall Gain |
 |---|---|---|---|---|
-| Llama-3B | 0.674 | 0.697 | +0.023 | +0.122 |
-| Llama-8B | 0.712 | 0.756 | +0.044 | +0.209 |
+| Llama-3B | 0.674 | 0.693 | +0.019 | +0.122 |
+| Llama-8B | 0.712 | 0.758 | +0.046 | +0.209 |
+| Qwen-14B | 0.742 | 0.768 | +0.026 | — |
+| Qwen-32B | 0.778 | 0.793 | +0.015 | — |
 
-**30k Results:**
+Works on all 4 models — consistent +0.015 to +0.046 F1 gain.
+
+**30k Results (Llama complete, Qwen running on server):**
 
 | Model | Baseline F1 | Debias F1 | Delta |
 |---|---|---|---|
-| Llama-3B | 0.722 | 0.727 | +0.005 |
+| Llama-3B | 0.722 | 0.724 | +0.002 |
 | Llama-8B | 0.743 | 0.757 | +0.014 |
+| Qwen-14B | 0.779 | *running* | — |
+| Qwen-32B | 0.767 | *running* | — |
 
 Narrows FT gap but doesn't close it — confirms ceiling is structural.
-Qwen-14B and Qwen-32B debias: **running now**.
 
 ---
 
@@ -140,26 +148,49 @@ Not in main results (only tested on one model), but supports the mechanistic sto
 
 ---
 
-## Slide 10: Data Efficiency Crossover (THE HERO EXPERIMENT)
+## Slide 10: Data Efficiency Crossover — Llama Results (Complete)
 
-**Status: Running now** on local RTX 4090 + OSC H100
+**Setup:** Stratified subsamples (1.5k / 3k / 9k / 15k / 27k) from 30k training pool, fixed 3k test set.
 
-Subsample 30k training pool at 1.5k / 3k / 9k / 15k / 27k:
-- RAGTAG curve: gentle slope (prompt budget is fixed)
-- FT curve: steep rise with data
-- Crossover point depends on model scale
+**Figure description:** 2-panel plot (Llama-3B | Llama-8B), RAGTAG (blue) vs FT (red) curves.
 
-**Expected figure:** 4 panels (one per model), two curves each
+| Train Size | Llama-3B RAGTAG | Llama-3B FT | Llama-8B RAGTAG | Llama-8B FT |
+|---|---|---|---|---|
+| 1.5k | 0.698 | 0.714 | 0.718 | 0.748 |
+| 3k | 0.699 | **0.679** | 0.719 | 0.768 |
+| 9k | 0.705 | 0.767 | 0.726 | 0.779 |
+| 15k | 0.714 | 0.790 | 0.726 | 0.788 |
+| 27k | 0.722 | 0.790 | 0.743 | 0.792 |
 
-| Already have | Still running |
-|---|---|
-| 27k endpoints (all models) | 1.5k, 3k, 9k, 15k RAGTAG (all models) |
-| 3k development results | 1.5k, 3k, 9k, 15k FT (all models) |
-| | Qwen debias on 3k and 30k |
+**Key findings:**
+- **RAGTAG curve is nearly flat** — gentle slope from 0.698→0.722 (3B) and 0.718→0.743 (8B). Prompt budget is fixed regardless of pool size.
+- **FT curve rises steeply** — 0.714→0.790 (3B) and 0.748→0.792 (8B). Thousands of gradient updates scale with data.
+- **Llama-3B crossover at ~3k:** RAGTAG wins at n=3k (+0.021) where FT dips to 0.679. FT pulls ahead from 9k onward.
+- **Llama-8B: FT leads at all sizes** — even at 1.5k, FT already beats RAGTAG by 0.030.
+- FT plateaus around 15k–27k for both models.
 
 ---
 
-## Slide 11: Paper Structure
+## Slide 11: Data Efficiency Crossover — Qwen RAGTAG (FT pending from server)
+
+**RAGTAG results complete for all 4 models. Qwen FT running on OSC H100.**
+
+| Train Size | Qwen-14B RAGTAG | Qwen-14B FT | Qwen-32B RAGTAG | Qwen-32B FT |
+|---|---|---|---|---|
+| 1.5k | 0.778 | *running* | 0.782 | *running* |
+| 3k | 0.776 | *running* | 0.780 | *running* |
+| 9k | 0.768 | *running* | 0.782 | *running* |
+| 15k | 0.775 | *running* | 0.779 | *running* |
+| 27k | 0.779 | 0.767 | 0.785 | 0.810 |
+
+**Preliminary observation:**
+- Qwen RAGTAG is **almost perfectly flat** (0.768–0.782) — larger models extract maximum value from even small retrieval pools
+- At 27k: Qwen-14B RAGTAG still beats FT (+0.012), but Qwen-32B FT wins (-0.025)
+- **Hypothesis:** Larger model = higher crossover point (more data needed before FT overtakes)
+
+---
+
+## Slide 12: Paper Structure
 
 **Title:** "RAGTAG: When Retrieval-Augmented Classification Beats Fine-Tuning for GitHub Issue Labeling"
 
@@ -172,14 +203,14 @@ Subsample 30k training pool at 1.5k / 3k / 9k / 15k / 27k:
 | 5. RAGTAG Analysis (3k) | k x ctx, vs FT/VTAG, random ablation | **Complete** |
 | 6. Cost-Performance | Pareto frontier, time, VRAM | **Complete** |
 | 7. Bug Bias | Discovery, diagnosis, mechanistic interpretation | **Complete** |
-| 8. Data Efficiency (30k) | Config transfer, crossover plot | **Running** |
-| 9. Debiased Retrieval | Mechanism, results all 4 models | **Partially complete** |
+| 8. Data Efficiency (30k) | Config transfer, crossover plot | **Llama complete, Qwen FT running** |
+| 9. Debiased Retrieval | Mechanism, results all 4 models | **3k complete, 30k Qwen running** |
 | 10. Discussion | Decision framework, structural ceiling | Ready to write |
 | 11-13. Threats/Future/Conclusion | | Ready to write |
 
 ---
 
-## Slide 12: Three Key Takeaways
+## Slide 13: Three Key Takeaways
 
 1. **Below a data threshold → use RAGTAG.** No training, 70-80% of FT's VRAM, competitive or superior F1. The threshold is model-dependent.
 
@@ -189,14 +220,18 @@ Subsample 30k training pool at 1.5k / 3k / 9k / 15k / 27k:
 
 ---
 
-## Slide 13: Timeline
+## Slide 14: Timeline & Status
 
 | Task | Status |
 |---|---|
-| Phase 1 experiments (3k) | Done |
-| Phase 2 experiments (30k at 27k) | Done |
-| All failed interventions tested | Done |
-| Debiased retrieval (Llama) | Done |
-| Data efficiency crossover | **Running (local + server)** |
-| Debiased retrieval (Qwen) | **Running (local + server)** |
-| Write paper | Next |
+| Phase 1 experiments (3k, all 4 models) | Done |
+| Phase 2 experiments (30k at 27k, all 4 models) | Done |
+| All 6 failed interventions tested | Done |
+| Activation steering (CAA) — mechanistic evidence | Done |
+| Debiased retrieval — Llama (3k + 30k) | Done |
+| Debiased retrieval — Qwen (3k) | **Done** |
+| Data efficiency crossover — Llama (RAGTAG + FT) | **Done** |
+| Data efficiency crossover — Qwen RAGTAG | **Done** |
+| Data efficiency crossover — Qwen FT | **Running on OSC H100** |
+| Debiased retrieval — Qwen (30k) | **Running on OSC H100** |
+| Write paper | Next (all data expected within 24h) |
