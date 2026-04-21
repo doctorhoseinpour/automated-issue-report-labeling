@@ -241,8 +241,24 @@ After finding best config on `issues3k.csv`, re-run on `issues30k.csv` to verify
 ## Known Issues / Current Status
 
 - **No cross-directory aggregation:** Each context window experiment has its own `all_results.csv`. A script to merge results across `results/issues3k_ctx*/` for paper analysis still needs to be written.
-- **Context window experiments running on NRP** (A6000 GPU).
 - **VTAG complete** on issues3k with MiniLM+similarity (canonical), plus voting-scheme and embedder ablations (deferred to future work). Findings: [docs/VTAG_FINDINGS.md](docs/VTAG_FINDINGS.md).
 - **Analysis / findings docs live in `docs/`** (tracked in git). Raw run artifacts stay under `results/` (gitignored). Any future analysis writeups should go in `docs/` so they survive `results/` being cleaned.
-- **Open: whether to implement VTAG→RAGTAG prompt enhancements** (reduce k, inject retrieval-vote prior, bug/feature disambiguation). User is deciding. See "VTAG → RAGTAG prompt-design insights" section above.
-- Next steps: write cross-directory aggregation script, decide on RAGTAG prompt enhancements, analyze final results, write paper.
+- Next steps: run data efficiency experiment, run Qwen debias, analyze final results, write paper.
+
+### Data Efficiency Crossover Experiment
+- **Scripts:** `subsample_and_index.py` + `run_data_efficiency.sh`
+- **Subsample sizes:** 1.5k, 3k, 9k, 15k from 30k training pool (27k endpoint already exists)
+- **Results dir:** `results/issues30k_efficiency/n{1500,3000,9000,15000}/`
+- **Execution:** `--mode local` for RAGTAG (all models) + Llama FT; `--mode remote --nrp` for Qwen FT
+- **Best RAGTAG configs:** Llama-3B k=3/ctx=8192, Llama-8B k=9/ctx=8192, Qwen-14B k=9/ctx=8192, Qwen-32B k=3/ctx=8192
+
+### Debiased Retrieval — Qwen Models
+- **Script:** `run_debias_qwen.sh`
+- **Models:** Qwen-14B and Qwen-32B, both k=9, margin=3
+- **Execution:** `--skip_30k` for local 3k runs; `--skip_3k --nrp` for remote 30k runs
+- **Output:** integrates into existing `results/issues{3k,30k}_debias_m3/` alongside Llama results
+
+### Remote Server Setup
+- Server has code + `issues30k.csv` (NOT `results/` or `issues3k.csv`)
+- Use `requirements-server.txt` for portable install (omits hardware-specific CUDA pins)
+- Splits are deterministic — regenerated from dataset on first run
