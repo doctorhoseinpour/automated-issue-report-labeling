@@ -141,18 +141,92 @@ echo "  NRP mode:  ${NRP}"
 echo "============================================================"
 
 # ============================================================================
-# Phase 0: Build FAISS indexes
+# Phase 0a: Ensure train/test split CSVs exist (no GPU needed)
+# ============================================================================
+# Split CSVs are needed by FT even when FAISS indexing is skipped.
+# This step generates them from the source CSVs if they don't exist.
+
+echo -e "\n[Phase 0a] Ensuring train/test split CSVs exist"
+
+$PYTHON -c "
+import pandas as pd, os
+
+TRAIN_CSV = '$TRAIN_CSV'
+TEST_CSV  = '$TEST_CSV'
+RESULTS   = '$RESULTS'
+SETTING   = '$SETTING'
+
+PROJECTS = [
+    ('ansible/ansible', 'ansible_ansible'),
+    ('bitcoin/bitcoin', 'bitcoin_bitcoin'),
+    ('dart-lang/sdk', 'dart-lang_sdk'),
+    ('dotnet/roslyn', 'dotnet_roslyn'),
+    ('facebook/react', 'facebook_react'),
+    ('flutter/flutter', 'flutter_flutter'),
+    ('kubernetes/kubernetes', 'kubernetes_kubernetes'),
+    ('microsoft/TypeScript', 'microsoft_TypeScript'),
+    ('microsoft/vscode', 'microsoft_vscode'),
+    ('opencv/opencv', 'opencv_opencv'),
+    ('tensorflow/tensorflow', 'tensorflow_tensorflow'),
+]
+
+def normalize(df):
+    df['body'] = df['body'].fillna('')
+    df['title'] = df['title'].fillna('')
+    if 'label' in df.columns and 'labels' not in df.columns:
+        df.rename(columns={'label': 'labels'}, inplace=True)
+    df['labels'] = df['labels'].astype(str).str.lower().str.strip()
+    return df
+
+save_cols = ['repo', 'created_at', 'labels', 'title', 'body']
+
+train_df = normalize(pd.read_csv(TRAIN_CSV))
+test_df  = normalize(pd.read_csv(TEST_CSV))
+save_cols = [c for c in save_cols if c in test_df.columns]
+
+# Agnostic splits
+if SETTING in ('agnostic', 'both'):
+    ag_dir = os.path.join(RESULTS, 'agnostic/neighbors')
+    train_path = os.path.join(ag_dir, 'train_split.csv')
+    test_path  = os.path.join(ag_dir, 'test_split.csv')
+    if not os.path.exists(train_path) or not os.path.exists(test_path):
+        os.makedirs(ag_dir, exist_ok=True)
+        train_df[save_cols].to_csv(train_path, index=False)
+        test_df[save_cols].to_csv(test_path, index=False)
+        print(f'  Wrote agnostic splits: {len(train_df)} train, {len(test_df)} test')
+    else:
+        print(f'  Agnostic splits already exist')
+
+# Project-specific splits
+if SETTING in ('specific', 'both'):
+    for repo_name, proj_tag in PROJECTS:
+        ps_dir = os.path.join(RESULTS, f'project_specific/{proj_tag}/neighbors')
+        train_path = os.path.join(ps_dir, 'train_split.csv')
+        test_path  = os.path.join(ps_dir, 'test_split.csv')
+        if not os.path.exists(train_path) or not os.path.exists(test_path):
+            os.makedirs(ps_dir, exist_ok=True)
+            ptr = train_df[train_df['repo'] == repo_name].reset_index(drop=True)
+            pte = test_df[test_df['repo'] == repo_name].reset_index(drop=True)
+            ptr[save_cols].to_csv(train_path, index=False)
+            pte[save_cols].to_csv(test_path, index=False)
+            print(f'  Wrote {repo_name} splits: {len(ptr)} train, {len(pte)} test')
+        else:
+            print(f'  {repo_name} splits already exist')
+"
+
+# ============================================================================
+# Phase 0b: Build FAISS indexes (requires GPU)
 # ============================================================================
 
 if [[ "$SKIP_INDEXING" -eq 0 ]]; then
-    echo -e "\n[Phase 0] Building FAISS indexes"
+    echo -e "\n[Phase 0b] Building FAISS indexes"
 
     CACHE_ARG=""
     if [[ -n "$MODEL_CACHE_DIR" ]]; then
         CACHE_ARG="--model_cache_dir $MODEL_CACHE_DIR"
     fi
 
-    # 0a: Agnostic index
+    # Agnostic index
     if run_agnostic; then
         echo -e "\n  --- Agnostic index (3300 train) ---"
         $PYTHON build_11k_index.py \
@@ -163,7 +237,7 @@ if [[ "$SKIP_INDEXING" -eq 0 ]]; then
             $CACHE_ARG
     fi
 
-    # 0b: Per-project indexes
+    # Per-project indexes
     if run_specific; then
         for i in "${!PROJECTS[@]}"; do
             echo -e "\n  --- Project-specific: ${PROJECTS[$i]} (300 train) ---"
@@ -177,7 +251,7 @@ if [[ "$SKIP_INDEXING" -eq 0 ]]; then
         done
     fi
 else
-    echo -e "\n[Phase 0] SKIPPED (--skip_indexing)"
+    echo -e "\n[Phase 0b] SKIPPED (--skip_indexing)"
 fi
 
 # ============================================================================
