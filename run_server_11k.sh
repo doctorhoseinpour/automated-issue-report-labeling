@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=11k-qwen-ft
 #SBATCH --account=PCS0289
-#SBATCH --partition=gpu
+#SBATCH --partition=batch
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=64G
-#SBATCH --gpus-per-node=1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --output=server_11k_log_%j.txt
 #SBATCH --error=server_11k_log_%j.txt
 set -euo pipefail
