@@ -9,7 +9,6 @@ metadata:
 spec:
   backoffLimit: {{ backoff_limit | default(2) }}
   ttlSecondsAfterFinished: 604800
-  activeDeadlineSeconds: {{ active_deadline_seconds | default(43200) }}
   template:
     metadata:
       labels:
@@ -17,6 +16,10 @@ spec:
         wave: "{{ wave }}"
     spec:
       restartPolicy: Never
+      # Pod-level deadline: clock starts when the pod begins running, not at
+      # Job creation. This means queue time (out of our control) does NOT
+      # count against the budget. Bounds runtime only.
+      activeDeadlineSeconds: {{ active_deadline_seconds | default(43200) }}
       containers:
         - name: main
           image: {{ image }}
