@@ -27,14 +27,10 @@ This file gives Claude persistent context about this research project. Read it a
    - Voting schemes: `similarity` (Dudani-weighted k-NN, paper default), `shepard` (sim²), `majority` (uniform).
    - Establishes a pure-retrieval floor any RAGTAG number must clear to justify the LLM.
 
-3. **Flawed Fine-Tune Baseline**
-   - Faithful reproduction of a state-of-the-art paper's pipeline with all original flaws preserved
-   - Flaws: train/inference prompt mismatch, chain-of-thought prefix in training but not inference, hardcoded `EOS_TOKEN = "<|endoftext|>"`, `max_steps=60`, no input truncation, invalid predictions skipped from metrics, `top_p=0`, `adamw_8bit`
-   - Purpose: demonstrate that published fine-tuning results are inflated due to implementation bugs
-
-4. **Fixed Fine-Tune**
-   - Corrects all flaws: consistent `PROMPT_TEMPLATE`, no CoT prefix, uses `tokenizer.eos_token`, `num_train_epochs=1`, strict token truncation, `paged_adamw_8bit`, all predictions included in metrics
-   - Represents what fine-tuning actually achieves when implemented correctly
+3. **Fine-Tune (LoRA, Unsloth)**
+   - LoRA fine-tuning via Unsloth on the same train split as RAGTAG
+   - Consistent `PROMPT_TEMPLATE` between train and inference, `tokenizer.eos_token`, `num_train_epochs=1`, strict token truncation, `paged_adamw_8bit`, all predictions included in metrics
+   - Represents the fine-tuning baseline the paper compares against
 
 ---
 
@@ -105,11 +101,8 @@ Builds project-agnostic and project-specific FAISS indices from `issues11k_train
 ### `llm_labeler.py` — RAGTAG inference
 Loads the model once via Unsloth, runs all k values sequentially. Chat format with few-shot examples as user/assistant turns, assistant prefill (`<label>`), XML parsing + regex fallback, smart proportional truncation when prompt exceeds `max_seq_length`. Supports `--inference_batch_size` (left-padded), `--debias_retrieval` + `--debias_margin` for the RQ3 intervention, and `--cache_dir` for HF cache redirection.
 
-### `fixed_fine-tune.py` — corrected fine-tune baseline
-Accepts external `--train_csv` / `--test_csv` for shared splits. Tracks absolute peak GPU memory across training and inference for fair comparison against RAGTAG.
-
-### `baseline_finetune_flawed.py` — flawed-FT reproduction
-Same external split support; flaws preserved intentionally (see Approach 3 above).
+### `fixed_fine-tune.py` — fine-tune baseline
+LoRA via Unsloth. Accepts external `--train_csv` / `--test_csv` for shared splits with RAGTAG. Tracks absolute peak GPU memory across training and inference for fair comparison against RAGTAG.
 
 ### `evaluate.py` — metrics
 Per-label and macro precision/recall/F1, accuracy, invalid prediction rate. Works on prediction CSVs from any approach.

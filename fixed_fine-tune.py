@@ -15,7 +15,7 @@ Fixes over the original notebook:
   - All predictions included in output (invalids not skipped)
 
 GOLDEN TEST SET: Derived from the deduplicated dataset using balanced top-N,
-identical to baseline_finetune_flawed.py and build_and_query_index.py (RAGTAG).
+identical to build_and_query_index.py (RAGTAG).
 
 Usage:
   python fixed_fine-tune.py \
