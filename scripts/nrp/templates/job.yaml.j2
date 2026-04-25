@@ -1,0 +1,88 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ name }}
+  labels:
+    campaign: llm-labler-11k
+    wave: "{{ wave }}"
+    tier: "{{ tier }}"
+spec:
+  backoffLimit: {{ backoff_limit | default(2) }}
+  ttlSecondsAfterFinished: 604800
+  activeDeadlineSeconds: {{ active_deadline_seconds | default(43200) }}
+  template:
+    metadata:
+      labels:
+        campaign: llm-labler-11k
+        wave: "{{ wave }}"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: main
+          image: {{ image }}
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              mkdir -p /workspace/llm-labler/results/_outbox
+              cd /workspace/llm-labler
+              echo "[start] $(date -Is) experiment={{ outbox_name }}"
+              {{ command }}
+              echo "[tar] packaging output for sync..."
+              tar czf /workspace/llm-labler/results/_outbox/{{ outbox_name }}.tar.gz \
+                -C /workspace/llm-labler/results {{ output_paths }}
+              echo "[done] $(date -Is) tarball=_outbox/{{ outbox_name }}.tar.gz"
+          env:
+            - name: HF_HOME
+              value: /workspace/hf_cache
+            - name: TRANSFORMERS_CACHE
+              value: /workspace/hf_cache
+            - name: HUGGINGFACE_HUB_CACHE
+              value: /workspace/hf_cache
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            requests:
+              cpu: "{{ cpu }}"
+              memory: {{ mem }}
+{% for k, v in gpu_resources.items() %}
+              {{ k }}: {{ v }}
+{% endfor %}
+            limits:
+              cpu: "{{ cpu }}"
+              memory: {{ mem }}
+{% for k, v in gpu_resources.items() %}
+              {{ k }}: {{ v }}
+{% endfor %}
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /workspace/hf_cache
+            - name: results
+              mountPath: /workspace/llm-labler/results
+            - name: dshm
+              mountPath: /dev/shm
+{% if node_selector_products %}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values:
+{% for p in node_selector_products %}
+                      - {{ p }}
+{% endfor %}
+{% endif %}
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+        - name: results
+          persistentVolumeClaim:
+            claimName: results-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi

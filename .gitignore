@@ -35,3 +35,6 @@ unsloth_compiled_cache/
 # Misc
 .env
 *.log
+
+# NRP sync staging directory
+fetched/

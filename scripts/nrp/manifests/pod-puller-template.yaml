@@ -1,0 +1,25 @@
+# Template Pod for sync.sh — sed substitutes __NAME__ and __CMD__ before apply.
+# Pod runs the command, exits naturally (no sleep), gets kubectl-logs'd, then deleted.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: __NAME__
+  labels:
+    role: llm-labler-sync
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 1800
+  containers:
+    - name: main
+      image: alpine
+      command: ["sh", "-c"]
+      args: ["__CMD__"]
+      volumeMounts:
+        - name: results
+          mountPath: /data
+          readOnly: true
+  volumes:
+    - name: results
+      persistentVolumeClaim:
+        claimName: results-pvc
+        readOnly: true

@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: warm-hf-cache
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  activeDeadlineSeconds: 10800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: warmer
+          image: ghcr.io/doctorhoseinpour/llm-labler:latest
+          imagePullPolicy: Always
+          command: ["python", "-c"]
+          args:
+            - |
+              import os, time
+              from huggingface_hub import snapshot_download
+
+              cache_dir = "/workspace/hf_cache"
+              os.makedirs(cache_dir, exist_ok=True)
+
+              models = [
+                  "unsloth/Llama-3.2-3B-Instruct",
+                  "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+                  "unsloth/Qwen2.5-14B-Instruct-bnb-4bit",
+                  "unsloth/Qwen2.5-32B-Instruct-bnb-4bit",
+                  "sentence-transformers/all-MiniLM-L6-v2",
+              ]
+              for m in models:
+                  t0 = time.time()
+                  print(f"[warmup] downloading {m} ...", flush=True)
+                  snapshot_download(repo_id=m, cache_dir=cache_dir)
+                  print(f"[warmup] {m} done in {time.time()-t0:.1f}s", flush=True)
+              print("[warmup] all models cached at", cache_dir, flush=True)
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+              ephemeral-storage: 8Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+              ephemeral-storage: 8Gi
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /workspace/hf_cache
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc

@@ -1,0 +1,20 @@
+results/
+hf_cache/
+venv/
+.venv/
+unsloth_compiled_cache/
+__pycache__/
+**/__pycache__/
+docs/legacy/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.faiss_cache/
+.ipynb_checkpoints/
+*.ipynb
+fetched/
+
+# Old datasets (we only need issues11k*.csv)
+issues3k.csv
+issues30k.csv
