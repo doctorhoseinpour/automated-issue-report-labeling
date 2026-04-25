@@ -10,25 +10,26 @@ This file gives Claude persistent context about this research project. Read it a
 
 **Goal:** An academic research paper comparing four approaches to classifying GitHub issues into `bug`, `feature`, or `question`.
 
+**Sole dataset:** 11-project benchmark — `issues11k.csv` (6,600 issues, 11 projects × 600, balanced bug/feature/question). The 3k and 30k datasets are deprecated; their analyses are preserved under [docs/legacy/](docs/legacy/) for related-work / interventions-tried discussion only.
+
 ### Four Approaches
 
 1. **RAGTAG (RAG-enhanced few-shot prompting)** — primary method
-   - Uses FAISS to retrieve similar labeled issues from the training set
-   - Includes them as few-shot examples in the LLM prompt (chat format, `<label>X</label>` XML tags)
-   - Uses assistant prefill (`<label>`) so the model only generates the label + closing tag
-   - No training required — inference only
-   - Variables studied: k=0,1,3,5,9,15 retrieved examples; context window=2048/4096/8192/16384
+   - FAISS retrieval over the labeled training set, top-k neighbors injected as few-shot examples in chat format with `<label>X</label>` XML tags
+   - Assistant prefill (`<label>`) so the model only generates the label + closing tag
+   - Inference-only — no training
+   - Two settings: **project-agnostic** (one FAISS index over all 3,300 train issues) and **project-specific** (separate index per project, 300 train each)
+   - k values for the 11k benchmark: 0 (zero-shot), 1, 3, 6, 9 (justified by VTAG's plateau analysis on this dataset)
 
 2. **VTAG (Voting-based RAG baseline, no LLM)** — retrieval floor
-   - Script: [vtag.py](vtag.py). Full results + analysis: [docs/VTAG_FINDINGS.md](docs/VTAG_FINDINGS.md). Raw prediction/eval CSVs live under `results/vtag/` and `results/vtag_embed/` (gitignored).
-   - For each test issue, retrieve top-k neighbors and vote on their labels. Zero GPU at inference, ~3 ms per k for 1,497 issues.
+   - Script: [vtag.py](vtag.py)
+   - For each test issue, retrieve top-k neighbors and vote on their labels. Zero GPU at inference.
    - Voting schemes: `similarity` (Dudani-weighted k-NN, paper default), `shepard` (sim²), `majority` (uniform).
-   - **Canonical config for the paper: `sentence-transformers/all-MiniLM-L6-v2` + `similarity` voting. Best macro-F1 = 0.6451 @ k=16.** This is the "retrieval floor" any RAGTAG number must beat to justify the LLM.
-   - Ablations already run but **excluded from main paper** (noted as future work): voting scheme (shepard 0.6465, majority 0.6444 — spread 0.002) and embedder swap (bge-base 0.6692, bge-large 0.6675 — both beat MiniLM by ~0.022). Raw data retained in [results/vtag/](results/vtag/) and [results/vtag_embed/](results/vtag_embed/).
+   - Establishes a pure-retrieval floor any RAGTAG number must clear to justify the LLM.
 
 3. **Flawed Fine-Tune Baseline**
-   - Faithful reproduction of a state-of-the-art paper's pipeline with **all original flaws preserved**
-   - Flaws: train/inference prompt mismatch, chain-of-thought prefix in training but not inference, hardcoded `EOS_TOKEN = "<|endoftext|>"`, `max_steps=60` (not full epoch), no input truncation, invalid predictions skipped from metrics, `top_p=0`, `adamw_8bit`
+   - Faithful reproduction of a state-of-the-art paper's pipeline with all original flaws preserved
+   - Flaws: train/inference prompt mismatch, chain-of-thought prefix in training but not inference, hardcoded `EOS_TOKEN = "<|endoftext|>"`, `max_steps=60`, no input truncation, invalid predictions skipped from metrics, `top_p=0`, `adamw_8bit`
    - Purpose: demonstrate that published fine-tuning results are inflated due to implementation bugs
 
 4. **Fixed Fine-Tune**
@@ -37,30 +38,25 @@ This file gives Claude persistent context about this research project. Read it a
 
 ---
 
-## Research Narrative (Paper Claims)
+## Research Questions
 
-1. The fine-tuning baseline from literature was implemented with significant flaws that inflate reported results. We reproduced it faithfully and then fixed it.
-2. RAGTAG achieves competitive or superior performance to correctly-implemented fine-tuning, while requiring **no training** and **lower peak GPU memory**. We study RAGTAG's best configuration (optimal k and context window) across models and datasets.
-3. VTAG establishes a **pure-retrieval floor** (macro-F1 = 0.6451) that RAGTAG must clear. Without VTAG, the obvious reviewer question — *"is your LLM doing anything beyond k-NN?"* — has no concrete answer. With it, the paper quantifies the LLM's marginal value as (RAGTAG − VTAG).
-
-## VTAG → RAGTAG prompt-design insights (not yet implemented)
-
-VTAG's per-class error pattern and k-curve suggest three concrete RAGTAG prompt tweaks worth testing. User is deciding whether to pursue; noted here so they aren't re-derived later.
-
-1. **Reduce k from 15 to 7–9.** VTAG plateaus at k≈7 (F1=0.6427) and peaks at k=16 (0.6451) — +0.002 over 9 extra neighbors of mostly-noise. For RAGTAG, the LLM has to *read* that noise. Combined with the prompt-token analysis (k=15 only fits 44.7% of ctx=8k prompts; k=7 fits ~90%+), this is free tokens and less truncation.
-2. **Inject the retrieval vote as an explicit prior.** After few-shot examples, add *"Among these examples, the label distribution is {bug: X, feature: Y, question: Z}."* VTAG proves this distribution alone carries 0.645 F1. Giving the LLM the k-NN vote explicitly lets it anchor when it agrees and reason about *why* when it disagrees. Biggest paper-worthy candidate — novel, cheap, directly ablatable.
-3. **Bug-vs-feature disambiguation in the system prompt.** VTAG shows feature precision ~0.76 but recall ~0.55: features are systematically mislabeled as bugs. An explicit rule targeting this confusion pair should help. Example: *"If the issue requests new or improved functionality, label feature even when current behavior is called insufficient."*
+1. **RQ1 — Comparison.** How do RAGTAG, VTAG, and zero-shot perform in project-specific vs project-agnostic settings, per-project and overall? Built-in finding: 88.3% of agnostic-retrieved neighbors come from the same project, so agnostic ≈ project-specific for RAGTAG — that equivalence is itself a result.
+2. **RQ2 — Diagnosis.** Why do RAGTAG and zero-shot fall short of fine-tune-agnostic? The leading hypothesis is bug-bias in retrieval/prompting (feature precision is high but recall is low; features get mislabeled as bugs).
+3. **RQ3 — Bridging.** Can we close the gap between RAGTAG and fine-tuning without training? Margin-based retrieval debiasing (margin=3) is the validated intervention so far on Llama-3B and Llama-8B. A second method is under consideration (vote-prior injection, prompt-level disambiguation, or batch calibration).
 
 ---
 
 ## Datasets
 
-| File | Size | Split |
-|------|------|-------|
-| `issues3k.csv` | ~3,000 issues | `--test_size 0.5` → ~1,497 test / ~1,498 train (balanced bug/feature/question) |
-| `issues30k.csv` | ~30,000 issues | Used after best RAGTAG config is found on 3k, to test generalizability |
+| File | Size | Purpose |
+|------|------|---------|
+| `issues11k.csv` | 6,600 issues | Full pool (11 projects × 600 each) |
+| `issues11k_train.csv` | ~3,300 issues | Train split (stratified, project-balanced) |
+| `issues11k_test.csv` | ~3,300 issues | Test split (stratified, project-balanced) |
 
-**Shared splits:** The FAISS indexing step saves `train_split.csv` and `test_split.csv` in the neighbors directory. Both fine-tuning scripts accept `--train_csv` and `--test_csv` to use these exact splits. All three approaches are evaluated on identical data.
+The 11 projects: `ansible/ansible`, `bitcoin/bitcoin`, `dart-lang/sdk`, `dotnet/roslyn`, `facebook/react`, `flutter/flutter`, `kubernetes/kubernetes`, `microsoft/TypeScript`, `microsoft/vscode`, `opencv/opencv`, `tensorflow/tensorflow`.
+
+The orchestrator generates project-specific train/test split CSVs and FAISS indices on first run. Splits are deterministic from the source CSVs.
 
 ---
 
@@ -71,144 +67,89 @@ All models loaded via **Unsloth** (optimized inference + training):
 | Model | Size | Notes |
 |-------|------|-------|
 | `unsloth/Llama-3.2-3B-Instruct` | 3B | Runs on local 4090 |
-| `unsloth/Meta-Llama-3.1-8B-Instruct` | 8B 4-bit | Runs on local 4090 |
-| `unsloth/Qwen2.5-14B-Instruct` | 14B 4-bit | Requires NRP GPU for fine-tuning |
-| `unsloth/Qwen2.5-32B-Instruct` | 32B 4-bit | Requires NRP A100 |
+| `unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit` | 8B 4-bit | Runs on local 4090 |
+| `unsloth/Qwen2.5-14B-Instruct-bnb-4bit` | 14B 4-bit | Inference fits 4090; FT needs 48GB+ |
+| `unsloth/Qwen2.5-32B-Instruct-bnb-4bit` | 32B 4-bit | Inference fits 4090 (~23GB); FT needs A100 80GB |
 
 ---
 
 ## Infrastructure
 
-### NRP (Nautilus Research Platform)
-- Shared Kubernetes research cluster
-- Access via JupyterHub pods
-- GPUs available: **NVIDIA A6000 (48GB)** and **A100 (80GB)**
-- Home directories may be on slow network storage → use `--nrp` flag to redirect HF model cache to `hf_cache/` inside the project folder
-- Sessions can be killed → launch long experiments with `nohup ... &` to survive disconnects
-
-### Local Machine
-- **RTX 4090 (24GB VRAM)**
-- Can run 3B and 8B models (RAGTAG + fine-tuning)
-- 14B and 32B fine-tuning requires NRP
-
-### `--nrp` flag
-Sets `HF_HOME` / `TRANSFORMERS_CACHE` to `./hf_cache/` so model downloads stay on fast local storage inside the project directory.
+- **Local machine:** RTX 4090 (24GB VRAM). Runs all RAGTAG / zero-shot / VTAG inference and Llama-3B / Llama-8B fine-tuning.
+- **NRP (Nautilus Research Platform):** Shared Kubernetes cluster, namespace `bgsu-cs-heydarnoori`. Used for Qwen fine-tuning and Qwen-32B re-runs. Migration to Kubernetes Jobs (replacing JupyterHub usage) is planned but not yet implemented; see the next session's NRP plan.
+- **OSC Ascend:** Available as a backup for fine-tuning via `run_server_11k.sh` (Slurm, A100 partition).
 
 ---
 
 ## Pipeline Architecture
 
-### Primary Entry Point: `run_experiment.sh`
-Unified orchestrator for each dataset × model combination:
-1. Runs RAGTAG (produces shared train/test splits)
-2. Runs flawed fine-tune (uses shared splits)
-3. Runs fixed fine-tune (uses shared splits)
+### `run_11k_experiments.sh` — primary orchestrator
+End-to-end pipeline for the 11-project benchmark across both settings (agnostic + project-specific). Phases: train/test split CSVs → FAISS indexes → zero-shot → RAGTAG (k=1,3,6,9) → fine-tuning → VTAG → evaluation → summary report.
 
-Flags: `--skip_ragtag`, `--skip_flawed_ft`, `--skip_fixed_ft`
-Resume logic: if prediction files already exist for a step, that step is skipped.
+Key flags:
+- `--mode local|remote` — local trains Llama-3B/8B; remote trains Qwen-14B/32B
+- `--setting agnostic|specific|both`
+- `--skip_indexing`, `--skip_zero_shot`, `--skip_ragtag`, `--skip_ft`, `--skip_vtag`, `--skip_eval` — phase-level resume
 
-### Context Window Study: `context_experiment.sh`
-Batch runner that calls `run_experiment.sh` four times with `max_seq_length=2048/4096/8192/16384`.
-- Only the first run (2048) includes fine-tuning (fine-tune performance doesn't vary with RAGTAG's context window)
-- Results go to separate directories: `results/issues3k_ctx2048/`, `results/issues3k_ctx4096/`, etc.
+Built-in resume: re-running with the same flags skips phases whose output files already exist.
 
-### `build_and_query_index.py`
-- Loads dataset, deduplicates, stratified-splits into train/test
-- Builds FAISS index from **training data only**
-- Queries index to retrieve k nearest neighbors for each test issue
-- Saves `train_split.csv` and `test_split.csv` for downstream fine-tuning
-- Neighbor CSVs include a `neighbor_similarity` column (cosine sim from `IndexFlatIP` over L2-normalized vectors). Required by VTAG's weighted voting.
+### `run_11k_debias_qwen.sh` — debiased RAGTAG for Qwen on 11k
+Runs debiased RAGTAG (margin=3, k=1,3,6,9, ctx=8192) for Qwen-14B and Qwen-32B across all 11 projects. Expects neighbor files from a prior `run_11k_experiments.sh` run. Outputs to `results/issues11k_debias_m3/...`.
 
-### `vtag.py`
-- Non-LLM voting baseline. Reads a neighbors CSV with similarity scores, votes on labels, writes predictions in the same schema as RAGTAG for evaluate.py compatibility.
-- Usage: run `build_and_query_index.py` once with a large-enough `--top_ks` (e.g. 30), then call `vtag.py --neighbors_csv ... --voting {similarity,shepard,majority} --ks 1,2,...,30`.
-- Deterministic tie-break (label of highest-similarity tied neighbor). No seeds.
-- Auto-invokes `evaluate.py` per k if `--eval_dir` is passed.
+### `run_server_11k.sh` — Slurm wrapper for OSC
+SBATCH script that calls `run_11k_experiments.sh --mode remote --skip_indexing --skip_zero_shot --skip_ragtag --skip_vtag` on an A100 partition. 16h wall time.
 
-### `random_neighbors.py`
-- Ablation tool: generates neighbor CSVs with **random** training examples instead of FAISS-retrieved ones.
-- Same CSV schema as `build_and_query_index.py` output — drop-in replacement for `llm_labeler.py`.
-- Accepts `--seeds` for multiple runs (default: 1,2,3) to account for variance.
-- Output: `{output_dir}/seed{N}/neighbors_k{K}.csv` per seed.
-- Purpose: proves RAGTAG's gain comes from retrieval quality, not just having few-shot examples.
+### `build_11k_index.py` — FAISS indexing for the 11k benchmark
+Builds project-agnostic and project-specific FAISS indices from `issues11k_train.csv`, queries with `issues11k_test.csv`, writes `neighbors_k{N}.csv` per setting. Imports `clean_text` and `build_faiss_index` from [build_and_query_index.py](build_and_query_index.py) (the latter is kept solely as a helper module — its CLI is no longer used).
 
-### `analyze_prompt_tokens.py`
-- Tokenizer-only analysis of RAGTAG prompt-token distributions (no GPU, no model weights).
-- Reports percentiles + % of prompts fitting each context window (2k/4k/8k/16k).
-- Uses real FAISS neighbors if `--neighbors_dir` is given, otherwise random train samples.
-- Key finding: at k=15 only 44.7% of prompts fit in ctx=8k; at k=9 it's 67.5%. Informs k-vs-context-window tradeoffs.
+### `llm_labeler.py` — RAGTAG inference
+Loads the model once via Unsloth, runs all k values sequentially. Chat format with few-shot examples as user/assistant turns, assistant prefill (`<label>`), XML parsing + regex fallback, smart proportional truncation when prompt exceeds `max_seq_length`. Supports `--inference_batch_size` (left-padded), `--debias_retrieval` + `--debias_margin` for the RQ3 intervention, and `--cache_dir` for HF cache redirection.
 
-### `llm_labeler.py`
-- Loads model **once** via Unsloth, then runs all k values sequentially
-- Chat format with few-shot examples as user/assistant turns
-- Assistant prefill (`<label>`) for instruct models
-- XML parsing + regex fallback for output extraction
-- Smart truncation: compresses neighbor bodies proportionally when prompt exceeds `max_seq_length`
-- Supports `--inference_batch_size` for batched GPU inference with left-padding
+### `fixed_fine-tune.py` — corrected fine-tune baseline
+Accepts external `--train_csv` / `--test_csv` for shared splits. Tracks absolute peak GPU memory across training and inference for fair comparison against RAGTAG.
 
-### `baseline_finetune_flawed.py`
-- Accepts `--train_csv` and `--test_csv` for external splits
-- All original flaws intentionally preserved (see above)
-- Supports `--inference_batch_size`, `--max_new_tokens`
-- Tracks absolute peak GPU memory across training + inference phases
+### `baseline_finetune_flawed.py` — flawed-FT reproduction
+Same external split support; flaws preserved intentionally (see Approach 3 above).
 
-### `fixed_fine-tune.py`
-- Same external split support
-- All flaws corrected (see above)
-- Same batched inference and GPU tracking as flawed script
+### `evaluate.py` — metrics
+Per-label and macro precision/recall/F1, accuracy, invalid prediction rate. Works on prediction CSVs from any approach.
 
-### `evaluate.py`
-- Computes per-label precision/recall/F1, macro/weighted averages, accuracy, invalid prediction rate
-- Works on prediction CSVs from any approach
-
-### `run_pipeline.sh`
-- RAGTAG-only orchestrator (predecessor to `run_experiment.sh`)
-- Still functional but `run_experiment.sh` is the primary entry point
-
----
-
-## Key CLI Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--max_seq_length` | 16384 | Context window for RAGTAG inference. Tested: 2048, 4096, 8192, 16384 |
-| `--ft_max_seq_length` | 2048 | Context window for fine-tuning (matches original paper) |
-| `--max_new_tokens` | 50 | Max generated tokens for all approaches |
-| `--inference_batch_size` | 1 | Batch size for GPU inference |
-| `--top_ks` | `1,3,9,15` | Retrieved neighbors for RAGTAG. k=0 = zero-shot |
-| `--test_size` | 0.5 | Test set fraction per label (issues3k uses 0.5) |
-| `--nrp` | off | Redirect HF cache to `./hf_cache/` |
+### `vtag.py` — voting baseline
+Reads a neighbors CSV with similarity scores, votes on labels, writes predictions in the same schema as RAGTAG so `evaluate.py` works as-is. Auto-invokes `evaluate.py` per k if `--eval_dir` is passed.
 
 ---
 
 ## Output Structure
 
-Each run produces:
 ```
-results/run_<timestamp>/
-  neighbors/
-    train_split.csv          # shared train split
-    test_split.csv           # shared test split
-    neighbors_k1.csv         # retrieved neighbors per test issue
-    neighbors_k3.csv
-    ...
-  predictions/
+results/issues11k/
+  agnostic/
+    neighbors/
+      train_split.csv
+      test_split.csv
+      neighbors_k{3,9,30}.csv
     <model_tag>/
-      preds_zero_shot.csv    # ground truth + predicted label + raw output + token counts
-      preds_k1.csv
-      ...
-      cost_metrics.csv       # timing, token usage, GPU memory
-  evaluations/
-    <model_tag>/
-      eval_k0.csv            # per-label and aggregate P/R/F1
-      eval_k1.csv
-      ...
-  all_results.csv            # aggregated evaluations (single run)
-  all_cost_metrics.csv       # aggregated cost metrics (single run)
-  timing.csv                 # per-stage wall-clock time
-```
+      ragtag/
+        predictions/preds_{zero_shot,k1,k3,k6,k9}.csv
+        evaluations/eval_{zero_shot,k1,k3,k6,k9}.csv
+      finetune_fixed/
+        preds_finetune_fixed.csv
+        eval_finetune_fixed.csv
+    vtag/
+      predictions/, evaluations/
+  project_specific/
+    <project_tag>/         # 11 directories, e.g. ansible_ansible, facebook_react
+      neighbors/
+      <model_tag>/
+        ragtag/, finetune_fixed/
+      vtag/
 
-Context window experiments use separate root dirs: `results/issues3k_ctx2048/`, etc.
+results/issues11k_debias_m3/
+  <model_tag>/
+    ragtag/
+      predictions/preds_k{1,3,6,9}.csv
+      evaluations/eval_k{1,3,6,9}.csv
+```
 
 ---
 
@@ -224,41 +165,22 @@ This ensures the reported peak reflects true maximum VRAM usage for fair compari
 
 ---
 
-## Experiment Design
+## Current Status — Remaining Experiments
 
-### Context Window Study
-Run `context_experiment.sh` to test RAGTAG at 4 context sizes × all k values × all models.
-Fine-tuning only runs once (at ctx=2048) since it's unaffected by RAGTAG's context window.
+The 11k benchmark is partially complete. Remaining work tracked for the NRP migration plan:
 
-### K Study
-k=0 (zero-shot), 1, 3, 5, 9, 15 neighbors. Find the best k per model.
+1. **Qwen-32B RAGTAG re-run** (agnostic + project-specific) — prior run had OOM / invalid outputs; needs clean re-execution
+2. **Qwen-14B fine-tune on 11k** (agnostic + project-specific)
+3. **Qwen-32B fine-tune on 11k** (agnostic + project-specific) — blocked on NRP A100 quota approval
+4. **Qwen-14B debias on 11k** (margin=3, k=1,3,6,9, project-specific) — script ready: `run_11k_debias_qwen.sh`
+5. **Qwen-32B debias on 11k** (same config) — same script
 
-### Scale Generalization
-After finding best config on `issues3k.csv`, re-run on `issues30k.csv` to verify results generalize.
+A second RQ3 intervention method is under discussion; vote-prior injection is the leading candidate but not yet implemented.
 
 ---
 
-## Known Issues / Current Status
+## Conventions
 
-- **No cross-directory aggregation:** Each context window experiment has its own `all_results.csv`. A script to merge results across `results/issues3k_ctx*/` for paper analysis still needs to be written.
-- **VTAG complete** on issues3k with MiniLM+similarity (canonical), plus voting-scheme and embedder ablations (deferred to future work). Findings: [docs/VTAG_FINDINGS.md](docs/VTAG_FINDINGS.md).
-- **Analysis / findings docs live in `docs/`** (tracked in git). Raw run artifacts stay under `results/` (gitignored). Any future analysis writeups should go in `docs/` so they survive `results/` being cleaned.
-- Next steps: run data efficiency experiment, run Qwen debias, analyze final results, write paper.
-
-### Data Efficiency Crossover Experiment
-- **Scripts:** `subsample_and_index.py` + `run_data_efficiency.sh`
-- **Subsample sizes:** 1.5k, 3k, 9k, 15k from 30k training pool (27k endpoint already exists)
-- **Results dir:** `results/issues30k_efficiency/n{1500,3000,9000,15000}/`
-- **Execution:** `--mode local` for RAGTAG (all models) + Llama FT; `--mode remote --nrp` for Qwen FT
-- **Best RAGTAG configs:** Llama-3B k=3/ctx=8192, Llama-8B k=9/ctx=8192, Qwen-14B k=9/ctx=8192, Qwen-32B k=3/ctx=8192
-
-### Debiased Retrieval — Qwen Models
-- **Script:** `run_debias_qwen.sh`
-- **Models:** Qwen-14B and Qwen-32B, both k=9, margin=3
-- **Execution:** `--skip_30k` for local 3k runs; `--skip_3k --nrp` for remote 30k runs
-- **Output:** integrates into existing `results/issues{3k,30k}_debias_m3/` alongside Llama results
-
-### Remote Server Setup
-- Server has code + `issues30k.csv` (NOT `results/` or `issues3k.csv`)
-- Use `requirements-server.txt` for portable install (omits hardware-specific CUDA pins)
-- Splits are deterministic — regenerated from dataset on first run
+- **`results/` is paper-archival.** Never delete, move, or rename anything inside it during refactors. Even content from deprecated 3k/30k experiments stays as evidence trail.
+- **Findings docs live in `docs/`** (tracked in git). The active set is `11K_BENCHMARK_FINDINGS.md`, `PAPER_NARRATIVE.md`, and `professor_meeting_slides.md`. Legacy docs (3k/30k era) live in [docs/legacy/](docs/legacy/) and inform discussion sections only.
+- **Splits are deterministic** — regenerated from the source CSV on first run; safe to delete and re-create.

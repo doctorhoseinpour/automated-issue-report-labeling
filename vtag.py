@@ -31,8 +31,8 @@ reproducible, no seeds).
 
 Usage:
   # Retrieve neighbors with similarity scores first (one-time):
-  python build_and_query_index.py --dataset issues3k.csv --top_ks "30" \\
-      --test_size 0.5 --output_dir results/vtag/neighbors
+  python build_11k_index.py --train_csv issues11k_train.csv --test_csv issues11k_test.csv \\
+      --top_ks "30" --output_dir results/issues11k/agnostic/neighbors
 
   # Run VTAG:
   python vtag.py \\

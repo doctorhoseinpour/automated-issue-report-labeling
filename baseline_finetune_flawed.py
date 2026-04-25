@@ -23,9 +23,10 @@ identical to fixed_fine-tune.py and build_and_query_index.py (RAGTAG).
 Usage:
   python baseline_finetune_flawed.py \
     --model unsloth/Llama-3.2-3B-Instruct \
-    --dataset issues3k.csv \
-    --test_size 0.5 \
-    --output_dir results/flawed_baseline/llama3b
+    --dataset issues11k.csv \
+    --train_csv issues11k_train.csv \
+    --test_csv issues11k_test.csv \
+    --output_dir results/issues11k/agnostic/<tag>/finetune_flawed
 """
 
 import argparse

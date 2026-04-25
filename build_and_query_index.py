@@ -12,12 +12,8 @@ Split logic:
   - FAISS index is built ONLY from train_df.
 
 Usage:
-  python build_and_query_index.py \
-    --dataset data/issues3k.csv \
-    --top_ks 1,3,9,15 \
-    --test_size 0.5 \
-    --embedding_model sentence-transformers/all-MiniLM-L6-v2 \
-    --output_dir results/neighbors
+  Kept as a helper module (clean_text, build_faiss_index) imported by build_11k_index.py.
+  Its CLI is no longer the active entry point; use build_11k_index.py for the 11k benchmark.
 """
 
 from __future__ import annotations
