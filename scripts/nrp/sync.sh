@@ -56,10 +56,13 @@ spawn_pod() {
   manifest_tmp=$(mktemp -t puller-pod-XXXXXX.yaml)
   trap 'rm -f "$manifest_tmp"' RETURN
 
-  # Substitute placeholders. Note: __CMD__ is a shell command string passed to
-  # `sh -c`. Quotes inside the command must already be escaped for YAML safety;
-  # the callers below use only simple commands (`ls`, `cat`).
-  sed -e "s|__NAME__|$name|g" -e "s|__CMD__|$cmd|g" "$TEMPLATE" >"$manifest_tmp"
+  # Substitute placeholders via python — sed breaks when __CMD__ contains
+  # `|`, `&`, etc. Python handles arbitrary command strings cleanly.
+  python3 -c '
+import sys
+t = open(sys.argv[1]).read()
+print(t.replace("__NAME__", sys.argv[2]).replace("__CMD__", sys.argv[3]))
+' "$TEMPLATE" "$name" "$cmd" >"$manifest_tmp"
 
   kubectl apply -f "$manifest_tmp" >&2
   # Wait for the Pod to terminate (success OR failure).
@@ -90,15 +93,23 @@ fi
 new_count=0
 fail_count=0
 while IFS= read -r tarball; do
+  # Trim any whitespace / CR that might have come from kubectl logs.
+  tarball=$(echo "$tarball" | tr -d '[:space:]')
   [[ -z "$tarball" ]] && continue
   if grep -Fxq "$tarball" "$LEDGER"; then
     continue
   fi
   echo "[sync] pulling $tarball"
   out_path="$FETCHED_DIR/$tarball"
-  pull_pod="sync-puller-$SUFFIX-$(echo "$tarball" | tr -c 'a-z0-9-' '-' | cut -c1-30)"
+  # Build a k8s-valid pod name: lowercase alphanumeric + dashes, must end in
+  # alphanumeric. Strip the file extension first, then sanitize, then drop any
+  # leading/trailing dashes the sanitization left behind.
+  tar_slug=$(echo "${tarball%.tar.gz}" | tr -c 'a-z0-9-' '-' | sed -E 's/^-+|-+$//g' | cut -c1-30 | sed -E 's/-+$//')
+  pull_pod="sync-puller-$SUFFIX-$tar_slug"
 
-  if ! spawn_pod "$pull_pod" "cat /data/_outbox/$tarball" >"$out_path"; then
+  # base64-encode inside the pod so kubectl logs (which mangles binary)
+  # delivers the bytes faithfully. Decode locally.
+  if ! spawn_pod "$pull_pod" "base64 /data/_outbox/$tarball" | base64 -d >"$out_path" 2>/dev/null; then
     echo "[sync] FAILED to stream $tarball" >&2
     rm -f "$out_path"
     fail_count=$((fail_count + 1))
