@@ -3,7 +3,7 @@
 # knows how to render Jobs for each wave type.
 
 # Default container image. submit.py overrides via --image.
-image: ghcr.io/doctorhoseinpour/llm-labler:ef6bd30
+image: ghcr.io/doctorhoseinpour/llm-labler:7028c1a
 
 projects:
   - ansible_ansible
