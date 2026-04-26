@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip python3-venv git curl ca-certificates tar gzip \
+        python3 python3-pip python3-venv python3-dev git curl ca-certificates tar gzip \
         build-essential \
     && rm -rf /var/lib/apt/lists/*
 
