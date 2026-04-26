@@ -237,6 +237,7 @@ def build_finetune_jobs(plan: dict, image: str, wave: dict) -> list[dict]:
             f"--max_new_tokens 50 "
             f"--inference_batch_size 1 "
             f"--output_dir {ft_dir} "
+            f"--skip_save_adapter "
             f"--cache_dir {CACHE_DIR_IN_POD}"
         )
         name = f"w{wave['id']}-{model['short']}-ft-agnostic"
@@ -260,6 +261,7 @@ def build_finetune_jobs(plan: dict, image: str, wave: dict) -> list[dict]:
                 f"--max_new_tokens 50 "
                 f"--inference_batch_size 1 "
                 f"--output_dir {ft_dir} "
+                f"--skip_save_adapter "
                 f"--cache_dir {CACHE_DIR_IN_POD}"
             )
             name = f"w{wave['id']}-{model['short']}-ft-{k8s_safe(proj)}"

@@ -235,6 +235,8 @@ def main():
                         help="Directory to save/load LoRA adapters")
     parser.add_argument("--cache_dir", type=str, default=None,
                         help="HuggingFace model cache directory")
+    parser.add_argument("--skip_save_adapter", action="store_true",
+                        help="Skip saving LoRA adapter weights post-training (used for ephemeral runs where the adapter is never reloaded)")
     args = parser.parse_args()
 
     test_size = parse_test_size(args.test_size)
@@ -405,6 +407,7 @@ def main():
                 lr_scheduler_type="linear",
                 seed=3407,
                 output_dir=os.path.join(args.output_dir, "checkpoints"),
+                save_strategy="no",
                 report_to="none",
             ),
         )
@@ -416,10 +419,13 @@ def main():
         monitor.record_phase("Training", train_start)
         monitor.log("Training Complete")
 
-        print(f"Saving LoRA adapters to: {args.adapter_dir}")
-        os.makedirs(args.adapter_dir, exist_ok=True)
-        model.save_pretrained(args.adapter_dir)
-        tokenizer.save_pretrained(args.adapter_dir)
+        if args.skip_save_adapter:
+            print("Skipping adapter save (--skip_save_adapter)")
+        else:
+            print(f"Saving LoRA adapters to: {args.adapter_dir}")
+            os.makedirs(args.adapter_dir, exist_ok=True)
+            model.save_pretrained(args.adapter_dir)
+            tokenizer.save_pretrained(args.adapter_dir)
 
     # Capture peak GPU after training (includes model load + training)
     gpu_peak_training_mb = torch.cuda.max_memory_allocated() / (1024**2) if torch.cuda.is_available() else 0.0
