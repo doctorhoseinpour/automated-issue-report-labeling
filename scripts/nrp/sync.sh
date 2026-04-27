@@ -134,7 +134,15 @@ while IFS= read -r tarball; do
   while IFS= read -r pred; do
     [[ -z "$pred" ]] && continue
     pred_dir="$(dirname "$pred")"
-    eval_dir="$(dirname "$pred_dir")/evaluations"
+    # RAGTAG/debias preds live in <output_subdir>/predictions/preds_*.csv
+    # → eval goes alongside in <output_subdir>/evaluations/
+    # FT preds live directly in finetune_fixed/preds_finetune_fixed.csv
+    # → eval goes in finetune_fixed/evaluations/
+    if [[ "$(basename "$pred_dir")" == "predictions" ]]; then
+      eval_dir="$(dirname "$pred_dir")/evaluations"
+    else
+      eval_dir="$pred_dir/evaluations"
+    fi
     eval_file="$eval_dir/$(basename "$pred" | sed 's/^preds_/eval_/')"
     mkdir -p "$eval_dir"
     if [[ -f "$eval_file" ]]; then
