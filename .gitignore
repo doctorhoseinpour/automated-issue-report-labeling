@@ -4,6 +4,9 @@
 *.json
 *.jsonl
 
+# Exception: analysis output CSVs are paper artifacts (small, derived from results/)
+!docs/analysis/*.csv
+
 # Results
 results/
 
