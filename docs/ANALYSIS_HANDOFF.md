@@ -46,6 +46,7 @@ VTAG is a first-class baseline alongside the LLM-based approaches — we built i
 |---|---|
 | **Zero-shot** | No retrieval, no training. The model sees only the issue. |
 | **VTAG** (no LLM) | Voting-based k-NN over the same FAISS index RAGTAG uses. Voting schemes available: `similarity` (Dudani-weighted, paper default), `shepard` (sim²), `majority`. Zero GPU at inference, no LLM call. Model-independent — one VTAG number per setting per k applies to all four models. |
+| **Debiased VTAG (margin = 3)** | Same bug-class debias logic as RAGTAG-debias, applied to VTAG voting. Added 2026-04-29 as a mechanism ablation. Both agnostic and project-specific. See section 5.4b for results. |
 | **RAGTAG** | FAISS retrieval + few-shot prompt with `<label>X</label>` XML tags. k ∈ {1, 3, 6, 9}; k = 0 is treated as zero-shot. |
 | **Debiased RAGTAG (margin = 3)** | Retrieval-time class-rebalancing intervention. Project-specific only by design. k ∈ {1, 3, 6, 9}. |
 | **Fine-tuning** | LoRA via Unsloth on the same train split that RAGTAG retrieves from. Both agnostic (3,300 examples) and project-specific (300 examples per project). |
@@ -105,7 +106,32 @@ VTAG numbers are the same regardless of model (no LLM in the loop). Best k for b
 | Agnostic | 0.565 | 0.565 | 0.579 | 0.591 | 0.598 |
 | Project-specific (avg) | 0.556 | 0.556 | 0.563 | 0.572 | 0.578 |
 
-Every Qwen approach above zero-shot beats this floor in both settings — even Qwen-3B zero-shot agnostic (0.613) clears VTAG-9 agnostic (0.598). The new session should still report this anchor: it justifies the LLM cost and frames how much work the LLM is actually doing on top of retrieval.
+Every Qwen approach above zero-shot beats this floor in both settings — even Qwen-3B zero-shot agnostic (0.613) clears VTAG-9 agnostic (0.598). Report this anchor: it justifies the LLM cost and frames how much work the LLM is doing on top of retrieval.
+
+### 5.4b Debiased VTAG — same intervention, no LLM (mechanism ablation)
+
+We ran the same margin-3 bug-class debias on VTAG (drop all bug neighbors when `bug_count - question_count ≤ 3`, fall back to original top-k if that would empty the set). Outputs at `results/issues11k/{agnostic,project_specific/<proj>}/vtag_debias_m3/{predictions,evaluations}/eval_k{1,3,6,9}.csv`. Implementation: `vtag.py --debias_retrieval --debias_margin 3` (added 2026-04-29).
+
+Macro-F1 deltas (debias − plain):
+
+| Setting | k=1 | k=3 | k=6 | k=9 |
+|---|---:|---:|---:|---:|
+| Agnostic | +0.000 | −0.013 | +0.000 | **+0.006** |
+| Project-specific (avg) | +0.000 | −0.011 | −0.000 | **+0.007** |
+
+Tiny aggregate wins at k=9 (+0.006/+0.007), much smaller than RAGTAG-debias gains for any Qwen size (+0.017 to +0.052 at k=9). Per-project: debias-VTAG wins 7/11 at k=9 — mediocre, with `microsoft_vscode` losing 0.094 and `tensorflow_tensorflow`/`flutter_flutter` winning 0.09+.
+
+Per-class shift, agnostic k=9 (smoking gun for the mechanism story):
+
+| class | precision Δ | recall Δ |
+|---|---:|---:|
+| bug | **+0.098** | **−0.192** |
+| feature | −0.030 | +0.048 |
+| question | −0.054 | **+0.155** |
+
+Debias-VTAG works exactly as expected: bug recall crashes 19 points (bug evidence is thrown away in many cases), question recall jumps 15 points (question wins by default in borderline cases), bug precision rises (the bugs that survive are very confident). The macro-F1 gain is marginal because the bug-recall crash nearly cancels the question/feature recall gains.
+
+The contrast with RAGTAG-debias matters: an LLM uses the rebalanced few-shots intelligently (it can still predict bug from the issue text itself), so RAGTAG-debias gives clean +0.017–0.052 wins. VTAG can only vote on what's in the bag, so the same intervention trades bug recall for question recall almost 1-for-1. This is a clean ablation isolating the "LLM prior correction" part of the debias story from the "general class-balancing" part.
 
 ### 5.5 Pattern: FT proj-spec collapse
 
@@ -126,14 +152,16 @@ results/issues11k/
     <model_tag>/
       ragtag/{predictions, evaluations}/{eval_zero_shot, eval_k{1,3,6,9}}.csv
       finetune_fixed/eval_finetune_fixed.csv     # OR finetune_fixed/evaluations/eval_finetune_fixed.csv
-    vtag/evaluations/eval_k*.csv
+    vtag/{predictions, evaluations}/eval_k*.csv
+    vtag_debias_m3/{predictions, evaluations}/eval_k{1,3,6,9}.csv
     neighbors/                                    # FAISS-derived
   project_specific/<11 projects>/
     <model_tag>/
       ragtag/{predictions, evaluations}/...
       ragtag_debias_m3/{predictions, evaluations}/eval_k{1,3,6,9}.csv
       finetune_fixed/...                          # path varies as above
-    vtag/evaluations/eval_k*.csv
+    vtag/{predictions, evaluations}/eval_k*.csv
+    vtag_debias_m3/{predictions, evaluations}/eval_k{1,3,6,9}.csv
     neighbors/
 ```
 

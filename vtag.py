@@ -135,13 +135,32 @@ def _weight_for(nb: dict, voting: str) -> float:
     raise ValueError(f"Unknown voting scheme: {voting}")
 
 
-def vote(neighbors_sorted: List[dict], k: int, voting: str) -> str:
+def _debias_top_k(top_k: List[dict], margin: int) -> List[dict]:
+    """Mirror of llm_labeler._debias_neighbors, adapted to vtag's label field.
+
+    If bug_count - question_count <= margin (and bugs are present), drop all
+    bug neighbors. If that would empty the list, fall back to the original
+    top_k (voting needs at least one neighbor).
+    """
+    bug_count = sum(1 for n in top_k if n["label"] == "bug")
+    question_count = sum(1 for n in top_k if n["label"] == "question")
+    if bug_count > 0 and bug_count - question_count <= margin:
+        rebalanced = [n for n in top_k if n["label"] != "bug"]
+        if rebalanced:
+            return rebalanced
+    return top_k
+
+
+def vote(neighbors_sorted: List[dict], k: int, voting: str,
+         debias_retrieval: bool = False, debias_margin: int = 1) -> str:
     """
     Vote on a label using the top-k neighbors (already sorted by rank).
     Deterministic tie-break: label of the highest-similarity neighbor
     among tied candidates.
     """
     top_k = neighbors_sorted[:k]
+    if debias_retrieval:
+        top_k = _debias_top_k(top_k, debias_margin)
     scores: Dict[str, float] = defaultdict(float)
     for nb in top_k:
         scores[nb["label"]] += _weight_for(nb, voting)
@@ -168,12 +187,16 @@ def run_one_k(
     k: int,
     voting: str,
     output_csv: str,
+    debias_retrieval: bool = False,
+    debias_margin: int = 1,
 ) -> float:
     """Run VTAG at a given k, write preds CSV, return elapsed wall-time."""
     t0 = time.time()
     results = []
     for issue in neighbors_data:
-        pred = vote(issue["neighbors"], k, voting)
+        pred = vote(issue["neighbors"], k, voting,
+                    debias_retrieval=debias_retrieval,
+                    debias_margin=debias_margin)
         results.append({
             "test_idx": issue["test_idx"],
             "title": issue["title"],
@@ -221,6 +244,13 @@ def main():
     parser.add_argument("--model_name_for_eval", default=None,
                         help="Label used in evaluation CSVs "
                              "(default: VTAG-<voting>).")
+    parser.add_argument("--debias_retrieval", action="store_true",
+                        help="Apply the same bug-class debias as RAGTAG: drop "
+                             "all bug neighbors when bug_count - question_count "
+                             "<= margin (only when bugs are present, and only "
+                             "if the resulting set is non-empty).")
+    parser.add_argument("--debias_margin", type=int, default=1,
+                        help="Margin for debias trigger (default: 1).")
     args = parser.parse_args()
 
     ks = [int(x) for x in args.ks.split(",")]
@@ -269,7 +299,9 @@ def main():
             print(f"           cached accuracy = {100 * acc:.2f}%")
             continue
 
-        elapsed = run_one_k(neighbors_data, k, args.voting, output_csv)
+        elapsed = run_one_k(neighbors_data, k, args.voting, output_csv,
+                            debias_retrieval=args.debias_retrieval,
+                            debias_margin=args.debias_margin)
 
         df = pd.read_csv(output_csv)
         acc = (df["predicted_label"] == df["ground_truth"]).mean()
