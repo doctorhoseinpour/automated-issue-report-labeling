@@ -23,7 +23,7 @@ boundaries.
 ## 1. Status
 
 - The experimental campaign is **complete**. No more model runs are planned.
-- Final coverage: **4 models × 4 approaches × 11 projects × 2 settings**, all evaluated.
+- Final coverage: **4 models × 4 LLM-based approaches × 11 projects × 2 settings**, plus **VTAG** as a no-LLM voting-based retrieval baseline that is model-independent and runs once per setting per k.
 - NRP cluster is in clean steady-state (no jobs, no pods). PVCs (`hf-cache-pvc`, `results-pvc`) are preserved with model weights and synced results, but no workloads are running.
 - Llama-3B and Llama-8B data from earlier experiments is preserved on disk under `results/issues11k/.../unsloth_Llama_*`. It is **not** part of the active paper lineup. Treat as historical reference. The user explicitly chose to switch to a Qwen-only family for clean cross-scale comparison without a model-family confound.
 
@@ -40,9 +40,12 @@ Four Qwen2.5-Instruct bnb-4bit models, uniform quantization across the family fo
 
 ## 3. Approaches under comparison
 
+VTAG is a first-class baseline alongside the LLM-based approaches — we built it (`vtag.py`) to establish the pure-retrieval floor any LLM result must clear to justify the LLM. Treat it as a co-equal entry in the leaderboard, not just a sanity check.
+
 | Approach | Description |
 |---|---|
 | **Zero-shot** | No retrieval, no training. The model sees only the issue. |
+| **VTAG** (no LLM) | Voting-based k-NN over the same FAISS index RAGTAG uses. Voting schemes available: `similarity` (Dudani-weighted, paper default), `shepard` (sim²), `majority`. Zero GPU at inference, no LLM call. Model-independent — one VTAG number per setting per k applies to all four models. |
 | **RAGTAG** | FAISS retrieval + few-shot prompt with `<label>X</label>` XML tags. k ∈ {1, 3, 6, 9}; k = 0 is treated as zero-shot. |
 | **Debiased RAGTAG (margin = 3)** | Retrieval-time class-rebalancing intervention. Project-specific only by design. k ∈ {1, 3, 6, 9}. |
 | **Fine-tuning** | LoRA via Unsloth on the same train split that RAGTAG retrieves from. Both agnostic (3,300 examples) and project-specific (300 examples per project). |
@@ -93,7 +96,18 @@ Observation: hurts (slightly) at low k, helps clearly at k ≥ 6, with the large
 
 Non-monotonic within the family: 7B is the only size where FT wins.
 
-### 5.4 Pattern: FT proj-spec collapse
+### 5.4 VTAG floor (model-independent)
+
+VTAG numbers are the same regardless of model (no LLM in the loop). Best k for both settings is k = 9.
+
+| Setting | k=1 | k=2 | k=3 | k=6 | k=9 |
+|---|---:|---:|---:|---:|---:|
+| Agnostic | 0.565 | 0.565 | 0.579 | 0.591 | 0.598 |
+| Project-specific (avg) | 0.556 | 0.556 | 0.563 | 0.572 | 0.578 |
+
+Every Qwen approach above zero-shot beats this floor in both settings — even Qwen-3B zero-shot agnostic (0.613) clears VTAG-9 agnostic (0.598). The new session should still report this anchor: it justifies the LLM cost and frames how much work the LLM is actually doing on top of retrieval.
+
+### 5.5 Pattern: FT proj-spec collapse
 
 | Model | FT agnostic | FT proj-spec | drop |
 |---|---:|---:|---:|
