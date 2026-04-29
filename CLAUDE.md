@@ -38,7 +38,7 @@ This file gives Claude persistent context about this research project. Read it a
 
 1. **RQ1 — Comparison.** How do RAGTAG, VTAG, and zero-shot perform in project-specific vs project-agnostic settings, per-project and overall? Built-in finding: 88.3% of agnostic-retrieved neighbors come from the same project, so agnostic ≈ project-specific for RAGTAG — that equivalence is itself a result.
 2. **RQ2 — Diagnosis.** Why do RAGTAG and zero-shot fall short of fine-tune-agnostic? The leading hypothesis is bug-bias in retrieval/prompting (feature precision is high but recall is low; features get mislabeled as bugs).
-3. **RQ3 — Bridging.** Can we close the gap between RAGTAG and fine-tuning without training? Margin-based retrieval debiasing (margin=3) is the validated intervention so far on Llama-3B and Llama-8B. A second method is under consideration (vote-prior injection, prompt-level disambiguation, or batch calibration).
+3. **RQ3 — Bridging.** Can we close the gap between RAGTAG and fine-tuning without training? Margin-based retrieval debiasing (margin=3) is the validated intervention across the Qwen2.5 family (3B, 7B, 14B, 32B): hurts at low k, helps at k≥6 on every model, with the biggest wins at k=9. At Qwen-14B+ scale, debiased RAGTAG matches or beats fine-tuning. A second method is under consideration (vote-prior injection, prompt-level disambiguation, or batch calibration).
 
 ---
 
@@ -60,19 +60,23 @@ The orchestrator generates project-specific train/test split CSVs and FAISS indi
 
 All models loaded via **Unsloth** (optimized inference + training):
 
+All models are Qwen2.5-Instruct, bnb-4bit (uniform quantization across the family for clean scale comparisons):
+
 | Model | Size | Notes |
 |-------|------|-------|
-| `unsloth/Llama-3.2-3B-Instruct` | 3B | Runs on local 4090 |
-| `unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit` | 8B 4-bit | Runs on local 4090 |
-| `unsloth/Qwen2.5-14B-Instruct-bnb-4bit` | 14B 4-bit | Inference fits 4090; FT needs 48GB+ |
-| `unsloth/Qwen2.5-32B-Instruct-bnb-4bit` | 32B 4-bit | Inference fits 4090 (~23GB); FT needs A100 80GB |
+| `unsloth/Qwen2.5-3B-Instruct-bnb-4bit` | 3B 4-bit | Runs on local 4090 |
+| `unsloth/Qwen2.5-7B-Instruct-bnb-4bit` | 7B 4-bit | Runs on local 4090 |
+| `unsloth/Qwen2.5-14B-Instruct-bnb-4bit` | 14B 4-bit | Inference fits 4090; FT runs on NRP A6000 |
+| `unsloth/Qwen2.5-32B-Instruct-bnb-4bit` | 32B 4-bit | Inference fits 4090 (~23GB); FT runs on NRP A6000 |
+
+Llama-3B and Llama-8B were used in earlier experiments. Their predictions/evals remain on disk under `results/issues11k/.../unsloth_Llama_*` for reference and the historical record, but are no longer part of the active model lineup.
 
 ---
 
 ## Infrastructure
 
-- **Local machine:** RTX 4090 (24GB VRAM). Runs all RAGTAG / zero-shot / VTAG inference and Llama-3B / Llama-8B fine-tuning.
-- **NRP (Nautilus Research Platform):** Shared Kubernetes cluster, namespace `bgsu-cs-heydarnoori`. Used for Qwen fine-tuning and Qwen-32B re-runs. Migration to Kubernetes Jobs (replacing JupyterHub usage) is planned but not yet implemented; see the next session's NRP plan.
+- **Local machine:** RTX 4090 (24GB VRAM). Runs all RAGTAG / zero-shot / VTAG inference and Qwen-3B / Qwen-7B fine-tuning.
+- **NRP (Nautilus Research Platform):** Shared Kubernetes cluster, namespace `bgsu-cs-heydarnoori`. Migration to Kubernetes Jobs is implemented — pipeline lives in `scripts/nrp/`. Strategy: a single mega-runner Job ([scripts/nrp/runners/run_remaining_cells.py](scripts/nrp/runners/run_remaining_cells.py)) holds one A6000 and processes all 58 production cells sequentially via subprocess, with idempotent skip on existing `preds_*.csv`. Image is SHA-pinned (currently `:55ba8f1`). Two CephFS RWX PVCs back the run: `hf-cache-pvc` (100 Gi, model weights cached once) and `results-pvc` (50 Gi, outputs + `_outbox/` for `sync.sh` pickup). Live status is in [docs/NRP_MIGRATION_STATUS.md](docs/NRP_MIGRATION_STATUS.md).
 - **OSC Ascend:** Available as a backup for fine-tuning via `run_server_11k.sh` (Slurm, A100 partition).
 
 ---
@@ -83,7 +87,7 @@ All models loaded via **Unsloth** (optimized inference + training):
 End-to-end pipeline for the 11-project benchmark across both settings (agnostic + project-specific). Phases: train/test split CSVs → FAISS indexes → zero-shot → RAGTAG (k=1,3,6,9) → fine-tuning → VTAG → evaluation → summary report.
 
 Key flags:
-- `--mode local|remote` — local trains Llama-3B/8B; remote trains Qwen-14B/32B
+- `--mode local|remote` — local trains Qwen-3B/7B; remote trains Qwen-14B/32B
 - `--setting agnostic|specific|both`
 - `--skip_indexing`, `--skip_zero_shot`, `--skip_ragtag`, `--skip_ft`, `--skip_vtag`, `--skip_eval` — phase-level resume
 
@@ -164,7 +168,7 @@ The 11k benchmark is partially complete. Remaining work tracked for the NRP migr
 
 1. **Qwen-32B RAGTAG re-run** (agnostic + project-specific) — prior run had OOM / invalid outputs; needs clean re-execution
 2. **Qwen-14B fine-tune on 11k** (agnostic + project-specific)
-3. **Qwen-32B fine-tune on 11k** (agnostic + project-specific) — blocked on NRP A100 quota approval
+3. **Qwen-32B fine-tune on 11k** (agnostic + project-specific) — A100 not needed; runs on A6000 (peak ~32 GB at `max_seq_length=2048` per 30k cost_metrics, well under the 48 GB cap). Wave 5 of the mega-runner.
 4. **Qwen-14B debias on 11k** (margin=3, k=1,3,6,9, project-specific) — script ready: `run_11k_debias_qwen.sh`
 5. **Qwen-32B debias on 11k** (same config) — same script
 

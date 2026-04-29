@@ -83,21 +83,21 @@ CTX=8192
 RAGTAG_KS="1,3,6,9"
 
 declare -a ALL_MODELS=(
-    "unsloth/Llama-3.2-3B-Instruct"
-    "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit"
+    "unsloth/Qwen2.5-3B-Instruct-bnb-4bit"
+    "unsloth/Qwen2.5-7B-Instruct-bnb-4bit"
     "unsloth/Qwen2.5-14B-Instruct-bnb-4bit"
     "unsloth/Qwen2.5-32B-Instruct-bnb-4bit"
 )
 declare -a ALL_TAGS=(
-    "unsloth_Llama_3_2_3B_Instruct"
-    "unsloth_Meta_Llama_3_1_8B_Instruct_bnb_4bit"
+    "unsloth_Qwen2_5_3B_Instruct_bnb_4bit"
+    "unsloth_Qwen2_5_7B_Instruct_bnb_4bit"
     "unsloth_Qwen2_5_14B_Instruct_bnb_4bit"
     "unsloth_Qwen2_5_32B_Instruct_bnb_4bit"
 )
-declare -a ALL_SHORT=("Llama-3B" "Llama-8B" "Qwen-14B" "Qwen-32B")
+declare -a ALL_SHORT=("Qwen-3B" "Qwen-7B" "Qwen-14B" "Qwen-32B")
 
 # FT models by mode
-LOCAL_FT_INDICES=(0 1)    # Llama-3B, Llama-8B
+LOCAL_FT_INDICES=(0 1)    # Qwen-3B, Qwen-7B
 REMOTE_FT_INDICES=(2 3)   # Qwen-14B, Qwen-32B
 
 declare -a PROJECTS=(
@@ -360,7 +360,7 @@ if [[ "$SKIP_FT" -eq 0 ]]; then
 
     if [[ "$MODE" == "local" ]]; then
         FT_INDICES=("${LOCAL_FT_INDICES[@]}")
-        echo "  Mode: local — training Llama-3B and Llama-8B"
+        echo "  Mode: local — training Qwen-3B and Qwen-7B"
     else
         FT_INDICES=("${REMOTE_FT_INDICES[@]}")
         echo "  Mode: remote — training Qwen-14B and Qwen-32B"

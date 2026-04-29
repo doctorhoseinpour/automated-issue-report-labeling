@@ -1,7 +1,124 @@
 # 11-Project Benchmark Findings
 
-**Date:** 2026-04-24
-**Status:** All RAGTAG baselines and debiased runs complete for all 4 models. Llama FT complete. Qwen FT pending on OSC server.
+**Date:** 2026-04-28
+**Status:** Campaign complete. All 4 models × {zero-shot, RAGTAG k∈{1,3,6,9} agnostic+proj-spec, debias_m3 k∈{1,3,6,9} proj-spec, FT agnostic+proj-spec} fully evaluated. Qwen-32B RAGTAG was rerun on NRP A6000 (the original 4090 results were OOM-corrupted and are superseded). See [NRP_MIGRATION_STATUS.md](NRP_MIGRATION_STATUS.md) for the campaign record.
+
+---
+
+## 0. Master Table — Final Results (2026-04-28)
+
+Every (model × approach × k × setting) combination, all 7 metrics + per-class precision/recall + invalid count. Project-specific values are 11-project averages.
+
+| Model | Approach | k | Setting | acc | f1_macro | f1_bug | f1_feat | f1_q | P/R bug | P/R feat | P/R q | invalid |
+|---|---|---|---|---:|---:|---:|---:|---:|---|---|---|---|
+| Llama-3B | zero-shot | — | agnostic | 0.627 | 0.583 | 0.666 | 0.769 | 0.314 | .53/.88 | .74/.80 | .77/.20 | 9/3300 |
+| Llama-3B | RAGTAG | k1 | agnostic | 0.668 | 0.651 | 0.690 | 0.763 | 0.501 | .63/.77 | .70/.84 | .70/.39 | 3/3300 |
+| Llama-3B | RAGTAG | k1 | proj-spec | 0.666 | 0.647 | 0.689 | 0.759 | 0.492 | .63/.77 | .70/.84 | .70/.39 | 5/3300 |
+| Llama-3B | RAGTAG | k3 | agnostic | 0.666 | 0.658 | 0.671 | 0.757 | 0.546 | .62/.73 | .71/.81 | .67/.46 | 5/3300 |
+| Llama-3B | RAGTAG | k3 | proj-spec | 0.669 | 0.657 | 0.671 | 0.761 | 0.541 | .63/.73 | .72/.82 | .68/.46 | 5/3300 |
+| Llama-3B | RAGTAG | k6 | agnostic | 0.659 | 0.659 | 0.686 | 0.760 | 0.532 | .62/.77 | .74/.78 | .68/.44 | 94/3300 |
+| Llama-3B | RAGTAG | k6 | proj-spec | 0.662 | 0.660 | 0.681 | 0.767 | 0.531 | .62/.76 | .76/.79 | .70/.44 | 91/3300 |
+| Llama-3B | RAGTAG | k9 | agnostic | 0.640 | 0.642 | 0.663 | 0.761 | 0.502 | .59/.76 | .76/.76 | .66/.41 | 120/3300 |
+| Llama-3B | RAGTAG | k9 | proj-spec | 0.640 | 0.641 | 0.661 | 0.755 | 0.508 | .60/.75 | .76/.76 | .68/.41 | 123/3300 |
+| Llama-3B | debias_m3 | k1 | proj-spec | 0.670 | 0.650 | 0.692 | 0.766 | 0.492 | .62/.79 | .72/.83 | .70/.39 | 6/3300 |
+| Llama-3B | debias_m3 | k3 | proj-spec | 0.679 | 0.669 | 0.659 | 0.756 | 0.592 | .69/.65 | .69/.84 | .68/.54 | 6/3300 |
+| Llama-3B | debias_m3 | k6 | proj-spec | 0.692 | 0.687 | 0.655 | 0.761 | 0.644 | .77/.61 | .71/.83 | .68/.64 | 45/3300 |
+| Llama-3B | debias_m3 | k9 | proj-spec | 0.671 | 0.670 | 0.621 | 0.754 | 0.634 | .76/.57 | .72/.80 | .65/.65 | 87/3300 |
+| Llama-3B | **FT** | — | **agnostic** | **0.728** | **0.728** | 0.731 | 0.803 | 0.649 | .66/.82 | .84/.77 | .72/.59 | 9/3300 |
+| Llama-3B | FT | — | proj-spec | 0.482 | 0.428 | 0.551 | 0.520 | 0.212 | .42/.82 | .60/.50 | .66/.13 | 15/3300 |
+| Llama-8B | zero-shot | — | agnostic | 0.640 | 0.599 | 0.672 | 0.790 | 0.334 | .53/.93 | .79/.79 | .84/.21 | 8/3300 |
+| Llama-8B | RAGTAG | k1 | agnostic | 0.672 | 0.650 | 0.695 | 0.793 | 0.460 | .56/.91 | .80/.78 | .80/.32 | 4/3300 |
+| Llama-8B | RAGTAG | k1 | proj-spec | 0.675 | 0.647 | 0.695 | 0.800 | 0.446 | .56/.91 | .82/.79 | .80/.33 | 3/3300 |
+| Llama-8B | RAGTAG | k3 | agnostic | 0.701 | 0.686 | 0.720 | 0.807 | 0.532 | .60/.91 | .81/.80 | .81/.40 | 7/3300 |
+| Llama-8B | RAGTAG | k3 | proj-spec | 0.701 | 0.682 | 0.720 | 0.806 | 0.520 | .60/.91 | .82/.80 | .81/.40 | 8/3300 |
+| Llama-8B | RAGTAG | k6 | agnostic | 0.696 | 0.695 | 0.719 | 0.812 | 0.554 | .61/.87 | .84/.79 | .79/.43 | 98/3300 |
+| Llama-8B | RAGTAG | k6 | proj-spec | 0.701 | 0.696 | 0.724 | 0.814 | 0.551 | .62/.88 | .85/.79 | .80/.44 | 96/3300 |
+| Llama-8B | RAGTAG | k9 | agnostic | 0.681 | 0.682 | 0.712 | 0.803 | 0.530 | .61/.86 | .83/.77 | .76/.41 | 125/3300 |
+| Llama-8B | RAGTAG | k9 | proj-spec | 0.683 | 0.681 | 0.711 | 0.804 | 0.527 | .61/.85 | .83/.78 | .78/.41 | 128/3300 |
+| Llama-8B | debias_m3 | k1 | proj-spec | 0.671 | 0.642 | 0.688 | 0.792 | 0.446 | .56/.90 | .82/.78 | .80/.33 | 3/3300 |
+| Llama-8B | debias_m3 | k3 | proj-spec | 0.687 | 0.671 | 0.692 | 0.794 | 0.526 | .59/.86 | .81/.79 | .77/.42 | 3/3300 |
+| Llama-8B | debias_m3 | k6 | proj-spec | 0.718 | 0.715 | 0.727 | 0.813 | 0.604 | .66/.82 | .83/.80 | .74/.53 | 47/3300 |
+| Llama-8B | debias_m3 | k9 | proj-spec | 0.728 | 0.732 | 0.732 | 0.813 | 0.652 | .71/.77 | .83/.80 | .74/.61 | 90/3300 |
+| Llama-8B | **FT** | — | **agnostic** | **0.744** | **0.742** | 0.702 | 0.800 | 0.724 | .86/.60 | .74/.86 | .68/.77 | 11/3300 |
+| Llama-8B | FT | — | proj-spec | 0.533 | 0.492 | 0.419 | 0.667 | 0.390 | .60/.37 | .54/.90 | .56/.32 | 6/3300 |
+| Qwen-14B | zero-shot | — | agnostic | 0.675 | 0.645 | 0.691 | 0.806 | 0.440 | .57/.88 | .76/.86 | .87/.29 | 2/3300 |
+| Qwen-14B | RAGTAG | k1 | agnostic | 0.703 | 0.684 | 0.714 | 0.822 | 0.516 | .59/.89 | .80/.85 | .85/.37 | 3/3300 |
+| Qwen-14B | RAGTAG | k1 | proj-spec | 0.703 | 0.677 | 0.719 | 0.820 | 0.493 | .60/.89 | .81/.85 | .85/.37 | 3/3300 |
+| Qwen-14B | RAGTAG | k3 | agnostic | 0.726 | 0.712 | 0.735 | 0.830 | 0.569 | .62/.90 | .82/.85 | .85/.43 | 4/3300 |
+| Qwen-14B | RAGTAG | k3 | proj-spec | 0.726 | 0.706 | 0.737 | 0.832 | 0.549 | .63/.90 | .83/.85 | .84/.43 | 4/3300 |
+| Qwen-14B | RAGTAG | k6 | agnostic | 0.713 | 0.716 | 0.724 | 0.831 | 0.592 | .63/.85 | .83/.84 | .85/.46 | 118/3300 |
+| Qwen-14B | RAGTAG | k6 | proj-spec | 0.714 | 0.710 | 0.726 | 0.834 | 0.572 | .64/.85 | .84/.84 | .85/.45 | 117/3300 |
+| Qwen-14B | RAGTAG | k9 | agnostic | 0.711 | 0.717 | 0.727 | 0.827 | 0.597 | .64/.84 | .83/.82 | .83/.47 | 141/3300 |
+| Qwen-14B | RAGTAG | k9 | proj-spec | 0.714 | 0.717 | 0.728 | 0.833 | 0.588 | .65/.84 | .84/.83 | .83/.47 | 142/3300 |
+| Qwen-14B | debias_m3 | k1 | proj-spec | 0.697 | 0.671 | 0.706 | 0.816 | 0.490 | .59/.88 | .80/.84 | .85/.37 | 3/3300 |
+| Qwen-14B | debias_m3 | k3 | proj-spec | 0.716 | 0.697 | 0.720 | 0.817 | 0.555 | .62/.87 | .81/.84 | .84/.43 | 4/3300 |
+| Qwen-14B | debias_m3 | k6 | proj-spec | 0.736 | 0.730 | 0.745 | 0.830 | 0.615 | .66/.86 | .83/.84 | .84/.50 | 55/3300 |
+| Qwen-14B | **debias_m3** | k9 | **proj-spec** | **0.739** | **0.742** | 0.748 | 0.834 | 0.644 | .68/.83 | .84/.84 | .83/.54 | 106/3300 |
+| Qwen-14B | FT | — | agnostic | 0.712 | 0.715 | 0.703 | 0.767 | 0.676 | .73/.68 | .85/.70 | .61/.76 | 3/3300 |
+| Qwen-14B | FT | — | proj-spec | 0.638 | 0.637 | 0.692 | 0.652 | 0.566 | .67/.72 | .76/.59 | .54/.60 | 4/3300 |
+| Qwen-32B | zero-shot | — | agnostic | 0.706 | 0.688 | 0.715 | 0.814 | 0.533 | .61/.86 | .77/.87 | .86/.39 | 6/3300 |
+| Qwen-32B | zero-shot | — | proj-spec | 0.705 | 0.680 | 0.717 | 0.817 | 0.506 | .62/.86 | .78/.87 | .86/.39 | 6/3300 |
+| Qwen-32B | RAGTAG | k1 | agnostic | 0.737 | 0.726 | 0.745 | 0.828 | 0.604 | .64/.90 | .81/.85 | .86/.47 | 4/3300 |
+| Qwen-32B | RAGTAG | k1 | proj-spec | 0.736 | 0.720 | 0.747 | 0.830 | 0.584 | .64/.89 | .83/.85 | .86/.47 | 4/3300 |
+| Qwen-32B | RAGTAG | k3 | agnostic | 0.761 | 0.755 | 0.766 | 0.838 | 0.662 | .67/.90 | .83/.85 | .86/.54 | 9/3300 |
+| Qwen-32B | RAGTAG | k3 | proj-spec | 0.761 | 0.751 | 0.764 | 0.841 | 0.648 | .67/.89 | .84/.85 | .86/.54 | 8/3300 |
+| Qwen-32B | RAGTAG | k6 | agnostic | 0.745 | 0.754 | 0.754 | 0.837 | 0.672 | .68/.84 | .84/.84 | .84/.56 | 120/3300 |
+| Qwen-32B | RAGTAG | k6 | proj-spec | 0.748 | 0.755 | 0.755 | 0.841 | 0.667 | .69/.84 | .85/.84 | .85/.57 | 119/3300 |
+| Qwen-32B | RAGTAG | k9 | agnostic | 0.746 | 0.759 | 0.758 | 0.838 | 0.682 | .69/.83 | .84/.83 | .84/.57 | 146/3300 |
+| Qwen-32B | RAGTAG | k9 | proj-spec | 0.748 | 0.758 | 0.754 | 0.841 | 0.678 | .70/.83 | .86/.83 | .85/.58 | 148/3300 |
+| Qwen-32B | debias_m3 | k1 | proj-spec | 0.727 | 0.711 | 0.733 | 0.821 | 0.580 | .64/.87 | .81/.85 | .86/.46 | 3/3300 |
+| Qwen-32B | debias_m3 | k3 | proj-spec | 0.752 | 0.741 | 0.752 | 0.830 | 0.640 | .67/.86 | .82/.86 | .86/.53 | 7/3300 |
+| Qwen-32B | debias_m3 | k6 | proj-spec | 0.767 | 0.767 | 0.771 | 0.843 | 0.685 | .71/.86 | .85/.85 | .84/.60 | 57/3300 |
+| Qwen-32B | **debias_m3** | k9 | **proj-spec** | **0.766** | **0.775** | 0.775 | 0.841 | 0.708 | .73/.83 | .85/.84 | .82/.63 | 109/3300 |
+| Qwen-32B | FT | — | agnostic | 0.755 | 0.746 | 0.778 | 0.814 | 0.647 | .71/.86 | .76/.88 | .83/.53 | 0/3300 |
+| Qwen-32B | FT | — | proj-spec | 0.720 | 0.713 | 0.679 | 0.797 | 0.662 | .70/.68 | .77/.84 | .73/.64 | 2/3300 |
+
+**Bold** = best f1_macro per model.
+
+### Per-model winner
+
+| Model | Best approach | f1_macro |
+|---|---|---:|
+| Llama-3B | FT (agnostic) | 0.728 |
+| Llama-8B | FT (agnostic) | 0.742 |
+| Qwen-14B | **debias_m3 k=9** (proj-spec) | 0.742 |
+| Qwen-32B | **debias_m3 k=9** (proj-spec) | 0.775 |
+
+### Pattern 1 — Debias_m3 vs plain RAGTAG (proj-spec avg, robust across all 4 models)
+
+| Model | k=1 | k=3 | k=6 | k=9 | Mechanism (invalid k=6 → k=9) |
+|---|---:|---:|---:|---:|---|
+| Llama-3B | +0.003 | +0.012 | +0.027 | +0.028 | 91→123 (RAG) vs 45→87 (deb) |
+| Llama-8B | −0.005 | −0.012 | +0.018 | **+0.052** | 96→128 vs 47→90 |
+| Qwen-14B | −0.006 | −0.009 | +0.019 | +0.025 | 117→142 vs 55→106 |
+| Qwen-32B | −0.009 | −0.010 | +0.012 | +0.017 | 119→148 vs 57→109 |
+
+Debias hurts (slightly) at low k, helps clearly at k≥6, with biggest gains at k=9. **Debias roughly halves the invalid count** at high k — a key part of the mechanism: it keeps prompts from overloading the model into malformed output.
+
+### Pattern 2 — FT vs zero-training, monotonic crossover by model scale
+
+| Model | best FT | best RAGTAG | best debias | FT − bestRAG | FT − bestDeb |
+|---|---:|---:|---:|---:|---:|
+| Llama-3B | 0.728 | 0.660 | 0.687 | **+0.068** | **+0.041** |
+| Llama-8B | 0.742 | 0.696 | 0.732 | +0.046 | +0.010 |
+| Qwen-14B | 0.715 | 0.717 | 0.742 | −0.002 | −0.026 |
+| Qwen-32B | 0.746 | 0.759 | 0.775 | −0.013 | −0.028 |
+
+The FT advantage closes monotonically with scale and **inverts between 8B and 14B**. At Qwen-32B, debias_m3 k=9 beats fine-tuning by 0.028 with no training at all. **This is the headline RQ3 result.**
+
+*Caveat:* the 8B→14B inversion conflates model size and family (Llama → Qwen). With current data, the safe claim is "the FT advantage erodes as models get larger and/or stronger at instruction-following; by Qwen-32B scale, zero-training debiased RAGTAG matches or beats fine-tuning."
+
+### Other notable observations
+
+1. **Per-project FT is broken at small-data scales.** Llama-3B drops from 0.728 (agnostic FT) to 0.428 (proj-spec FT avg). Llama-8B: 0.742 → 0.492. With 300 train issues per project, LoRA does not get enough signal. Qwen is more robust (14B: −0.078, 32B: −0.033) but agnostic > proj-spec for FT in every case. **Per-project fine-tuning is not a viable deployment story.**
+
+2. **Question is the universal weak class.** For every model and approach, `recall_question` is the lowest of the three classes — matching prior qualitative analysis ("question→bug" is the dominant error). Even Qwen-32B debias k=9 only reaches 0.63 question recall vs 0.83 bug and 0.84 feature.
+
+3. **Agnostic ≈ proj-spec for RAGTAG and debias**, within 0.01 at every k. Re-confirms the cross-project retrieval finding (88.3% same-project neighbors in agnostic): restricting the index to one project adds nothing once retrieval already pulls same-project examples.
+
+4. **The 30k FT advantage doesn't fully transfer to 11k.** On 30k, FT was comfortably ahead; on 11k the gap is much smaller (Llama-3B FT vs best zero-training: 0.041, vs >0.10 on 30k). Less training data → less FT edge.
+
+5. **Invalid-rate scales with k** for every model. Even Qwen-32B agnostic k=9 has 4.4% invalid output. This is intrinsic to crowded prompts, not model-specific. Debias halves the rate, providing a clean instrumented mechanism for the paper.
 
 ---
 

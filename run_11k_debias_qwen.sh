@@ -30,6 +30,8 @@ PROJECTS=(
 )
 
 MODELS=(
+    "unsloth/Qwen2.5-3B-Instruct-bnb-4bit|unsloth_Qwen2_5_3B_Instruct_bnb_4bit"
+    "unsloth/Qwen2.5-7B-Instruct-bnb-4bit|unsloth_Qwen2_5_7B_Instruct_bnb_4bit"
     "unsloth/Qwen2.5-14B-Instruct-bnb-4bit|unsloth_Qwen2_5_14B_Instruct_bnb_4bit"
     "unsloth/Qwen2.5-32B-Instruct-bnb-4bit|unsloth_Qwen2_5_32B_Instruct_bnb_4bit"
 )
