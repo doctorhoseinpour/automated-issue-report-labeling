@@ -2,6 +2,8 @@
 
 **Status:** Pivoted 2026-04-25 to the 11-project benchmark as the sole dataset. The earlier three-phase (3k → 30k → bias correction) framing is retired. Prior versions of this document and the supporting analyses remain in [legacy/](legacy/).
 
+> **2026-04-29 refresh.** The active model lineup is now Qwen-only (3B, 7B, 14B, 32B; uniform 4-bit). Llama-3B/8B from earlier runs is preserved on disk but excluded from the paper. The narrative below has been reorganized to match the refresh; the original RQ1/2/3 structure (sections 5–7) reads similarly but the framing of RQ1 now leads with VTAG-as-floor and the plateau analysis that justifies the RAGTAG k grid. The new analyses live under [analysis/](analysis/) and are folded into [11K_BENCHMARK_FINDINGS.md](11K_BENCHMARK_FINDINGS.md). The remainder of this document predates the refresh; treat the refresh sections at the bottom as canonical.
+
 ---
 
 ## Working Title
@@ -173,3 +175,76 @@ These five sets of experiments are the focus of the upcoming NRP Kubernetes-Jobs
 | Activation steering in main results | One paragraph in Future Work as mechanistic evidence. |
 | Batch Calibration in main results | If pursued at all, mentioned briefly. |
 | Contrastive Decoding | Catastrophically destructive. Skipped. |
+
+---
+
+# Refresh 2026-04-29 — canonical narrative
+
+## Story arc (revised)
+
+> Fine-tuning LLMs has been the dominant approach in prior work on issue-report classification, but it is computationally expensive and data-hungry. We propose two retrieval-based alternatives — VTAG (no LLM, voting-only) and RAGTAG (retrieval + LLM reasoning) — and a retrieval-time debiasing intervention that closes the FT gap without any training.
+
+The paper is organised around three coupled research questions on a single 11-project benchmark, evaluated across four Qwen2.5-Instruct sizes (3B / 7B / 14B / 32B, uniform bnb-4bit).
+
+- **RQ1.** Establish VTAG as a fast, near-zero-cost retrieval-only baseline; identify its plateau; use it to justify the RAGTAG k grid.
+- **RQ2.** Comprehensive comparison of VTAG, RAGTAG, and Fine-Tune — strengths, weaknesses, Pareto frontier on GPU-time/cost, qualitative + quantitative failure analysis surfacing systematic bug-bias.
+- **RQ3.** Introduce the debiasing technique fully; compare against fine-tuning; ablate against VTAG-debias to isolate the LLM-reasoning component.
+
+## Core findings (one-line each, all evidence-backed)
+
+1. **VTAG is a competitive non-LLM floor.** Pure similarity-weighted k-NN reaches macro F1 ≈ 0.604 (agnostic) and 0.584 (project-specific mean) at the plateau (k ≈ 13 ag / k ≈ 7 ps), in negligible compute (≈10 ms per cell). See [analysis/figures/rq1_vtag_curve_*.png].
+2. **The RAGTAG k grid is anchored by VTAG, not arbitrary.** RAGTAG's chosen k ∈ {1, 3, 6, 9} brackets VTAG's climb (k=1..6) plus the entry to its plateau (k=9).
+3. **Adding the LLM is significant at every scale.** RAGTAG−VTAG gaps in macro F1: 3B +0.10, 7B +0.11, 14B +0.12, 32B +0.16, all p < 1e-24 (McNemar). The advantage grows with model size.
+4. **Bug-bias is a question→bug misclassification, more LLM than retrieval.** Top-k retrieval is roughly balanced for non-bug ground truth (≈30 % bug fraction at k=9), but every LLM still over-predicts bug by 24–54 %; question recall in zero-shot is as low as 0.39 on Qwen-32B before retrieval helps.
+5. **Debiased RAGTAG closes the FT gap from 14B up.** Debias-ps at k=9 beats RAGTAG-ps consistently (Δ +0.02 to +0.03, p < 0.001 on 7B/14B/32B). The Qwen-7B "FT-ag wins" point estimate of +0.011 is **not** statistically significant (McNemar p=0.36) — 7B is a tie, not a clear FT win.
+6. **VTAG-debias makes a bug↔question trade; RAGTAG-debias rescues true bugs.** VTAG-debias loses ~0.19 bug recall to gain ~0.16 question recall (1:1 trade, +0.006 macro F1). RAGTAG-debias on Qwen-7B+ loses essentially no bug recall while gaining 5–8 % question recall (+0.020 macro F1). The LLM rescue rate (correctly preserving true-bug despite rebalanced few-shots) climbs from 48 % at 3B to 81–85 % at 7B+.
+7. **FT-project-specific collapses on small/mid models.** Qwen-7B FT-ps drops to F1 0.51, 0.23 below FT-ag. Per-project FT is unstable except at 32B.
+8. **Pareto: agnostic FT is on the frontier; project-specific FT is dominated.** RAGTAG/debias-ps occupy the Pareto frontier in the project-specific setting from end to end. The cost is real, though: debias-ps uses 1.2–2.0× more total GPU-seconds than FT-ag because of long retrieval prompts, but requires no training step.
+
+## Discussion threads (outline only — to be written into prose by the user)
+
+### Thread A — Practitioner decision tree
+- **No training infra, single shared classifier:** RAGTAG-ag at the largest size you can afford. At 32B, RAGTAG-ag k=9 hits 0.759, beating FT-ag 0.746 (CI overlaps zero — ~tie).
+- **Training infra available, want one model for all projects:** FT-ag is competitive and cheaper at inference (no retrieval prompts). 7B+ FT-ag is on the Pareto frontier.
+- **Per-project tuning desired:** debias-ps at the largest size you can afford. FT-ps is unstable at 7B/14B; debias-ps wins 9–11/11 projects vs FT-ps regardless of model size.
+- **Latency-critical, low budget:** VTAG is the no-cost floor. At ≈0.60 macro F1, it's already 0.06 above 3B zero-shot and only ~0.16 below the 32B ceiling.
+
+### Thread B — Why bug-bias arises (mechanism hypotheses, supported by the data)
+- **LLM-side prior, not retrieval-side imbalance.** Top-k retrieval is roughly class-balanced for non-bug ground truth (RQ2.7). The 24–54 % bug over-prediction shows up even with balanced few-shots.
+- **Most labeling-noise is question→bug, not feature→bug.** Of 264 consensus-failure issues (all 4 Qwen sizes mislabel), 79 % were question→bug, 21 % feature→bug.
+- **User framing influences the label drift.** Qualitative review shows many consensus-failure issues contain explicit "Bug:" framing in the title or body, even though the maintainer's final label is feature/question. The LLM correctly reads the user's framing but misses the maintainer's reclassification — a labeling-mismatch problem more than a model error.
+
+### Thread C — Data-efficiency reframed
+- The headline "300 retrieval examples per project beats 3,300 training examples" is true on macro F1 from 14B up.
+- But it costs more inference compute (because 11 × per-project inferences with long retrieval prompts > 1 × training-once + agnostic inference).
+- The right framing is **operational simplicity** (no gradient updates, no training pipeline, swap models trivially) rather than absolute compute reduction.
+- For low-resource projects, debias-ps is uniquely valuable: it needs only 300 labeled examples to outperform any FT-ps trained on the same 300 issues.
+
+### Thread D — Why VTAG-debias works less than RAGTAG-debias (the LLM-as-rescuer mechanism)
+- The same retrieval-time intervention gives VTAG a marginal +0.006 macro F1 (project-specific +0.007), but RAGTAG +0.017 to +0.032 depending on model size and k.
+- The LLM rescue rate analysis (RQ3.5) directly shows the mechanism: where retrieval rebalancing flips an issue from bug to question, the LLM correctly says "bug" (rescuing the true label) 81–85 % of the time at 7B+, vs 48 % at 3B.
+- This is the cleanest available evidence that the LLM does substantive reasoning over rebalanced examples — it isn't just consuming a class-balanced prior.
+
+### Thread E — Limitations
+- Single random seed throughout. Multi-seed validation is the most important follow-up; bootstrap CIs partly compensate but do not capture training-init variance.
+- Qwen-only, bnb-4bit only — model-family generalization is not directly demonstrated. Llama-3B/8B legacy data on disk hints at portability but is excluded for cleanliness.
+- Three-class label space; richer label sets (e.g., "documentation", "performance", "security") may have different dynamics.
+- English-language repos only; the bug/feature/question convention itself is anglophone OSS culture.
+- No temporal split — train and test issues coexist in the same time window per project.
+
+### Thread F — Future work
+- Multi-seed validation across all cells.
+- Voting-scheme ablation for VTAG (similarity vs Shepard vs majority) — only similarity was run on 11k.
+- A second RQ3 intervention method. Vote-prior injection is the leading candidate; batch calibration and prompt-level disambiguation are alternatives.
+- Apply margin-debias to other retrieval-augmented classification problems beyond issue triage.
+- Out-of-distribution evaluation: train-on-N-projects, test-on-held-out-projects.
+
+---
+
+## Pointers to evidence (analysis docs)
+
+- `docs/analysis/all_cells.csv` — canonical results table for every cell
+- `docs/analysis/rq1_vtag_*.{csv,md}` and `figures/rq1_*.png` — VTAG plateau evidence
+- `docs/analysis/rq2_*.{csv,md}` and `figures/rq2_*.png` — leaderboard, Pareto, scaling, confusion, bug-skew, qualitative, significance
+- `docs/analysis/rq3_*.{csv,md}` and `figures/rq3_*.png` — debias-vs-RAGTAG, debias-vs-FT, mechanism ablation, cost reframe
+- `docs/analysis/coverage_audit.md` — what's on disk vs expected

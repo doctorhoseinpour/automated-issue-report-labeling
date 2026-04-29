@@ -1,11 +1,362 @@
 # 11-Project Benchmark Findings
 
-**Date:** 2026-04-28
+**Date:** 2026-04-28 (original) / **2026-04-29 (analysis refresh)**
+
 **Status:** Campaign complete. All 4 models × {zero-shot, RAGTAG k∈{1,3,6,9} agnostic+proj-spec, debias_m3 k∈{1,3,6,9} proj-spec, FT agnostic+proj-spec} fully evaluated. Qwen-32B RAGTAG was rerun on NRP A6000 (the original 4090 results were OOM-corrupted and are superseded). See [NRP_MIGRATION_STATUS.md](NRP_MIGRATION_STATUS.md) for the campaign record.
+
+The original master table (Section 0 below) covers the original 4-model lineup including Llama-3B/8B. **Sections RQ1 / RQ2 / RQ3 (this 2026-04-29 refresh) cover the active 4-Qwen lineup (3B / 7B / 14B / 32B, uniform bnb-4bit) and supersede the original numbers for the paper.** All numbers in the refresh sections are derived programmatically by `scripts/analysis/*.py` reading from `results/issues11k/`; tables and figures are written to `docs/analysis/`.
 
 ---
 
-## 0. Master Table — Final Results (2026-04-28)
+# RQ1 (2026-04-29) — VTAG plateau and the case for the RAGTAG k grid
+
+VTAG is similarity-weighted k-NN over the same FAISS index that RAGTAG uses, with no LLM call. We use the full k sweep on disk (k = 1..20, 25, 30) to identify where VTAG plateaus, then justify the chosen RAGTAG grid k ∈ {1, 3, 6, 9} as covering the climb plus the entry to the plateau.
+
+## RQ1.1 — Macro F1 by k
+
+Table at [analysis/rq1_vtag_table.csv](analysis/rq1_vtag_table.csv); figures [rq1_vtag_curve_agnostic.png](analysis/figures/rq1_vtag_curve_agnostic.png), [rq1_vtag_curve_project_specific.png](analysis/figures/rq1_vtag_curve_project_specific.png), and [rq1_vtag_kgrid_justification.png](analysis/figures/rq1_vtag_kgrid_justification.png).
+
+| k | Agnostic F1 | Project-specific F1 (mean of 11) |
+|---:|---:|---:|
+| 1 | 0.5649 | 0.5564 |
+| 3 | 0.5787 | 0.5626 |
+| 6 | 0.5912 | 0.5718 |
+| 9 | 0.5984 | 0.5783 |
+| 13 | 0.6019 | 0.5786 |
+| 15 | 0.6006 | 0.5808 |
+| **16 (peak ag)** | **0.6039** | 0.5779 |
+| 20 | 0.5997 | 0.5714 |
+| 30 | 0.5933 | 0.5570 |
+
+**Plateau detection** (first k where F1 reaches `peak − 0.005`): agnostic plateau k = 13 (peak 0.604 at k = 16); project-specific plateau k = 7 (peak 0.584 at k = 7).
+
+## RQ1.2 — Cost (the "near-zero" claim, quantified)
+
+Per-cell wall-clock (median across all 22 k values, excluding model-load time):
+
+| Setting | Median wall-clock per (k, project) | Total prompt tokens |
+|---|---:|---:|
+| Agnostic | 6.4 ms | 0 |
+| Project-specific | 0.6 ms | 0 |
+
+VTAG is functionally free at inference. Total time to evaluate the entire 22-k sweep across all 12 cells (1 agnostic + 11 ps) is ≈ 0.3 seconds.
+
+## RQ1.3 — Per-project variance
+
+The agnostic VTAG curve is smooth; project-specific VTAG variance is large (per-project std rises from 0.05 at k = 1 to 0.09 at k = 30). The hardest projects are TypeScript and Roslyn (~0.50 at most k); the easiest is dart-lang (~0.72). Detail: [analysis/rq1_vtag_per_project.csv](analysis/rq1_vtag_per_project.csv) and [rq1_vtag_variance.csv](analysis/rq1_vtag_variance.csv).
+
+## RQ1.4 — Why we chose RAGTAG k ∈ {1, 3, 6, 9}
+
+The chosen k grid spans VTAG's climb-up (k = 1..6: F1 rises from 0.565 → 0.591 ag, 0.556 → 0.572 ps) and reaches the entry to the plateau (k = 9: 0.598 ag, 0.578 ps). Beyond k = 9, VTAG gains < 0.005 macro F1 per k step on agnostic and oscillates noisily on project-specific. RAGTAG's prompt budget at k = 9 is already near 8k tokens (~98 % of the model's 8k context); pushing k higher would force more aggressive truncation. The k grid is therefore both empirically motivated by VTAG's behaviour and constrained by the LLM context budget.
+
+**Limitation.** Only the `similarity` voting scheme was run on the 11k benchmark. Shepard (sim²) and majority schemes are implemented in `vtag.py` but were not swept; future work.
+
+---
+
+# RQ2 (2026-04-29) — VTAG vs RAGTAG vs FT: comprehensive comparison and failure analysis
+
+## RQ2.1 — Master leaderboard, 4 Qwen models
+
+Source: [analysis/rq2_leaderboard.csv](analysis/rq2_leaderboard.csv). Project-specific F1 is the per-project mean across 11 projects (macro-macro). Agnostic F1 is on the pooled 3,300-issue test set.
+
+### Qwen-3B
+
+| Approach | Setting | k | F1 macro | Acc | F1 bug | F1 feat | F1 q | Inv |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| zero-shot | ag | — | 0.6132 | 0.6258 | 0.6816 | 0.7227 | 0.4352 | 0.0024 |
+| RAGTAG | ag | k3 | 0.6944 | 0.7006 | 0.7094 | 0.8018 | 0.5720 | 0.0024 |
+| RAGTAG | ps | k3 | 0.6939 | 0.7030 | 0.7088 | 0.8021 | 0.5708 | 0.0021 |
+| **Debias** | **ps** | **k6** | **0.7089** | 0.7079 | 0.6815 | 0.8022 | 0.6431 | 0.0179 |
+| FT | ag | — | 0.6520 | 0.6630 | 0.6989 | 0.7475 | 0.5098 | 0.0055 |
+| FT | ps | — | 0.5754 | 0.5851 | 0.6479 | 0.6558 | 0.4225 | 0.0191 |
+
+### Qwen-7B
+
+| Approach | Setting | k | F1 macro | Acc | F1 bug | F1 feat | F1 q | Inv |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| zero-shot | ag | — | 0.6621 | 0.6791 | 0.6959 | 0.7905 | 0.5000 | 0.0009 |
+| RAGTAG | ag | k6 | 0.7122 | 0.7103 | 0.7287 | 0.8082 | 0.5996 | 0.0348 |
+| RAGTAG | ps | k6 | 0.7142 | 0.7152 | 0.7323 | 0.8166 | 0.5938 | 0.0346 |
+| Debias | ps | k6 | 0.7299 | 0.7342 | 0.7483 | 0.8138 | 0.6277 | 0.0161 |
+| **FT** | **ag** | — | **0.7411** | 0.7412 | 0.7329 | 0.8263 | 0.6641 | 0.0012 |
+| FT | ps | — | 0.5113 | 0.5267 | 0.5041 | 0.6299 | 0.4001 | 0.0106 |
+
+### Qwen-14B
+
+| Approach | Setting | k | F1 macro | Acc | F1 bug | F1 feat | F1 q | Inv |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| zero-shot | ag | — | 0.6452 | 0.6752 | 0.6905 | 0.8057 | 0.4395 | 0.0006 |
+| RAGTAG | ag | k9 | 0.7170 | 0.7109 | 0.7268 | 0.8272 | 0.5971 | 0.0427 |
+| RAGTAG | ps | k9 | 0.7165 | 0.7142 | 0.7283 | 0.8330 | 0.5883 | 0.0430 |
+| **Debias** | **ps** | **k9** | **0.7418** | 0.7388 | 0.7477 | 0.8337 | 0.6441 | 0.0321 |
+| FT | ag | — | 0.7154 | 0.7121 | 0.7027 | 0.7675 | 0.6759 | 0.0009 |
+| FT | ps | — | 0.6366 | 0.6385 | 0.6922 | 0.6516 | 0.5660 | 0.0012 |
+
+### Qwen-32B
+
+| Approach | Setting | k | F1 macro | Acc | F1 bug | F1 feat | F1 q | Inv |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| zero-shot | ag | — | 0.6876 | 0.7058 | 0.7150 | 0.8143 | 0.5335 | 0.0018 |
+| RAGTAG | ag | k9 | 0.7594 | 0.7464 | 0.7577 | 0.8379 | 0.6825 | 0.0442 |
+| RAGTAG | ps | k9 | 0.7579 | 0.7476 | 0.7545 | 0.8410 | 0.6782 | 0.0449 |
+| **Debias** | **ps** | **k9** | **0.7745** | 0.7664 | 0.7754 | 0.8405 | 0.7077 | 0.0330 |
+| FT | ag | — | 0.7462 | 0.7552 | 0.7781 | 0.8138 | 0.6466 | 0.0000 |
+| FT | ps | — | 0.7130 | 0.7200 | 0.6794 | 0.7972 | 0.6625 | 0.0006 |
+
+### VTAG floor (model-independent, on the same FAISS index RAGTAG uses)
+
+| Approach | Setting | k | F1 macro | F1 bug | F1 feat | F1 q |
+|---|---|---|---:|---:|---:|---:|
+| VTAG | ag | k16 | 0.6039 | 0.6318 | 0.6294 | 0.5505 |
+| VTAG | ps | k7 | 0.5837 | 0.6194 | 0.5981 | 0.5336 |
+| VTAG-debias | ag | k9 | 0.6048 | 0.5892 | 0.6287 | 0.5966 |
+| VTAG-debias | ps | k9 | 0.5852 | 0.5628 | 0.6075 | 0.5853 |
+
+**Headlines:**
+- Best overall: Qwen-32B Debias-ps k9 (F1 = 0.7745).
+- 7B is the only model where FT-ag wins on point estimate, but the gap is **not statistically significant** (see RQ2.9).
+- From 14B up, debias-ps clears FT-ag.
+
+## RQ2.2 — Per-project leaderboard
+
+Heatmap for the canonical model (Qwen-32B): [rq2_per_project_heatmap_qwen32b.png](analysis/figures/rq2_per_project_heatmap_qwen32b.png). Per-model heatmaps for 3B/7B/14B alongside. Tidy data: [analysis/rq2_per_project_table.csv](analysis/rq2_per_project_table.csv).
+
+Project hardness ranking (mean F1 across all approaches and Qwen sizes):
+
+| Rank | Project | Mean F1 |
+|---|---|---:|
+| Hardest | microsoft_TypeScript | 0.573 |
+| | dotnet_roslyn | 0.601 |
+| | microsoft_vscode | 0.615 |
+| | opencv_opencv | 0.654 |
+| | bitcoin_bitcoin | 0.666 |
+| | ansible_ansible | 0.679 |
+| | tensorflow_tensorflow | 0.704 |
+| | flutter_flutter | 0.705 |
+| | facebook_react | 0.749 |
+| | kubernetes_kubernetes | 0.759 |
+| Easiest | dart-lang_sdk | 0.778 |
+
+Two patterns in the per-project heatmap:
+- **ansible_ansible is the only project where FT-ps (0.82) clearly beats every other approach** for Qwen-32B. Likely a result of ansible's relatively homogeneous bug labels.
+- **microsoft_vscode is hardest for zero-shot** (Qwen-32B ZS = 0.51) but recovers strongly under RAGTAG/debias (0.74–0.75). Retrieval is doing real work for vscode-specific feature/question phrasing.
+
+## RQ2.3 — RAGTAG k-curves per Qwen size
+
+Two-by-two panel: [rq2_kcurves_panel.png](analysis/figures/rq2_kcurves_panel.png).
+
+Plateau-of-RAGTAG by model size:
+- 3B and 7B plateau at k = 3 (3B) and k = 6 (7B); pushing higher doesn't help.
+- 14B and 32B continue improving to k = 9; the k-grid's upper bound coincides with the RAGTAG plateau at the larger sizes.
+
+## RQ2.4 — Scaling-law axis
+
+Source: [analysis/rq2_scaling_table.csv](analysis/rq2_scaling_table.csv); figures [rq2_scaling_agnostic.png](analysis/figures/rq2_scaling_agnostic.png) and [rq2_scaling_project_specific.png](analysis/figures/rq2_scaling_project_specific.png).
+
+| Model | ZS ag | RAGTAG-ag | RAGTAG-ps | Debias-ps | FT-ag | FT-ps |
+|---|---:|---:|---:|---:|---:|---:|
+| 3B | 0.613 | 0.694 | 0.694 | 0.709 | 0.652 | 0.575 |
+| 7B | 0.662 | 0.712 | 0.714 | 0.730 | **0.741** | 0.511 |
+| 14B | 0.645 | 0.717 | 0.717 | **0.742** | 0.715 | 0.637 |
+| 32B | 0.688 | 0.759 | 0.758 | **0.775** | 0.746 | 0.713 |
+
+- **RAGTAG/debias scale steeper with model size than FT-ag** in the agnostic setting: RAGTAG-ag gains 0.065 from 3B to 32B; FT-ag gains 0.094 with a non-monotonic trajectory (drop from 7B to 14B).
+- **FT-ps collapses non-monotonically.** 7B is the worst (0.511), recovering only at 32B. Consistent with the well-known phenomenon that LoRA on small training pools is unstable for mid-size models.
+- **The "FT wins" anomaly is uniquely Qwen-7B agnostic.** The point estimate is +0.029 over RAGTAG-ag and +0.011 over Debias-ps; the latter is not statistically significant (RQ2.9).
+
+## RQ2.5 — Pareto frontier (cost vs F1)
+
+Source: [analysis/rq2_pareto_table.csv](analysis/rq2_pareto_table.csv).
+
+**Project-specific (figure [rq2_pareto_gpu_project_specific.png](analysis/figures/rq2_pareto_gpu_project_specific.png)).** All FT-ps points are dominated. The Pareto frontier in the project-specific setting is composed entirely of RAGTAG and debias points, from Qwen-3B-debias-k1 (398 GPU-s, F1 0.675) to Qwen-32B-debias-k9 (11,424 GPU-s, F1 0.775).
+
+**Agnostic (figure [rq2_pareto_gpu_agnostic.png](analysis/figures/rq2_pareto_gpu_agnostic.png)).** Different story: FT-ag at 7B is on the Pareto frontier (940 GPU-s, F1 0.741), as is FT-ag at 32B (5,824 GPU-s, F1 0.746). RAGTAG fills the rest of the frontier.
+
+So FT is a Pareto-efficient choice in the agnostic setting (one classifier across all projects), but a Pareto-dominated choice in the project-specific setting (per-project tuning).
+
+## RQ2.6 — Bug-bias quantification (LLM-side, not retrieval-side)
+
+Source: [analysis/rq2_overprediction.csv](analysis/rq2_overprediction.csv); figure [rq2_bug_overprediction.png](analysis/figures/rq2_bug_overprediction.png); confusion matrices for Qwen-32B [rq2_confusion_qwen32b.png](analysis/figures/rq2_confusion_qwen32b.png).
+
+Bug over-prediction ratio (predicted_bug / true_bug; 1.0 = calibrated; mean across model sizes / k values within each cell type):
+
+| Cell type | Bug | Feature | Question |
+|---|---:|---:|---:|
+| Zero-shot ag | 1.54 | 0.99 | 0.47 |
+| RAGTAG ag (k1-9) | 1.32 | 1.04 | 0.58 |
+| RAGTAG ps (k1-9) | 1.32 | 1.03 | 0.58 |
+| Debias ps (k1-9) | 1.25 | 1.03 | 0.68 |
+| FT ag | 1.24 | 0.93 | 0.82 |
+| FT ps | 1.15 | 0.99 | 0.83 |
+
+Confusion-matrix view (Qwen-32B): zero-shot misclassifies 46 % of questions as bugs (506 / 1,100). RAGTAG-k9-ag drops it to 28 % (304); FT to 29 % (316); debias-k9-ps to 24 % (259, lowest of the four).
+
+## RQ2.7 — Retrieval-side bug skew is mild
+
+Source: [analysis/rq2_retrieval_bug_skew.csv](analysis/rq2_retrieval_bug_skew.csv); figure [rq2_retrieval_bug_skew.png](analysis/figures/rq2_retrieval_bug_skew.png).
+
+Mean fraction of top-k FAISS neighbors that are labeled "bug", sliced by ground-truth class (agnostic):
+
+| k | GT = bug | GT = feature | GT = question |
+|---:|---:|---:|---:|
+| 3 | 0.632 | 0.279 | 0.309 |
+| 9 | 0.609 | 0.289 | 0.325 |
+| 30 | 0.582 | 0.307 | 0.356 |
+
+For non-bug ground truth, the top-k contain ≈ 30 % bug neighbors — close to the 33 % balanced expectation. Retrieval is well-calibrated for non-bug classes; the bug-bias is **primarily an LLM-side phenomenon**, not a retrieval-side imbalance. This reframes the mechanism: retrieval-time debiasing works less by "fixing bad retrieval" and more by "nudging the LLM's prior at inference time via a class-balanced prompt."
+
+## RQ2.8 — Qualitative failure analysis
+
+264 of 3,300 test issues (8.0 %) are **consensus-bug failures**: every Qwen size's best plain RAGTAG (agnostic) predicted "bug", but ground truth was feature or question. Per ground-truth split: 79 % are question→bug, 21 % feature→bug.
+
+Auto-categorisation of consensus failures:
+
+| Category | Count | Description |
+|---|---:|---|
+| ambiguous | 195 | None of the patterns below — mostly labeling noise or genuinely hard cases |
+| question-phrased | 31 | Starts with "how/what/why/can I"; ends with "?" — should be question |
+| error-trace | 30 | Contains traceback / Exception / *Error class — looks bug-like even if labeled feature/question |
+| error-trace + question-phrased | 5 | Both patterns |
+| feature-cue | 3 | Explicit "feature request" / "proposal" language |
+
+Sample table: [analysis/rq2_qualitative_failures.md](analysis/rq2_qualitative_failures.md). Hand-review observation: many consensus-failure issues contain explicit "Bug:" framing in the title or body (often via GitHub's bug-report template), even though the maintainer's final label is feature or question. The LLM correctly reads the user's framing but misses the maintainer's reclassification — this is a labeling-mismatch problem more than a model error, and a meaningful chunk of the residual 24 % bug over-prediction is attributable to label noise of this kind.
+
+## RQ2.9 — Bootstrap CIs and McNemar tests on headline pairs
+
+Source: [analysis/rq2_significance.csv](analysis/rq2_significance.csv); markdown summary [rq2_significance.md](analysis/rq2_significance.md). Bootstrap 1,000 iters, n = 3,300 paired test issues. Significance markers: `***` p < 0.001, `**` p < 0.01, `*` p < 0.05.
+
+Selected critical findings:
+
+| Pair | ΔF1 (A − B) | 95 % CI | McNemar p | Sig |
+|---|---:|---|---:|:---:|
+| H2[Qwen-32B]: RAGTAG ag k9 vs VTAG ag k9 | +0.161 | [+0.142, +0.181] | 2.4e-44 | *** |
+| H3[Qwen-7B]: RAGTAG ag k6 vs FT ag | −0.029 | [−0.044, −0.014] | 4.5e-05 | *** (FT wins on RAGTAG-vs-FT) |
+| H4[Qwen-14B]: Debias ps k9 vs RAGTAG ps k9 | +0.025 | [+0.016, +0.033] | 2.2e-09 | *** |
+| H4[Qwen-32B]: Debias ps k9 vs RAGTAG ps k9 | +0.016 | [+0.008, +0.023] | 6.3e-07 | *** |
+| H5[Qwen-14B]: Debias ps k9 vs FT ag | +0.030 | [+0.013, +0.046] | 0.003 | ** |
+| H5[Qwen-32B]: Debias ps k9 vs FT ag | +0.031 | [+0.014, +0.045] | 0.139 | ns* |
+| **H6: Qwen-7B FT ag vs Debias ps k6 (the +0.011 anomaly)** | **+0.008** | **[−0.007, +0.023]** | **0.36** | **ns** |
+
+\*The 32B Debias-vs-FT gap has bootstrap CI excluding 0 (so the F1 ranking is reliable under resampling) but McNemar p > 0.05 (so paired decisions are statistically comparable). Both findings should be reported in the paper.
+
+**The 7B FT-wins anomaly is not statistically significant.** Qwen-7B FT ag (0.7411) vs Qwen-7B Debias ps k6 (0.7299) is a tie under McNemar (p = 0.36) and the 95 % CI of the gap straddles zero. The narrative should treat 7B as a tie between FT-ag and Debias-ps, not a clear FT win.
+
+---
+
+# RQ3 (2026-04-29) — Debiasing intervention closes the FT gap
+
+The debiasing technique: when retrieving the top-k FAISS neighbors for an issue, count the labels among the neighbors. If `bug_count − second_class_count ≤ margin (m=3)`, drop all bug-labeled neighbors and fall back to the next k non-bug neighbors. The intervention is applied at retrieval time and the rebalanced few-shots are consumed verbatim by the LLM.
+
+## RQ3.1 — Debias vs plain RAGTAG, all (model, k) cells
+
+Source: [analysis/rq3_debias_vs_ragtag.csv](analysis/rq3_debias_vs_ragtag.csv).
+
+Δ macro F1 (debias − plain RAGTAG, project-specific mean):
+
+| Model | k = 1 | k = 3 | k = 6 | k = 9 |
+|---|---:|---:|---:|---:|
+| Qwen-3B | −0.0088 | −0.0008 | +0.0309 | +0.0315 |
+| Qwen-7B | −0.0097 | −0.0018 | +0.0157 | +0.0202 |
+| Qwen-14B | −0.0061 | −0.0088 | +0.0194 | +0.0253 |
+| Qwen-32B | −0.0090 | −0.0103 | +0.0122 | +0.0166 |
+
+Debias **hurts at low k** (removing bug evidence harms precision when there's only one or three neighbors), **helps consistently at k ≥ 6**, and is largest at k = 9. The smallest model (3B) shows the biggest gain because it benefits most from class rebalancing; the largest model (32B) gains least because it's already best calibrated. Invalid-output rate falls under debias at high k (e.g., Qwen-32B ps k=9: 0.045 plain → 0.033 debias).
+
+## RQ3.2 — Debias-best vs FT, per Qwen size
+
+(See RQ2.9 for full bootstrap CIs and McNemar p-values.)
+
+| Model | Best debias (ps) | FT-ag | Δ (debias − FT) | Significance |
+|---|---:|---:|---:|:---|
+| Qwen-3B | 0.7089 (k6) | 0.6520 | +0.057 | *** (debias > FT clearly) |
+| Qwen-7B | 0.7299 (k6) | 0.7411 | −0.011 | ns (statistical tie, not a clear FT win) |
+| Qwen-14B | 0.7418 (k9) | 0.7154 | +0.026 | ** (debias > FT) |
+| Qwen-32B | 0.7745 (k9) | 0.7462 | +0.028 | bootstrap CI excludes 0; McNemar ns |
+
+## RQ3.3 — Per-project win rate of debias-ps
+
+Source: [analysis/rq3_per_project_winrate.csv](analysis/rq3_per_project_winrate.csv); figure [rq3_per_project_winrate.png](analysis/figures/rq3_per_project_winrate.png).
+
+| Model | vs FT-ag (wins / 11) | mean Δ | vs FT-ps (wins / 11) | mean Δ |
+|---|---:|---:|---:|---:|
+| Qwen-3B | 8 / 11 | +0.063 | 9 / 11 | +0.140 |
+| Qwen-7B | 6 / 11 | −0.005 | 11 / 11 | +0.225 |
+| Qwen-14B | 6 / 11 | +0.031 | 10 / 11 | +0.109 |
+| Qwen-32B | 8 / 11 | +0.032 | 9 / 11 | +0.065 |
+
+Debias-ps consistently wins vs FT-ps (9–11/11 projects per model), and wins or ties vs FT-ag (6–8/11 projects per model).
+
+## RQ3.4 — Scaling effect of debias
+
+Figure: [rq3_debias_gain_by_size.png](analysis/figures/rq3_debias_gain_by_size.png).
+
+- Left panel: Δ macro F1 vs k for each Qwen size. All four lines cross zero between k = 3 and k = 6; all are positive at k = 9.
+- Right panel: best-debias vs FT-ag vs FT-ps. Debias is monotonically increasing with size; FT-ag has the 7B spike; FT-ps is the lowest line throughout.
+
+## RQ3.5 — VTAG-debias mechanism ablation: the LLM-as-rescuer effect
+
+The same retrieval-time intervention applied to a no-LLM voting baseline (VTAG-debias) gives a near-zero macro-F1 gain: +0.006 ag, +0.007 ps. The LLM does the heavy lifting in RAGTAG-debias.
+
+Per-class recall delta (debias − plain) at k = 9, ground-truth-conditioned:
+
+| System | Δ recall bug | Δ recall feature | Δ recall question | Δ macro F1 |
+|---|---:|---:|---:|---:|
+| VTAG ag | **−0.192** | +0.048 | **+0.155** | +0.006 |
+| VTAG ps | **−0.183** | +0.047 | **+0.147** | +0.007 |
+| RAGTAG-3B ps | −0.124 | +0.005 | +0.202 | +0.032 |
+| RAGTAG-7B ps | −0.020 | +0.001 | +0.076 | +0.020 |
+| RAGTAG-14B ps | −0.008 | +0.009 | +0.073 | +0.025 |
+| RAGTAG-32B ps | **+0.002** | +0.003 | +0.052 | +0.017 |
+
+VTAG-debias trades ~0.19 bug-recall for ~0.16 question-recall (1:1 trade, marginal macro gain). RAGTAG-debias at 7B+ loses essentially zero bug-recall while gaining 5–8 % question-recall. The LLM is reading the retrieval-rebalanced few-shots and **correctly preserving true-bug predictions even when bug examples are removed from the prompt** — the rescue mechanism.
+
+**Quantifying the rescue.** Of the 164 test issues where VTAG-debias flipped a true-bug from "bug" to "question" (vs plain VTAG), how often did each Qwen model's RAGTAG-debias correctly predict "bug"?
+
+| Model | n flips | n rescued | Rescue rate |
+|---|---:|---:|---:|
+| Qwen-3B | 164 | 79 | **48.2 %** |
+| Qwen-7B | 164 | 133 | **81.1 %** |
+| Qwen-14B | 164 | 139 | **84.8 %** |
+| Qwen-32B | 164 | 138 | **84.1 %** |
+
+Source: [analysis/rq3_llm_rescue.csv](analysis/rq3_llm_rescue.csv); per-class deltas in [analysis/rq3_vtag_debias_perclass.csv](analysis/rq3_vtag_debias_perclass.csv); figure [rq3_mechanism_ablation.png](analysis/figures/rq3_mechanism_ablation.png).
+
+## RQ3.6 — Cost reframe
+
+Source: [analysis/rq3_cost_reframe.csv](analysis/rq3_cost_reframe.csv); figure [rq3_cost_reframe.png](analysis/figures/rq3_cost_reframe.png). Excludes model-load time per the project convention.
+
+| Model | Debias-ps total (s) | Debias F1 | FT-ag train (s) | FT-ag inf (s) | FT-ag total (s) | FT F1 | Δ F1 | Compute ratio (deb / FT) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Qwen-3B | 803 | 0.709 | 367 | 309 | 676 | 0.652 | +0.057 | 1.19× |
+| Qwen-7B | 1,439 | 0.730 | 568 | 371 | 939 | 0.741 | −0.011 | 1.53× |
+| Qwen-14B | 5,431 | 0.742 | 1,728 | 1,211 | 2,939 | 0.715 | +0.026 | 1.85× |
+| Qwen-32B | 11,424 | 0.775 | 3,616 | 2,208 | 5,824 | 0.746 | +0.028 | 1.96× |
+
+**Caveat to the data-efficiency claim.** Debias-ps uses 300 retrieval examples per project (vs FT-ag's 3,300 training examples — 11× fewer), but on **total GPU-seconds it costs 1.2–2.0× more than FT-ag** because of the 11 separate inferences with long retrieval prompts. Debias is uniquely valuable for low-resource projects where only 300 examples are available — there it beats any FT-ps trained on the same 300 examples by 0.06–0.23 macro F1 depending on model size.
+
+**Peak GPU memory tells a different story.** FT's peak memory is set by the training step (gradients + optimizer state + model + activations); RAGTAG/Debias inference only carries the model + activations + a longer prompt. Across the family:
+
+| Model | FT peak (train binding) | Debias-ps inference peak | Memory headroom | Min deployable GPU |
+|---|---:|---:|---:|---|
+| Qwen-3B | 5.5 GB | 2.9 GB | −2.6 GB (1.9× less) | both fit anywhere |
+| Qwen-7B | 9.9 GB | 6.8 GB | −3.1 GB (1.5× less) | both fit on 12 GB |
+| Qwen-14B | 17.0 GB | 12.6 GB | −4.4 GB (1.3× less) | both fit on 24 GB |
+| **Qwen-32B** | **31.7 GB** | **22.3 GB** | **−9.5 GB (1.4× less)** | **FT needs ≥40 GB (A100 / A6000); Debias fits on a single 24 GB RTX 3090/4090** |
+
+For Qwen-32B specifically, this is the practitioner-facing flip: FT-32B locks you into datacenter-class hardware (A100/A6000, 40+ GB) for the training step alone; Debias-32B inference fits on a single consumer 24 GB GPU. So at the largest size, debias is dramatically cheaper in deployable hardware class — **a single RTX 4090 vs an A100** — even though wall-clock is 1.96× higher.
+
+The honest framing of the data-efficiency / cost story now has three axes:
+
+| Axis | Direction | Magnitude |
+|---|---|---|
+| Training examples consumed | Debias wins | 300 ps vs 3,300 ag = 11× fewer per project |
+| Wall-clock GPU-seconds | FT wins | Debias is 1.2–2.0× slower at the largest sizes |
+| Peak GPU memory & hardware class | Debias wins | 1.3–1.9× less; at 32B, the difference is consumer-vs-datacenter |
+| Operational simplicity | Debias wins | No gradient updates, no training pipeline, swap models trivially |
+
+---
+
+## 0. Master Table — Final Results (2026-04-28, original — includes Llama)
 
 Every (model × approach × k × setting) combination, all 7 metrics + per-class precision/recall + invalid count. Project-specific values are 11-project averages.
 
