@@ -1,0 +1,20 @@
+% Approach
+% Claims to support: RAGTAG, VTAG, fine-tuning, margin-based debiasing
+
+\section{Approach}
+\label{sec:03_approach}
+
+% 3.1 Problem formulation
+% 3.2 Indexing and retrieval
+% 3.3 VTAG (retrieval-only voting baseline)
+% 3.4 RAGTAG (zero-shot folded in as the k=0 case)
+% 3.5 Fine-tuning baseline
+% 3.6 Margin-based retrieval debiasing  ← full algorithm, brief intuition,
+%                                          empirical case deferred to §6/§7
+\subsection{Problem Formulation}
+Given a query issue report, we classify it into only one of the three lables: \textit{bug}, \textit{feature}, or \textit{question}. Only the issue's title and description texts are used for classification with no other signals from the issue tracker. The defined label space is adopted directly from prior IRC studies.~\cite{aracena2024applyinglargelanguagemodels,aracena2025applying,izadi2022catiss,kallis2019ticket,antoniol2008bug}. 
+
+\subsection{Indexing and Retrieval}
+To prepare the issues for retrieval based on textual similarity, we first embed their textual content (i.e., \textit{title} + \textit{description}). We do not embed the issue labels. Instead, we retain them as metadata associated with each embedded issue. To generate the embeddings, we use the \texttt{all-MiniLM-L6-v2} model from the Sentence-Transformers library~\cite{reimers2019sentence}. We selected this model due to its lightweight architecture, fast performance, and effectiveness on issue report text~\cite{huang2025back}. After embedding all issue reports, we index them using the Faiss vector database library~\cite{douze2025faiss}, which enables efficient high-dimensional similarity retrieval. At the retrieval stage, the query issue is first embedded with the same \texttt{all-MiniLM-L6-v2} model. Next, Faiss calculates the cosine similarity of indexed issue reports to the query, and returns the top-k most similar candidates.
+
+

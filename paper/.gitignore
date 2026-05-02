@@ -1,0 +1,22 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.vtc
+*.run.xml
+*.bcf
+*.nav
+*.snm
+*.dvi
+
+# Editor backups
+*~
+*.swp

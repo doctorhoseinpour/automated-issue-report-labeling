@@ -1,0 +1,74 @@
+\documentclass[a4paper,UKenglish,cleveref,autoref,thm-restate,anonymous]{lipics-v2021}
+% NOTE: "anonymous" suppresses author block for double-blind submission.
+% Remove for camera-ready after acceptance.
+
+% ESEM 2026 Technical Track submission.
+% Format: Dagstuhl LIPIcs (lipics-v2021).
+% Limits: 17 pages main + up to 3 pages for Data Availability / References / Acknowledgements (mandatory: Data Availability + References).
+% Submission portal: https://esem26.hotcrp.com  -- Abstract: 2026-05-11, Full paper: 2026-05-18.
+
+\bibliographystyle{plainurl}
+
+% --- Metadata (TODO: fill in before submission) ---
+\title{TODO: Paper Title}
+% \titlerunning{TODO: short title} % uncomment if title is longer than one line
+
+\author{TODO: Author Name}{Affiliation, City, Country}{email@domain}{https://orcid.org/0000-0000-0000-0000}{}
+
+\authorrunning{TODO: A. Name}
+\Copyright{TODO: Author Name}
+
+\ccsdesc[500]{Software and its engineering~Software notations and tools}
+\ccsdesc[300]{Computing methodologies~Natural language processing}
+
+\keywords{issue classification, retrieval-augmented generation, fine-tuning, large language models, mining software repositories}
+
+\category{}
+\relatedversion{}
+
+% \acknowledgements{TODO}
+
+% --- Editor-only macros (do not touch) ---
+\EventEditors{}
+\EventNoEds{0}
+\EventLongTitle{}
+\EventShortTitle{}
+\EventAcronym{}
+\EventYear{}
+\EventDate{}
+\EventLocation{}
+\EventLogo{}
+\SeriesVolume{}
+\ArticleNo{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% ESEM 2026 mandates a structured abstract with these labelled segments.
+\textbf{Background.} TODO: 1--2 sentences on the problem and why it matters.
+
+\textbf{Aims.} TODO: the research questions or specific objectives.
+
+\textbf{Method.} TODO: dataset, models, approaches compared.
+
+\textbf{Results.} TODO: headline numbers, ordered by RQ.
+
+\textbf{Conclusions.} TODO: what this means and the takeaway for practitioners.
+\end{abstract}
+
+\input{sections/01_intro}
+\input{sections/02_related}
+\input{sections/03_approach}
+\input{sections/04_setup}
+\input{sections/05_rq1}
+\input{sections/06_rq2}
+\input{sections/07_rq3}
+\input{sections/08_discussion}
+\input{sections/09_threats}
+\input{sections/10_conclusion}
+\input{sections/11_data_availability}
+
+\bibliography{refs}
+
+\end{document}
