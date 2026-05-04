@@ -4,17 +4,64 @@
 \section{Approach}
 \label{sec:03_approach}
 
-% 3.1 Problem formulation
-% 3.2 Indexing and retrieval
-% 3.3 VTAG (retrieval-only voting baseline)
-% 3.4 RAGTAG (zero-shot folded in as the k=0 case)
-% 3.5 Fine-tuning baseline
-% 3.6 Margin-based retrieval debiasing  ← full algorithm, brief intuition,
-%                                          empirical case deferred to §6/§7
 \subsection{Problem Formulation}
-Given a query issue report, we classify it into only one of the three lables: \textit{bug}, \textit{feature}, or \textit{question}. Only the issue's title and description texts are used for classification with no other signals from the issue tracker. The defined label space is adopted directly from prior IRC studies.~\cite{aracena2024applyinglargelanguagemodels,aracena2025applying,izadi2022catiss,kallis2019ticket,antoniol2008bug}. 
+Given a query issue report, we classify it into only one of the three labels: \textit{bug}, \textit{feature}, or \textit{question}. Only the issue's title and description text are used for classification with no other signals from the issue tracker. The defined label space is adopted directly from prior IRC studies~\cite{aracena2024applyinglargelanguagemodels,aracena2025applying,izadi2022catiss,kallis2019ticket,antoniol2008bug}. 
 
 \subsection{Indexing and Retrieval}
-To prepare the issues for retrieval based on textual similarity, we first embed their textual content (i.e., \textit{title} + \textit{description}). We do not embed the issue labels. Instead, we retain them as metadata associated with each embedded issue. To generate the embeddings, we use the \texttt{all-MiniLM-L6-v2} model from the Sentence-Transformers library~\cite{reimers2019sentence}. We selected this model due to its lightweight architecture, fast performance, and effectiveness on issue report text~\cite{huang2025back}. After embedding all issue reports, we index them using the Faiss vector database library~\cite{douze2025faiss}, which enables efficient high-dimensional similarity retrieval. At the retrieval stage, the query issue is first embedded with the same \texttt{all-MiniLM-L6-v2} model. Next, Faiss calculates the cosine similarity of indexed issue reports to the query, and returns the top-k most similar candidates.
+\label{sec:retrieval}
+To prepare the issues for retrieval based on textual similarity, we first embed their textual content (i.e., \textit{title} + \textit{description}). We do not embed the issue labels. Instead, we retain them as metadata associated with each embedded issue. To generate the embeddings, we use the \texttt{all-MiniLM-L6-v2} model from the Sentence-Transformers library~\cite{reimers2019sentence}. We selected this model due to its lightweight architecture, fast performance, and effectiveness on issue report text~\cite{huang2025back}. After embedding all issue reports, we index them using the Faiss vector database library~\cite{douze2025faiss}, which enables efficient high-dimensional similarity retrieval. At the retrieval stage, the query issue is first embedded with the same model. Next, Faiss calculates the cosine similarity of indexed issue reports to the query, and returns the top-K nearest neighbors, ordered by descending similarity.
+\subsection{\ragtag}
+\ragtag is our proposed retrieval-augmented few-shot prompting approach for
+IRC. \ragtag uses the retrieval pipeline described in~\cref{sec:retrieval}
+to retrieve the top-K nearest neighbors to the query issue, and present
+them as classified examples to the LLM in a few-shot prompt. This enables
+a more accurate classification, based on in-context
+learning~\cite{brown2020language}. The choice to present the top-K nearest
+neighbors as examples is based on two insights from prior research: First,
+retrieval-based example selection outperforms random
+selection~\cite{liu2022makes}. Second, the most similar neighbors tend to
+share the same labels~\cite{cover1967nearest}; therefore, they are
+informative for the classification.
+
+We create the few-shot prompt in three parts. First, the system message frames
+the classification task and the label space. Second, the top-K nearest neighbors are listed in retrieval order (descending similarity), each formatted as \textit{title + description + label}. Finally, the query issue is appended to the end of the prompt, ensuring it receives high attention from the LLM~\cite{liu2024lost}. K=0 produces a zero-shot prompting baseline, similar to prior work~\cite{colavito2025benchmarking}.
+
+The LLM is instructed to generate the predicted label wrapped in XML tags
+(e.g. \texttt{<label>bug</label>}). The labels of the presented examples also
+follow the same format. This technique enables easy detection of the
+predicted label from the LLM's generation, and reduces variance in LLM
+outputs caused by prompt format sensitivity~\cite{sclar2023quantifying}.
+We use a regular expression to extract the predicted label. Unparseable outputs are
+marked as \textit{invalid}.
 
 
+\subsection{\votag}
+\votag is our proposed non-parametric retrieval IRC method. \votag uses the retrieval pipeline described in~\cref{sec:retrieval} to retrieve the top-K nearest neighbors of the query issue report, then predicts the final
+label with a similarity-weighted vote on their labels. This approach follows the standard K-nearest-neighbor classification setup~\cite{cover1967nearest}, with neighbors weighted by their similarity to the query~\cite{dudani1976distance}.\footnote{Squared-similarity weighting and uniform majority were also evaluated, but were outperformed by similarity-weighted voting.} Formally, for a
+query issue $q$ with retrieved neighbors $\{(n_i, l_i, s_i)\}_{i=1}^{K}$, where
+$n_i$ is the $i$-th nearest neighbor with label $l_i$ and cosine similarity $s_i$ to $q$, the label is predicted by:
+\begin{equation}
+    \hat{y} = \operatorname*{arg\,max}_{c \in \mathcal{L}}
+    \sum_{i=1}^{K} s_i \cdot \mathbf{1}[l_i = c],
+    \label{eq:votag}
+\end{equation}
+where $\mathcal{L}$ is the label set and $\mathbf{1}[\cdot]$ is the indicator function. \votag breaks ties by returning the label of the most similar neighbor in the tied classes.
+
+\votag has three main roles: First, it serves as a fast and cost-efficient baseline that LLM-based approaches must clear to justify their computational cost. Second, it is used as an ablation to
+distinguish the contributions of the LLM and retrieval in the \ragtag method. Third, \votag's performance as a function of K informs the K values we evaluate for \ragtag.
+
+
+\subsection{Fine-Tuning}
+\label{sec:finetune}
+SOTA IRC approaches have achieved strong performance by supervised
+fine-tuning of LLMs~\cite{heo2025study,aracena2025applying,
+aracena2024applyinglargelanguagemodels}, using Low-Rank Adaptation
+(LoRA)~\cite{hu2022lora}. In these studies, the
+model is trained on labeled issue reports and predicts the labels for
+unseen test issues. Each training example is formatted as an
+instruction prompt which includes the issue's title and description
+as input, and its label as output. At inference, the trained model
+receives the test issue in the same format, and predicts the empty
+label field. Regular expressions are used to extract the prediction
+from the output, and unparseable outputs are marked as
+\textit{invalid}. We use this established methodology as our fine-tuning baseline.
