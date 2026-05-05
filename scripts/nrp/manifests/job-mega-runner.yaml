@@ -40,11 +40,11 @@ spec:
             requests:
               cpu: "8"
               memory: 64Gi
-              nvidia.com/rtxa6000: 1
+              nvidia.com/gpu: 1
             limits:
               cpu: "8"
               memory: 64Gi
-              nvidia.com/rtxa6000: 1
+              nvidia.com/gpu: 1
           volumeMounts:
             - name: hf-cache
               mountPath: /workspace/hf_cache
@@ -55,6 +55,16 @@ spec:
       # Pod-level deadline: clock starts when the container begins running,
       # not at Job submission. Queue time is uncapped.
       activeDeadlineSeconds: 360000
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values:
+                      - NVIDIA-L40
+                      - NVIDIA-L40S
       volumes:
         - name: hf-cache
           persistentVolumeClaim:

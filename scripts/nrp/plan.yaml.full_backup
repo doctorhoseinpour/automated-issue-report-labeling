@@ -1,0 +1,111 @@
+# Canonical campaign manifest for the NRP 11k experiments.
+# Consumed by scripts/nrp/submit.py — declares which cells exist; the launcher
+# knows how to render Jobs for each wave type.
+
+# Default container image. submit.py overrides via --image.
+image: ghcr.io/doctorhoseinpour/llm-labler:6570030
+
+projects:
+  - ansible_ansible
+  - bitcoin_bitcoin
+  - dart-lang_sdk
+  - dotnet_roslyn
+  - facebook_react
+  - flutter_flutter
+  - kubernetes_kubernetes
+  - microsoft_TypeScript
+  - microsoft_vscode
+  - opencv_opencv
+  - tensorflow_tensorflow
+
+models:
+  llama3b:
+    hf_id: unsloth/Llama-3.2-3B-Instruct
+    short: llama3b
+    tag: unsloth_Llama_3_2_3B_Instruct
+    tier: S
+  qwen14b:
+    hf_id: unsloth/Qwen2.5-14B-Instruct-bnb-4bit
+    short: qwen14b
+    tag: unsloth_Qwen2_5_14B_Instruct_bnb_4bit
+    tier: M
+  qwen32b:
+    hf_id: unsloth/Qwen2.5-32B-Instruct-bnb-4bit
+    short: qwen32b
+    tag: unsloth_Qwen2_5_32B_Instruct_bnb_4bit
+    tier: M
+
+# Resource profiles per tier. limits == requests (NRP >100-pod policy compliant).
+tiers:
+  S:
+    cpu: "2"
+    mem: 16Gi
+    gpu_resources:
+      nvidia.com/gpu: 1
+    node_selector_products:
+      - NVIDIA-GeForce-RTX-3090
+      - NVIDIA-RTX-A5000
+  M:
+    cpu: "8"
+    mem: 64Gi
+    gpu_resources:
+      nvidia.com/rtxa6000: 1
+    node_selector_products: []
+
+# Waves of work. Wave 0 must finish before any other wave's Jobs schedule
+# (submit.py enforces this barrier).
+waves:
+  - id: 0
+    name: indexing
+    type: indexing
+    # Re-runs build_11k_index.py for agnostic + all 11 projects on a single tier-M
+    # GPU pod, ~10 min wall.
+    active_deadline_seconds: 72000
+
+  - id: 1
+    name: qwen32b-ragtag
+    type: ragtag
+    model: qwen32b
+    settings: [agnostic, project_specific]
+    top_ks: "0,1,3,6,9"
+    max_seq_length: 8192
+    output_subdir: ragtag_v2     # sibling of broken `ragtag/` (paper-archival)
+    active_deadline_seconds: 72000   # 20h (uniform)
+
+  - id: 2
+    name: qwen14b-ft
+    type: finetune
+    model: qwen14b
+    settings: [agnostic, project_specific]
+    output_subdir: finetune_fixed
+    active_deadline_seconds: 72000   # 20h (uniform)
+
+  - id: 3
+    name: qwen14b-debias
+    type: debias
+    model: qwen14b
+    settings: [project_specific]
+    top_ks: "1,3,6,9"
+    debias_margin: 3
+    max_seq_length: 8192
+    output_subdir: ragtag_debias_m3_v2
+    active_deadline_seconds: 72000   # 20h (uniform)
+
+  - id: 4
+    name: qwen32b-debias
+    type: debias
+    model: qwen32b
+    settings: [project_specific]
+    top_ks: "1,3,6,9"
+    debias_margin: 3
+    max_seq_length: 8192
+    output_subdir: ragtag_debias_m3_v2
+    active_deadline_seconds: 72000   # 20h (uniform)
+
+  - id: 5
+    name: qwen32b-ft
+    type: finetune
+    model: qwen32b
+    settings: [agnostic, project_specific]
+    output_subdir: finetune_fixed
+    active_deadline_seconds: 72000   # 20h (uniform)

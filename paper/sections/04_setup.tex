@@ -3,64 +3,38 @@
 
 \subsection{Dataset and Settings}
 \label{sec:setup-dataset}
-We use the dataset introduced by Heo et al.~\cite{heo2025study} in our experiments. The dataset has a total of 6,600 issue reports gathered from eleven active open-source projects: \texttt{ansible/ansible},
-\texttt{bitcoin/bitcoin}, \texttt{dart-lang/sdk},
-\texttt{dotnet/roslyn}, \texttt{facebook/react},
-\texttt{flutter/flutter}, \texttt{kubernetes/kubernetes},
-\texttt{microsoft/TypeScript}, \texttt{microsoft/vscode},
-\texttt{opencv/opencv}, and \texttt{tensorflow/tensorflow}. Each project has 600 issue reports with an equal distribution across the labels (\textit{bug, feature, question}). To support their LLM fine-tuning method, Heo et al. divided the dataset in 50/50 train and test splits, stratified by project and label. This results in 300 train and 300 test issue reports per project. 
+We use the dataset introduced in Heo et al.~\cite{heo2025study} for our experiments. The dataset has a total of 6,600 issue reports gathered from eleven active open-source projects:
+\texttt{ansible/ansible}, \texttt{bitcoin/bitcoin},
+\texttt{dart-lang/sdk}, \texttt{dotnet/roslyn},
+\texttt{facebook/react}, \texttt{flutter/flutter},
+\texttt{kubernetes/kubernetes}, \texttt{microsoft/TypeScript},
+\texttt{microsoft/vscode}, \texttt{opencv/opencv}, and
+\texttt{tensorflow/tensorflow}. Each project has 600 issue reports
+with an equal distribution across the labels
+(\textit{bug, feature, question}). To support their LLM fine-tuning
+method, Heo et al. divided the dataset into 50/50 train and test
+splits, stratified by project and label. This results in 300 train
+and 300 test issue reports per project.
 
-Heo et al. also evaluate the effect of \emph{project-specific} (PS) and \emph{project-agnostic} (PA) data on fine-tuning with two different configurations. 
-
-
-
-
-% Points to cover:
-% 1. We use the 11-project benchmark from \cite{heo2025study}: 6,600 issue reports, 600 per project, balanced across {bug, feature, question}.
-% 2. (Optional) list or characterize the 11 projects (active OSS projects spanning multiple ecosystems).
-% 3. Issues are temporally sorted by their creation timestamp before splitting, mimicking a standard SE repository's chronological progression and preventing temporal data leakage between train and test.
-% 4. Sorting is performed independently per label so the train/test split remains class-balanced after temporal ordering.
-% 5. Train/test split: 50/50 stratified by label and project, deterministic from the source CSV; ~3,300 issues per split.
-% 6. Two settings are evaluated for retrieval-based methods:
-%    - Project-agnostic: one FAISS index over all 3,300 train issues across all projects.
-%    - Project-specific: a separate FAISS index per project (~300 train issues each); retrieval is restricted to same-project neighbors.
-% 7. Both settings are evaluated for \ragtag, \votag, and fine-tuning.
+We also adopt Heo et al.'s project-specific (PS) and project-agnostic
+(PA) configurations to examine how data scope affects IRC performance.
+In the PS setting, each project's train and test data are used in
+isolation, resulting in eleven different train-test pairs. In the PA
+setting, the train splits of all projects are merged into a single
+training set of 3,300 issue reports. In both configurations, \ragtag
+and \votag only use the training splits as their retrieval index to
+ensure fair comparison with the fine-tuning baseline.
 
 \subsection{Models}
 \label{sec:setup-models}
-% Points to cover:
-% 8. We evaluate the Qwen2.5-Instruct model family at four sizes: 3B, 7B, 14B, and 32B parameters.
-% 9. Rationale: a single uniform model family across sizes enables clean scale-comparison, isolating the effect of model capacity from architectural differences.
-% 10. All models are loaded in bnb-4bit quantization via Unsloth for memory efficiency.
+We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluations with four different parameter sizes: 3B, 7B, 14B, and 32B. Qwen2.5 is an open-source LLM with strong performance on general-purpose benchmarks. Using the same model at different parameter sizes isolates the effect of model scale from model architecture across LLM-based IRC approaches. Model temperature is set at 0.1 for deterministic classifications.
 
-\subsection{Hyperparameters and Implementation}
-\label{sec:setup-hyperparameters}
-% --- RAGTAG ---
-% 11. We evaluate \ragtag at k in {0, 1, 3, 6, 9}; this grid is derived from \votag's plateau analysis presented in \cref{sec:rq1}.
-% 12. Decoding: temperature=0.1, top_p=0.9, top_k=50, max_new_tokens=50.
-% 13. Maximum sequence length: 8,192 tokens; when the assembled prompt exceeds this budget, we truncate proportionally (30% test issue / 70% retrieved neighbors).
-%
-% --- VOTAG ---
-% 14. We evaluate \votag at k in {1, ..., 30} for the plateau analysis; similarity-weighted voting is the default scheme (squared-similarity and uniform majority were also evaluated, see \cref{sec:votag} footnote).
-%
-% --- Fine-tuning ---
-% 15. LoRA configuration: rank r=16, alpha=16, dropout=0, applied to all attention and MLP projection modules (q, k, v, o, gate, up, down).
-% 16. Training: 1 epoch, learning rate 2e-4, optimizer paged_adamw_8bit (linear schedule, 5-step warmup), batch size 16 (per_device=1, grad_accum=16), bf16 precision, max sequence length 2,048.
-% 17. Inference decoding: temperature=0.1, top_p=0.9, top_k=1, max_new_tokens=10.
-%
-% --- Reproducibility ---
-% 18. Random seed 3407 for fine-tuning and data shuffling.
-% 19. GPU peak memory is tracked across both training and inference for cost comparison (reported alongside accuracy in \cref{sec:rq1,sec:rq2,sec:rq3}).
 
-\subsection{Metrics}
+\subsection{Evaluation Metrics}
 \label{sec:setup-metrics}
-% Points to cover:
-% 20. Primary: macro-averaged F1 (averaged across the three labels: bug, feature, question).
-% 21. Secondary: per-label precision, recall, and F1; overall accuracy; invalid prediction rate (fraction of outputs not parseable as a valid label).
-% 22. Macro F1 is reported because the three classes are balanced in our benchmark; per-label metrics expose where each method's contribution lies.
-% 23. TODO: significance testing methodology (see paper/TODO.md) -- decide during \cref{sec:rq1,sec:rq2,sec:rq3} whether to use paired tests / bootstrap CIs / McNemar's; if yes, the methodology comes back here.
+%TODO
 
-\subsection{Hardware}
+\subsection{Setup Hardware}
 \label{sec:setup-hardware}
 % Points to cover:
 % 24. All experiments were run on a server with the following specifications: NVIDIA RTX A6000 GPU (48 GB VRAM), [CPU model + core count], [RAM amount], [OS / CUDA version].

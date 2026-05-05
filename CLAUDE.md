@@ -10,7 +10,7 @@ This file gives Claude persistent context about this research project. Read it a
 
 **Goal:** An academic research paper comparing four approaches to classifying GitHub issues into `bug`, `feature`, or `question`.
 
-**Sole dataset:** 11-project benchmark — `issues11k.csv` (6,600 issues, 11 projects × 600, balanced bug/feature/question). The 3k and 30k datasets are deprecated; their analyses are preserved under [docs/legacy/](docs/legacy/) for related-work / interventions-tried discussion only.
+**Sole dataset:** 11-project benchmark — `issues11k.csv` (6,600 issues, 11 projects × 600, balanced bug/feature/question). The 3k and 30k datasets are deprecated and their analyses have been removed from the repo.
 
 ### Four Approaches
 
@@ -179,5 +179,5 @@ A second RQ3 intervention method is under discussion; vote-prior injection is th
 ## Conventions
 
 - **`results/` is paper-archival.** Never delete, move, or rename anything inside it during refactors. Even content from deprecated 3k/30k experiments stays as evidence trail.
-- **Findings docs live in `docs/`** (tracked in git). The active set is `11K_BENCHMARK_FINDINGS.md`, `PAPER_NARRATIVE.md`, and `professor_meeting_slides.md`. Legacy docs (3k/30k era) live in [docs/legacy/](docs/legacy/) and inform discussion sections only.
+- **Paper writing lives in `paper/`** (LIPIcs template, `sections/*.tex`); the canonical session handoff is [paper/SESSION_HANDOFF.md](paper/SESSION_HANDOFF.md). Older findings docs in `docs/` (`11K_BENCHMARK_FINDINGS.md`, `PAPER_NARRATIVE.md`) are reference only and partially superseded — their FT numbers are 1-epoch and their links to `docs/analysis/` are broken because that directory was deleted along with `docs/legacy/` to remove stale-analysis bloat.
 - **Splits are deterministic** — regenerated from the source CSV on first run; safe to delete and re-create.

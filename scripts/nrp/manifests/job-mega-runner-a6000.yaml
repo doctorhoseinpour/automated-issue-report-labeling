@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mega-runner-a6000
+  labels:
+    campaign: llm-labler-11k
+    role: mega-runner
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 604800
+  template:
+    metadata:
+      labels:
+        campaign: llm-labler-11k
+        role: mega-runner
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: main
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          command: ["bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              cd /workspace/llm-labler
+              echo "[start] $(date -Is) mega-runner-a6000 $(hostname)"
+              python scripts/nrp/runners/run_remaining_cells.py
+              echo "[done] $(date -Is) mega-runner-a6000 exited cleanly"
+          env:
+            - name: HF_HOME
+              value: /workspace/hf_cache
+            - name: TRANSFORMERS_CACHE
+              value: /workspace/hf_cache
+            - name: HUGGINGFACE_HUB_CACHE
+              value: /workspace/hf_cache
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            requests:
+              cpu: "8"
+              memory: 64Gi
+              nvidia.com/rtxa6000: 1
+            limits:
+              cpu: "8"
+              memory: 64Gi
+              nvidia.com/rtxa6000: 1
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /workspace/hf_cache
+            - name: results
+              mountPath: /workspace/llm-labler/results
+            - name: dshm
+              mountPath: /dev/shm
+      # Pod-level deadline: clock starts when the container begins running,
+      # not at Job submission. Queue time is uncapped.
+      activeDeadlineSeconds: 360000
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: hf-cache-pvc
+        - name: results
+          persistentVolumeClaim:
+            claimName: results-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi

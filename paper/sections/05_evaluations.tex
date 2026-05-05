@@ -1,0 +1,185 @@
+% Evaluations
+% Claims to support: VOTAG plateau and k-grid justification, leaderboard
+% across approaches and model scales, bug-bias diagnosis, debiasing results.
+
+\section{Evaluations}
+\label{sec:evaluations}
+
+% TODO
+
+\subsection{RQ1) To what extent can similarity-weighted voting on the nearest neighbors (\votag) classify issue reports, and at what point does adding neighbors stop helping?}
+\label{sec:rq1}
+
+To study \votag's performance as a function of $K$, We evaluate it at K values 1 to 30 across both PS and PA settings. \Cref{fig:vtag-kcurve} plots macro F1 as a function of $k$ in both settings, while \cref{tab:eval-ps,tab:eval-pa} report \votag's peak per-class and macro F1 at the chosen plateau $k$ ($k{=}7$ for PS, $k{=}14$ for PA, leftmost column of each table).
+
+
+% Points to drive home in this subsection:
+%
+% 1. VOTAG defines a non-LLM retrieval floor.
+%    Pure similarity-weighted k-NN over the FAISS index reaches macro F1
+%    ~0.60 (agnostic) and ~0.58 (project-specific mean) at the plateau, in
+%    negligible compute (CPU, no LLM call, no training). Any LLM-based
+%    approach must clear this floor to justify the cost it adds.
+%
+% 2. VOTAG's k-curve plateau anchors the RAGTAG k-grid.
+%    The k=1..30 sweep climbs to ~k=6, then plateaus (agnostic ~k=13,
+%    project-specific ~k=7). The chosen RAGTAG grid {0, 1, 3, 6, 9}
+%    brackets the climb (k=1, 3, 6) plus the entry to the plateau (k=9).
+%    The k-values are not arbitrary -- they are empirically informed by
+%    where retrieval evidence stops adding value. Pre-empts the
+%    "did you try k=15? k=30?" reviewer question.
+%
+% 3. The retrieval signal is real but bounded.
+%    At its plateau, VOTAG closes a meaningful chunk of the gap to
+%    fine-tuning (FT-PA ~0.71 vs VOTAG ~0.60 -- about 85% of the way) but
+%    still trails RAGTAG by ~0.10 macro F1 on every model size. This sets
+%    up the natural question that motivates RAGTAG: what does the LLM add
+%    beyond retrieval?
+%
+% Analyses needed:
+% - Table or figure: VOTAG macro F1 by k, both settings (agnostic, PS).
+%   Mark the plateau. k = 1..15 or 1..30.
+% - Plateau identification with a quantitative definition (e.g., F1 within
+%   0.005 of the maximum).
+% - Per-project breakdown: std across the 11 projects at the plateau k.
+%   The point is consistency, not a single-project artifact.
+% - PA vs PS comparison for VOTAG: agnostic outperforms PS by ~0.02 at
+%   plateau. Mild evidence that pooling helps even pure retrieval.
+% - Cost characterization: median per-issue inference time for VOTAG (CPU,
+%   ms) vs RAGTAG-k=9 (GPU, seconds). Cost-vs-quality story is most
+%   legible here.
+%
+% Things NOT to claim:
+% - Don't oversell VOTAG as a deployable replacement for FT.
+% - Don't claim VOTAG matches anything LLM-based.
+% - Don't include voting-scheme ablation (similarity vs Shepard vs majority,
+%   spread is ~0.002, noise) in main text -- footnote or appendix only.
+% - Don't include the embedder-comparison story (legacy data only).
+%
+% Best load-bearing figure: k-curve plot with both PA and PS lines,
+% plateau region shaded, RAGTAG k-grid markers (k=1, 3, 6, 9) annotated as
+% vertical lines. This single figure carries point 2 by itself.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.6\linewidth]{figures/vtag_kcurve.pdf}
+    \caption{\votag macro F1 as a function of $k$.}
+    \label{fig:vtag-kcurve}
+\end{figure}
+
+% TODO -- write subsection prose
+
+% Headline results tables. F1 only across all four Qwen2.5-Instruct sizes.
+% \votag is model-independent (single column on the left). Generated from
+% results/issues11k/ via on-the-fly metric computation; regeneratable when
+% Qwen-14B/32B FT 3-epoch data syncs from NRP.
+
+\begin{table}[t]
+\caption{Per-class F1 score for each project under the project-specific setting, across all four Qwen2.5-Instruct sizes (3B/7B/14B/32B). \votag\ is model-independent ($k{=}7$ plateau). \ragtag\ uses the best $k$ per scale ($k{=}3$ for 3B, $k{=}6$ for 7B, $k{=}9$ for 14B/32B). FT for 14B/32B is currently a 1-epoch baseline pending the in-flight 3-epoch update.}
+\label{tab:eval-ps}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{l l c cccc cccc cccc}
+\toprule
+& & \textbf{\votag} & \multicolumn{4}{c}{\textbf{Zero-shot}} & \multicolumn{4}{c}{\textbf{\ragtag}} & \multicolumn{4}{c}{\textbf{Fine-tune}} \\
+\cmidrule(lr){4-7} \cmidrule(lr){8-11} \cmidrule(lr){12-15}
+Project & Label & --- & 3B & 7B & 14B & 32B & 3B & 7B & 14B & 32B & 3B & 7B & 14B & 32B \\
+\midrule
+ansible & bug & 0.644 & 0.751 & 0.722 & 0.760 & 0.800 & 0.786 & 0.813 & 0.817 & 0.828 & 0.943 & 0.736 & 0.828 & 0.911 \\
+ & feature & 0.667 & 0.875 & 0.708 & 0.744 & 0.727 & 0.790 & 0.774 & 0.824 & 0.850 & 0.949 & 0.933 & 0.783 & 0.817 \\
+ & question & 0.397 & 0.514 & 0.339 & 0.198 & 0.246 & 0.439 & 0.478 & 0.384 & 0.474 & 0.910 & 0.706 & 0.695 & 0.728 \\
+ & \textit{average} & 0.569 & 0.713 & 0.590 & 0.567 & 0.591 & 0.672 & 0.688 & 0.675 & 0.717 & 0.934 & 0.792 & 0.768 & 0.819 \\
+\midrule
+bitcoin & bug & 0.558 & 0.696 & 0.700 & 0.692 & 0.702 & 0.684 & 0.699 & 0.700 & 0.709 & 0.692 & 0.600 & 0.643 & 0.663 \\
+ & feature & 0.693 & 0.695 & 0.844 & 0.867 & 0.860 & 0.874 & 0.873 & 0.891 & 0.872 & 0.839 & 0.736 & 0.678 & 0.826 \\
+ & question & 0.482 & 0.313 & 0.424 & 0.339 & 0.440 & 0.466 & 0.570 & 0.507 & 0.599 & 0.479 & 0.605 & 0.468 & 0.607 \\
+ & \textit{average} & 0.577 & 0.568 & 0.656 & 0.632 & 0.667 & 0.675 & 0.714 & 0.699 & 0.727 & 0.670 & 0.647 & 0.596 & 0.699 \\
+\midrule
+dart-lang & bug & 0.706 & 0.749 & 0.766 & 0.765 & 0.814 & 0.782 & 0.800 & 0.815 & 0.847 & 0.808 & 0.822 & 0.693 & 0.857 \\
+ & feature & 0.639 & 0.662 & 0.815 & 0.835 & 0.878 & 0.816 & 0.832 & 0.889 & 0.878 & 0.788 & 0.831 & 0.756 & 0.910 \\
+ & question & 0.471 & 0.687 & 0.762 & 0.712 & 0.798 & 0.715 & 0.772 & 0.818 & 0.856 & 0.794 & 0.827 & 0.719 & 0.863 \\
+ & \textit{average} & 0.605 & 0.699 & 0.781 & 0.771 & 0.830 & 0.771 & 0.801 & 0.841 & 0.860 & 0.796 & 0.827 & 0.723 & 0.877 \\
+\midrule
+dotnet & bug & 0.568 & 0.652 & 0.659 & 0.654 & 0.643 & 0.628 & 0.659 & 0.645 & 0.658 & 0.617 & 0.585 & 0.602 & 0.513 \\
+ & feature & 0.628 & 0.604 & 0.781 & 0.808 & 0.791 & 0.756 & 0.796 & 0.782 & 0.806 & 0.772 & 0.757 & 0.458 & 0.737 \\
+ & question & 0.356 & 0.326 & 0.303 & 0.290 & 0.397 & 0.412 & 0.406 & 0.406 & 0.532 & 0.296 & 0.468 & 0.513 & 0.632 \\
+ & \textit{average} & 0.517 & 0.527 & 0.581 & 0.584 & 0.610 & 0.599 & 0.620 & 0.611 & 0.665 & 0.562 & 0.603 & 0.524 & 0.628 \\
+\midrule
+react & bug & 0.783 & 0.763 & 0.766 & 0.775 & 0.810 & 0.797 & 0.797 & 0.803 & 0.833 & 0.886 & 0.632 & 0.785 & 0.804 \\
+ & feature & 0.491 & 0.728 & 0.827 & 0.872 & 0.870 & 0.802 & 0.827 & 0.871 & 0.871 & 0.773 & 0.813 & 0.696 & 0.835 \\
+ & question & 0.534 & 0.670 & 0.691 & 0.632 & 0.703 & 0.623 & 0.687 & 0.718 & 0.762 & 0.721 & 0.618 & 0.673 & 0.724 \\
+ & \textit{average} & 0.603 & 0.721 & 0.761 & 0.759 & 0.794 & 0.741 & 0.770 & 0.797 & 0.822 & 0.793 & 0.687 & 0.718 & 0.787 \\
+\midrule
+flutter & bug & 0.659 & 0.692 & 0.719 & 0.701 & 0.714 & 0.695 & 0.700 & 0.647 & 0.687 & 0.720 & 0.670 & 0.722 & 0.701 \\
+ & feature & 0.560 & 0.817 & 0.861 & 0.842 & 0.842 & 0.834 & 0.883 & 0.857 & 0.870 & 0.787 & 0.888 & 0.737 & 0.860 \\
+ & question & 0.483 & 0.532 & 0.604 & 0.607 & 0.658 & 0.551 & 0.684 & 0.662 & 0.765 & 0.419 & 0.646 & 0.615 & 0.715 \\
+ & \textit{average} & 0.568 & 0.681 & 0.728 & 0.716 & 0.738 & 0.694 & 0.755 & 0.722 & 0.774 & 0.642 & 0.734 & 0.691 & 0.759 \\
+\midrule
+kubernetes & bug & 0.626 & 0.659 & 0.625 & 0.586 & 0.652 & 0.778 & 0.792 & 0.817 & 0.837 & 0.639 & 0.783 & 0.664 & 0.503 \\
+ & feature & 0.708 & 0.953 & 0.850 & 0.821 & 0.851 & 0.904 & 0.918 & 0.939 & 0.929 & 0.860 & 0.791 & 0.911 & 0.802 \\
+ & question & 0.792 & 0.459 & 0.587 & 0.493 & 0.627 & 0.819 & 0.741 & 0.718 & 0.763 & 0.433 & 0.727 & 0.606 & 0.682 \\
+ & \textit{average} & 0.709 & 0.690 & 0.687 & 0.633 & 0.710 & 0.833 & 0.817 & 0.824 & 0.843 & 0.644 & 0.767 & 0.727 & 0.662 \\
+\midrule
+typescript & bug & 0.462 & 0.660 & 0.664 & 0.671 & 0.683 & 0.588 & 0.682 & 0.654 & 0.661 & 0.641 & 0.593 & 0.629 & 0.500 \\
+ & feature & 0.667 & 0.675 & 0.749 & 0.744 & 0.764 & 0.712 & 0.718 & 0.756 & 0.765 & 0.500 & 0.615 & 0.239 & 0.729 \\
+ & question & 0.512 & 0.292 & 0.298 & 0.214 & 0.341 & 0.488 & 0.394 & 0.417 & 0.531 & 0.301 & 0.490 & 0.433 & 0.582 \\
+ & \textit{average} & 0.547 & 0.542 & 0.570 & 0.543 & 0.596 & 0.596 & 0.598 & 0.609 & 0.652 & 0.481 & 0.566 & 0.434 & 0.604 \\
+\midrule
+vscode & bug & 0.604 & 0.590 & 0.659 & 0.618 & 0.617 & 0.624 & 0.655 & 0.664 & 0.715 & 0.580 & 0.575 & 0.613 & 0.617 \\
+ & feature & 0.548 & 0.548 & 0.785 & 0.737 & 0.751 & 0.776 & 0.753 & 0.754 & 0.786 & 0.697 & 0.761 & 0.660 & 0.758 \\
+ & question & 0.736 & 0.137 & 0.271 & 0.144 & 0.177 & 0.564 & 0.496 & 0.558 & 0.729 & 0.174 & 0.638 & 0.398 & 0.383 \\
+ & \textit{average} & 0.629 & 0.425 & 0.572 & 0.500 & 0.515 & 0.655 & 0.635 & 0.658 & 0.744 & 0.484 & 0.658 & 0.557 & 0.586 \\
+\midrule
+opencv & bug & 0.584 & 0.620 & 0.627 & 0.625 & 0.664 & 0.652 & 0.670 & 0.675 & 0.736 & 0.641 & 0.540 & 0.604 & 0.519 \\
+ & feature & 0.594 & 0.599 & 0.800 & 0.794 & 0.822 & 0.794 & 0.815 & 0.823 & 0.847 & 0.756 & 0.675 & 0.542 & 0.716 \\
+ & question & 0.650 & 0.320 & 0.434 & 0.406 & 0.543 & 0.580 & 0.596 & 0.586 & 0.709 & 0.358 & 0.506 & 0.409 & 0.659 \\
+ & \textit{average} & 0.610 & 0.513 & 0.620 & 0.608 & 0.676 & 0.675 & 0.694 & 0.695 & 0.764 & 0.585 & 0.574 & 0.518 & 0.631 \\
+\midrule
+tensorflow & bug & 0.619 & 0.680 & 0.755 & 0.760 & 0.792 & 0.782 & 0.789 & 0.773 & 0.789 & 0.793 & 0.549 & 0.830 & 0.886 \\
+ & feature & 0.385 & 0.679 & 0.667 & 0.817 & 0.833 & 0.766 & 0.793 & 0.777 & 0.776 & 0.798 & 0.638 & 0.709 & 0.779 \\
+ & question & 0.456 & 0.471 & 0.574 & 0.538 & 0.644 & 0.621 & 0.708 & 0.699 & 0.741 & 0.589 & 0.586 & 0.697 & 0.712 \\
+ & \textit{average} & 0.487 & 0.610 & 0.665 & 0.705 & 0.756 & 0.723 & 0.764 & 0.750 & 0.769 & 0.727 & 0.591 & 0.745 & 0.792 \\
+\midrule
+\textbf{Overall} & \textit{average} & 0.584 & 0.608 & 0.656 & 0.638 & 0.680 & 0.694 & 0.714 & 0.717 & 0.758 & 0.665 & 0.677 & 0.637 & 0.713 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Per-class F1 score under the project-agnostic setting, across all four Qwen2.5-Instruct sizes. \votag\ uses $k{=}14$ (PA plateau). \ragtag\ uses the best $k$ per scale.}
+\label{tab:eval-pa}
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{l c cccc cccc cccc}
+\toprule
+& \textbf{\votag} & \multicolumn{4}{c}{\textbf{Zero-shot}} & \multicolumn{4}{c}{\textbf{\ragtag}} & \multicolumn{4}{c}{\textbf{Fine-tune}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10} \cmidrule(lr){11-14}
+Label & --- & 3B & 7B & 14B & 32B & 3B & 7B & 14B & 32B & 3B & 7B & 14B & 32B \\
+\midrule
+bug & 0.635 & 0.682 & 0.696 & 0.691 & 0.715 & 0.709 & 0.729 & 0.727 & 0.758 & 0.736 & 0.762 & 0.703 & 0.778 \\
+feature & 0.626 & 0.723 & 0.791 & 0.806 & 0.814 & 0.802 & 0.808 & 0.827 & 0.838 & 0.790 & 0.846 & 0.768 & 0.814 \\
+question & 0.549 & 0.435 & 0.500 & 0.439 & 0.534 & 0.572 & 0.600 & 0.597 & 0.683 & 0.599 & 0.678 & 0.676 & 0.647 \\
+\textit{average} & 0.603 & 0.613 & 0.662 & 0.645 & 0.688 & 0.694 & 0.712 & 0.717 & 0.759 & 0.708 & 0.762 & 0.715 & 0.746 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Bug-Bias Diagnosis}
+\label{sec:bug-bias}
+
+% Points to drive home in this subsection (chart deferred):
+% 1. Per-class recall asymmetry across all LLM-based methods: bug recall is
+%    high, feature recall medium, question recall the floor.
+% 2. The asymmetry is invariant to model scale (3B-32B all show it).
+% 3. Retrieval (RAGTAG) partially rebalances by exposing the LLM to
+%    explicitly-labeled examples; FT also rebalances via gradient updates.
+% 4. VOTAG (no LLM, model-independent) shows a milder version of the
+%    asymmetry that comes purely from retrieval geometry, not the LLM prior.
+% 5. Connection to Aracena et al. 2025: they identified question-class
+%    difficulty in fine-tuned models; we extend the diagnosis to retrieval
+%    and zero-shot, and show it is a structural LLM property.
+
+% TODO -- write subsection prose; pick supporting visualization once the
+% prose has settled.

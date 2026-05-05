@@ -3,6 +3,10 @@
 **Date:** 2026-04-29
 **Purpose:** Bring a fresh Claude Code session up to speed on the 11k-projects paper so it can propose and execute a comprehensive results analysis without the noise of the long migration / runs conversation.
 
+> **2026-05-04 — partially superseded.** The FT cells in the leaderboards below (§5.1, §5.3, §5.5) are **1-epoch FT** numbers. They are being replaced by a 3-epoch re-run (Heo et al. and Aracena et al. defaults). Local Qwen-3B/7B 3-epoch FT is done; Qwen-14B/32B is in flight on NRP. The 1-epoch backup is preserved at `results/issues11k_ft_1epoch_backup_20260504/`. The retrieval-side numbers (RAGTAG, debias, VOTAG) on this page are still current.
+>
+> Read [paper/SESSION_HANDOFF.md](../paper/SESSION_HANDOFF.md) for the current FT numbers, the partial leaderboard, and the in-flight RQ3 strategic pivot (margin-debiasing demoted, context-engineering replacement TBD).
+
 ---
 
 ## Bootstrap prompt for the new session

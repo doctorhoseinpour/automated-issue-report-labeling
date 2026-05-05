@@ -40,8 +40,10 @@ tiers:
     cpu: '8'
     mem: 64Gi
     gpu_resources:
-      nvidia.com/rtxa6000: 1
-    node_selector_products: []
+      nvidia.com/gpu: 1
+    node_selector_products:
+    - NVIDIA-L40
+    - NVIDIA-L40S
 waves:
 - id: 0
   name: indexing

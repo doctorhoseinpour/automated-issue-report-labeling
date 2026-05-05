@@ -2,9 +2,11 @@
 
 **Date:** 2026-04-28 (original) / **2026-04-29 (analysis refresh)**
 
+> **2026-05-04 — partially superseded; internal links broken.** The `docs/analysis/` directory this doc points at (CSVs, figures, leaderboard tables) was deleted on 2026-05-04 to remove stale-analysis bloat. Every `analysis/...` link below will 404. The FT cells throughout this doc are 1-epoch and are being re-run at 3 epochs; the retrieval-side numbers (RAGTAG, VOTAG, debias) are still derivable from `results/issues11k/` and remain valid in the meantime. Treat this doc as a historical reference for the *retrieval-side* findings only. For current state read [paper/SESSION_HANDOFF.md](../paper/SESSION_HANDOFF.md). The replacement analysis pipeline is TBD.
+
 **Status:** Campaign complete. All 4 models × {zero-shot, RAGTAG k∈{1,3,6,9} agnostic+proj-spec, debias_m3 k∈{1,3,6,9} proj-spec, FT agnostic+proj-spec} fully evaluated. Qwen-32B RAGTAG was rerun on NRP A6000 (the original 4090 results were OOM-corrupted and are superseded). See [NRP_MIGRATION_STATUS.md](NRP_MIGRATION_STATUS.md) for the campaign record.
 
-The original master table (Section 0 below) covers the original 4-model lineup including Llama-3B/8B. **Sections RQ1 / RQ2 / RQ3 (this 2026-04-29 refresh) cover the active 4-Qwen lineup (3B / 7B / 14B / 32B, uniform bnb-4bit) and supersede the original numbers for the paper.** All numbers in the refresh sections are derived programmatically by `scripts/analysis/*.py` reading from `results/issues11k/`; tables and figures are written to `docs/analysis/`.
+The original master table (Section 0 below) covers the original 4-model lineup including Llama-3B/8B. **Sections RQ1 / RQ2 / RQ3 (this 2026-04-29 refresh) cover the active 4-Qwen lineup (3B / 7B / 14B / 32B, uniform bnb-4bit) and supersede the original numbers for the paper.**
 
 ---
 

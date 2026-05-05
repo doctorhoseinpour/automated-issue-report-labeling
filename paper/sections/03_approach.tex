@@ -9,7 +9,7 @@ Given a query issue report, we classify it into only one of the three labels: \t
 
 \subsection{Indexing and Retrieval}
 \label{sec:retrieval}
-To prepare the issues for retrieval based on textual similarity, we first embed their textual content (i.e., \textit{title} + \textit{description}). We do not embed the issue labels. Instead, we retain them as metadata associated with each embedded issue. To generate the embeddings, we use the \texttt{all-MiniLM-L6-v2} model from the Sentence-Transformers library~\cite{reimers2019sentence}. We selected this model due to its lightweight architecture, fast performance, and effectiveness on issue report text~\cite{huang2025back}. After embedding all issue reports, we index them using the Faiss vector database library~\cite{douze2025faiss}, which enables efficient high-dimensional similarity retrieval. At the retrieval stage, the query issue is first embedded with the same model. Next, Faiss calculates the cosine similarity of indexed issue reports to the query, and returns the top-K nearest neighbors, ordered by descending similarity.
+To prepare the issues for retrieval based on textual similarity, we first embed their textual content (i.e., \textit{title} + \textit{description}). We do not embed the issue labels. Instead, we retain them as metadata associated with each embedded issue. To generate the embeddings, we use the \texttt{all-MiniLM-L6-v2} model from the Sentence-Transformers library~\cite{reimers2019sentence}. We selected this model due to its lightweight architecture, fast performance, and effectiveness on issue report text~\cite{huang2025back}. The embeddings are then indexed using the Faiss vector database library~\cite{douze2025faiss}, which provides efficient high-dimensional similarity retrieval. At the retrieval stage, the query issue is first embedded with the same model. Next, Faiss calculates the cosine similarity of indexed issue reports to the query, and returns the top-K nearest neighbors, ordered by descending similarity.
 \subsection{\ragtag}
 \ragtag is our proposed retrieval-augmented few-shot prompting approach for
 IRC. \ragtag uses the retrieval pipeline described in~\cref{sec:retrieval}
@@ -23,16 +23,22 @@ selection~\cite{liu2022makes}. Second, the most similar neighbors tend to
 share the same labels~\cite{cover1967nearest}; therefore, they are
 informative for the classification.
 
-We create the few-shot prompt in three parts. First, the system message frames
-the classification task and the label space. Second, the top-K nearest neighbors are listed in retrieval order (descending similarity), each formatted as \textit{title + description + label}. Finally, the query issue is appended to the end of the prompt, ensuring it receives high attention from the LLM~\cite{liu2024lost}. K=0 produces a zero-shot prompting baseline, similar to prior work~\cite{colavito2025benchmarking}.
+We create the few-shot prompt in three parts. First, the system message frames the classification task and the label space. Second, the top-K nearest neighbors are listed in retrieval order (descending similarity), each formatted as \textit{title + description + label}. Finally, the query issue is appended to the end of the prompt, ensuring it receives high attention from the LLM~\cite{liu2024lost}. $K=0$ produces a zero-shot prompting baseline, similar to prior work~\cite{colavito2025benchmarking}.
 
-The LLM is instructed to generate the predicted label wrapped in XML tags
-(e.g. \texttt{<label>bug</label>}). The labels of the presented examples also
-follow the same format. This technique enables easy detection of the
-predicted label from the LLM's generation, and reduces variance in LLM
-outputs caused by prompt format sensitivity~\cite{sclar2023quantifying}.
-We use a regular expression to extract the predicted label. Unparseable outputs are
-marked as \textit{invalid}.
+We evaluate \ragtag at top-K values in $\{0, 1, 3, 6, 9\}$. Details
+for the K value grid selection are provided in \cref{sec:rq1}. Since
+the median prompt size at $K=9$ in our dataset is $\sim$6,300 tokens, the maximum sequence length is set to 8,192 tokens. Roughly 30\% of the
+context quota is reserved for the query issue and 70\% for the
+neighbors. If the neighbors exceed their overall quota, they are
+truncated proportionally based on their length (longer neighbors get
+more truncation). The query issue gets truncated if it exceeds its
+budget as well. Truncation happens on the right side of the
+description text, preserving all titles and labels (if any).
+
+
+The LLM is instructed to generate the predicted label wrapped in XML tags (e.g. \texttt{<label>bug</label>}). The labels of the presented examples also follow the same format. This technique enables easy detection of the predicted label from the LLM's generation, and reduces variance in LLM outputs caused by prompt format sensitivity~\cite{sclar2023quantifying}. We use a regular expression to extract the predicted label. Unparseable outputs are marked as \textit{invalid}.
+
+
 
 
 \subsection{\votag}
@@ -47,8 +53,7 @@ $n_i$ is the $i$-th nearest neighbor with label $l_i$ and cosine similarity $s_i
 \end{equation}
 where $\mathcal{L}$ is the label set and $\mathbf{1}[\cdot]$ is the indicator function. \votag breaks ties by returning the label of the most similar neighbor in the tied classes.
 
-\votag has three main roles: First, it serves as a fast and cost-efficient baseline that LLM-based approaches must clear to justify their computational cost. Second, it is used as an ablation to
-distinguish the contributions of the LLM and retrieval in the \ragtag method. Third, \votag's performance as a function of K informs the K values we evaluate for \ragtag.
+\votag has three main roles: First, it serves as a fast and cost-efficient baseline that LLM-based approaches must clear to justify their computational cost. Second, it is used as an ablation to distinguish the contributions of the LLM and retrieval in the \ragtag method. Third, \votag's performance as a function of K informs the K value grid evaluated for \ragtag.
 
 
 \subsection{Fine-Tuning}
@@ -65,3 +70,10 @@ receives the test issue in the same format, and predicts the empty
 label field. Regular expressions are used to extract the prediction
 from the output, and unparseable outputs are marked as
 \textit{invalid}. We use this established methodology as our fine-tuning baseline.
+
+For memory efficiency, each model is loaded in 4-bit quantization with Unsloth\footnote{\url{https://unsloth.ai}}. The LoRA rank and alpha are set to 16, with a learning rate of $2 \times 10^{-4}$ and
+the paged AdamW 8-bit optimizer. Training runs for 3 epochs with a
+per-device batch size of 1 and gradient accumulation steps of 16. The max sequence length is set to 2,048 tokens, which covers 94.9\% of the issues in our dataset. Issues that exceed this budget get truncated from the right side of their description text to fit.
+
+
+
