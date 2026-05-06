@@ -45,25 +45,28 @@ tiers:
     - NVIDIA-L40
     - NVIDIA-L40S
 waves:
-- id: 0
-  name: indexing
-  type: indexing
-  active_deadline_seconds: 72000
-- id: 2
-  name: qwen14b-ft
-  type: finetune
-  model: qwen14b
-  settings:
-  - agnostic
-  - project_specific
-  output_subdir: finetune_fixed
-  active_deadline_seconds: 72000
-- id: 5
-  name: qwen32b-ft
-  type: finetune
+# Active waves for the k=12,15 extension campaign at ctx=8192.
+# Waves 0 (indexing), 2 (qwen14b-ft), 5 (qwen32b-ft) from the prior FT campaign
+# are complete and removed from the active list. Their preds are on disk.
+- id: 6
+  name: qwen32b-ragtag-extended-8k
+  type: ragtag
   model: qwen32b
   settings:
   - agnostic
   - project_specific
-  output_subdir: finetune_fixed
+  output_subdir: ragtag_v2
+  top_ks: "12,15"
+  max_seq_length: 8192
+  active_deadline_seconds: 72000
+- id: 7
+  name: qwen32b-debias-extended-8k
+  type: debias
+  model: qwen32b
+  settings:
+  - project_specific
+  output_subdir: ragtag_debias_m3_v2
+  top_ks: "12,15"
+  max_seq_length: 8192
+  debias_margin: 3
   active_deadline_seconds: 72000
