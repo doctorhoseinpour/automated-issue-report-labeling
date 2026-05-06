@@ -1,50 +1,38 @@
 # Paper TODO
 
-Items to circle back to. Not blocking the current writing thread.
+Items the next session should pick up. Live status of in-flight runs is in [SESSION_HANDOFF.md](SESSION_HANDOFF.md).
 
-## During / after evaluation sections (§5–§7)
+## In flight (no action needed yet — wait for completion)
 
-- [ ] **Significance testing — DECIDED: add Bootstrap CIs + McNemar's.** Run after the 3-epoch FT campaign finishes (NRP + local both done, all 48 cells synced and evaluated).
+- [ ] **k=12/15 extension at ctx=8192.** Local for 3B/7B/14B (`run_k12_k15_local_8k.sh`); NRP for 32B (waves 6 and 7 in `scripts/nrp/plan.yaml`). Both PA RAGTAG and PS RAGTAG, plus PS Debiased RAGTAG (margin=3). Idempotent skip on `preds_k15.csv`. Outputs land in canonical `ragtag/` and `ragtag_debias_m3/` directories. When done: re-run analysis utilities to see whether the {0,1,3,6,9} grid still represents the plateau.
+- [ ] **DeBERTa-v3-large PA fine-tune (exploratory).** Running locally via `run_transformer_ft.py`. Outputs to `results/issues11k/agnostic/microsoft_deberta_v3_large/finetune_transformer/`. Not yet committed to the paper — decide inclusion after seeing the F1 vs LLM-FT.
 
-  **What to compute:**
-  - **Bootstrap 95% CIs** on macro F1 for every method × model × setting cell. 1,000 resamples per cell. Report alongside the F1 point estimate in the leaderboard.
-  - **McNemar's test** for the headline pairwise comparisons:
-    - Debiased RAGTAG_PS vs FT_PS (per project + aggregated, per model)
-    - Debiased RAGTAG_PS vs FT_PA per-project eval (per project + aggregated, per model)
-    - RAGTAG_PA vs FT_PA (per model)
+## After in-flight runs land
 
-  **Why both:** the expected outcome is "RAGTAG slightly below FT; Debiased RAGTAG closes most of the gap, sometimes matching." Both the equivalence claims (matches) and the small-gap claims need stats:
-  - Bootstrap CIs put error bars on each metric so reviewers can see where confidence intervals overlap.
-  - McNemar's settles whether a small gap or apparent tie is real. Required to defensibly claim "matches" (= p > 0.05 of difference).
+- [ ] **k=12/15 verdict.** If F1 stays flat or drops past k=9, we have a documented null result that strengthens §3.3's k-grid defense. If a model bumps up at k=12 or k=15, decide whether to extend the published grid or footnote the divergence.
+- [ ] **DeBERTa decision.** If DeBERTa-v3-large PA F1 is competitive with or above LLM-FT-PA, decide whether to add an encoder baseline section. If not, drop it from the paper entirely.
 
-  **Implementation:** ~50 lines of Python in `scripts/analysis/significance_tests.py`. Use `statsmodels.stats.contingency_tables.mcnemar` for the test and `numpy` resampling for CIs. Need `y_true` and `y_pred` arrays per method × project to feed both.
+## Writing — section drafts
 
-  **Documentation in §4.4:** once tests are run, document the methodology there (1,000 bootstrap samples; McNemar's with continuity correction; p < 0.05 threshold; report b vs c counts in supplementary).
+- [ ] **§5.1 VOTAG retrieval floor.** Opener written; prose around the k-curve figure in progress. Two big tables (PS giant, PA small) for Qwen-7B per-class need replacement with all-4-models F1-only.
+- [ ] **§5.2 Bug-bias diagnosis.** Stub only. Build from the existing per-class numbers (precision/recall split between bug and feature) and confusion-matrix evidence.
+- [ ] **§5.3 Debiased RAGTAG.** Method recap + headline numbers + per-model curves. Margin-based retrieval debiasing (m=3) is the published intervention; keep wording careful since the FT baseline got tighter at 3 epochs and the Debias gap shrank for some cells.
+- [ ] **§6 Discussion / §7 Threats.** Draft after §5 lands.
 
-- [ ] **Hardware specs in §4.5.** Need exact server specs. Run `kubectl describe node <node-name>` on the cluster (or `kubectl describe pod <pod>` for the running mega-runner) to capture: GPU model + VRAM, CPU model + core count, RAM, OS/CUDA versions. Fill in §4.5 placeholder once known.
+## Statistics (after all runs land)
 
-## RQ3 — method pivot in progress (2026-05-04)
+- [ ] **Bootstrap 95% CIs on macro F1** for every method × model × setting cell. 1,000 resamples. Report alongside point estimates.
+- [ ] **McNemar's test** for headline pairwise comparisons:
+  - Debiased RAGTAG_PS vs FT_PS (per project + aggregated, per model)
+  - Debiased RAGTAG_PS vs FT_PA per-project eval (per project + aggregated, per model)
+  - RAGTAG_PA vs FT_PA (per model)
+- [ ] Implementation: ~50 lines of Python in `scripts/analysis/significance_tests.py`. Use `statsmodels.stats.contingency_tables.mcnemar` and `numpy` resampling for CIs. Document methodology in §4.4 (1,000 bootstraps; McNemar's with continuity correction; p < 0.05 threshold; b vs c counts in supplementary).
 
-- [ ] **Pick the new RQ3 context-engineering method.** The originally-planned RQ3 method (margin-based retrieval debiasing, m=3) is being demoted from the headline. Reason: after the 3-epoch FT campaign tightened the FT baseline, margin-debiasing's gains shrank. The user's framing: "debiased RAGTAG basically assumes the few-shot prompt already has 3 bugs in the chamber before we do anything" — i.e. the method only manipulates the *prompt's class distribution*, not the model's bug-prior.
+## Hardware specs
 
-  **Constraints on the replacement** (locked, do not re-litigate):
-  - Genre must be **context engineering** (curate/augment/restructure what enters the context window).
-  - NOT prompt engineering (instructions, persona, schema, decision trees, CoT, rubrics).
-  - NOT output-side / logit math (calibration, PMI, threshold tuning, activation steering — already tried or excluded).
-  - NOT class-rebalancing of the few-shot pool (same family as current method; user is tired of it).
-  - NOT retrieval-side replumbing (different embedder, BM25 hybrid, cross-encoder rerank).
+- [ ] **§4.5 placeholder.** Need exact server specs. Run `kubectl describe node <node-name>` (or `kubectl describe pod <pod>` for the running mega-runner) to capture: GPU model + VRAM, CPU model + core count, RAM, OS/CUDA versions. Local 4090 specs already known.
 
-  **Status:** Gemini brainstorm prompt drafted in the prior session and given to the user. Awaiting Gemini response and user selection. See [SESSION_HANDOFF.md §4](SESSION_HANDOFF.md) for the full constraint list.
+## Forward-pointers
 
-- [ ] **Decide what happens to margin-debiasing in the paper.** Options: (a) keep as the headline RQ3 method if the new method doesn't pan out; (b) demote to an early-attempt baseline that the new method improves over; (c) drop entirely. Hold this decision until the new method is chosen and run.
-
-## After §7 evaluation section is drafted
-
-- [ ] **Add debiasing forward-pointer to §3.3 RAGTAG.** Insert after the existing RAGTAG content:
-  > *We additionally introduce a retrieval-debiasing intervention applied on top of \ragtag; we describe its algorithm and present its empirical motivation in \cref{sec:rq3}.*
-
-  Replace `\cref{sec:rq3}` with the actual subsection label once §7.1 is written (likely `sec:debias` or `sec:rq3-debias`).
-
-  **Why deferred:** debiasing's algorithm and motivation live in §7.1 alongside its empirical evidence (Option B in the framing discussion). The §3.3 sentence is a one-line signpost so methodologically-conservative reviewers don't wonder where the third contribution went.
-
-  **2026-05-04 caveat:** if the RQ3 method gets replaced (see above), this forward-pointer's wording needs to match whatever lands in §7.1. Revisit phrasing after the method is chosen.
+- [ ] **§3.3 RAGTAG → §5.3 Debias signpost.** Once §5.3 has a stable label, insert in §3.3:
+  > *We additionally introduce a retrieval-debiasing intervention applied on top of \ragtag; we describe its algorithm and present its empirical motivation in \cref{sec:debias}.*

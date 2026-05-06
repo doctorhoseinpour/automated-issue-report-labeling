@@ -41,3 +41,6 @@ unsloth_compiled_cache/
 
 # NRP sync staging directory
 fetched/
+
+# Archived data (OOM runs, 1-epoch FT backup) — preserved on disk, not in git
+archive/

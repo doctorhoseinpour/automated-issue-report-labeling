@@ -10,7 +10,22 @@
 \subsection{RQ1) To what extent can similarity-weighted voting on the nearest neighbors (\votag) classify issue reports, and at what point does adding neighbors stop helping?}
 \label{sec:rq1}
 
-To study \votag's performance as a function of $K$, We evaluate it at K values 1 to 30 across both PS and PA settings. \Cref{fig:vtag-kcurve} plots macro F1 as a function of $k$ in both settings, while \cref{tab:eval-ps,tab:eval-pa} report \votag's peak per-class and macro F1 at the chosen plateau $k$ ($k{=}7$ for PS, $k{=}14$ for PA, leftmost column of each table).
+We evaluate \votag's performance at $k$ values from 1 to 30 across both PS and PA settings. \Cref{tab:eval-ps,tab:eval-pa} report \votag's per-class and macro F1 at the best $k$ for each setting. \votag has a best macro F1 of 0.584 in PS ($k{=}7$) and 0.603 in PA ($k{=}14$).
+
+
+
+Question consistently has the weakest performance among the three labels. In PS, per-class F1 averages 0.619 for bug, 0.598 for feature, and 0.534 for question. The corresponding PA values are 0.635, 0.626, and 0.549. Questions are more frequently misclassified as bugs. On both PS and PA settings with the best $k$ value, 30--32\% of true-question issues are predicted as bugs, while 18--19\% are predicted as features. 
+
+While per-project performance varies in both settings, kubernetes and tensorflow are consistently the easiest and hardest projects. PS macro F1 ranges from 0.487 on tensorflow to 0.709 on kubernetes, while PA spans a slightly wider 0.447 to 0.735.
+
+
+Since \votag\ casts similarity-weighted votes, the asymmetry indicates that bug-labeled neighbors contribute more cumulative similarity than feature-labeled neighbors when retrieving for true-question issues. Question reports sit closer in embedding space to bug reports than to feature requests.
+
+
+Beyond the best $k$, additional neighbors stop contributing. \Cref{fig:vtag-kcurve} shows PS macro F1 holding from $k{=}7$ to $k{=}15$ and then drifting down to 0.557 by $k{=}30$; the PA curve peaks at $k{=}14$ and declines gently afterward. The closest few neighbors carry most of the label signal, while less-similar neighbors past that point contribute increasingly noisy votes that dilute the result.
+
+Pure retrieval establishes an honest but bounded floor. Whether this floor reflects the limit of nearest-neighbor evidence itself, or only the limit of voting on labels, is the question we turn to next by introducing an LLM into the loop.
+
 
 
 % Points to drive home in this subsection:
