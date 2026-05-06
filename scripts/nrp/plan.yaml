@@ -55,7 +55,7 @@ waves:
   settings:
   - agnostic
   - project_specific
-  output_subdir: ragtag_v2
+  output_subdir: ragtag                # canonical (post-_v2 rename, May 6)
   top_ks: "12,15"
   max_seq_length: 8192
   active_deadline_seconds: 72000
@@ -65,7 +65,7 @@ waves:
   model: qwen32b
   settings:
   - project_specific
-  output_subdir: ragtag_debias_m3_v2
+  output_subdir: ragtag_debias_m3      # canonical (post-_v2 rename, May 6)
   top_ks: "12,15"
   max_seq_length: 8192
   debias_margin: 3
