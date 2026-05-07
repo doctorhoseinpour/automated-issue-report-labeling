@@ -44,20 +44,32 @@ Question consistently has the weakest performance among the three labels at ever
 
 
 
-\subsection{Bug-Bias Diagnosis}
-\label{sec:bug-bias}
+\subsection{\ragtag}
+\label{sec:ragtag}
 
-% Points to drive home in this subsection (chart deferred):
-% 1. Per-class recall asymmetry across all LLM-based methods: bug recall is
-%    high, feature recall medium, question recall the floor.
-% 2. The asymmetry is invariant to model scale (3B-32B all show it).
-% 3. Retrieval (RAGTAG) partially rebalances by exposing the LLM to
-%    explicitly-labeled examples; FT also rebalances via gradient updates.
-% 4. VOTAG (no LLM, model-independent) shows a milder version of the
-%    asymmetry that comes purely from retrieval geometry, not the LLM prior.
-% 5. Connection to Aracena et al. 2025: they identified question-class
-%    difficulty in fine-tuned models; we extend the diagnosis to retrieval
-%    and zero-shot, and show it is a structural LLM property.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ragtag_kcurve.pdf}
+    \caption{\ragtag\ macro $F_1$ as a function of $k$ for all four Qwen sizes. Solid lines with filled markers are project-specific (PS); dashed lines with hollow markers are project-agnostic (PA). $k{=}0$ is the zero-shot baseline. The dotted horizontal line marks \votag's best (0.604, PA $k{=}16$).}
+    \label{fig:ragtag-kcurve}
+\end{figure}
 
-% TODO -- write subsection prose; pick supporting visualization once the
-% prose has settled.
+We evaluate RAGTAG at $k$ values $\{0, 1, 3, 6, 9, 12, 15\}$ on both PA and PS settings, where $k{=}0$ is the zero-shot baseline~\cite{colavito2025benchmarking}. $k$ value grid selection is informed by \votag's peak results around $k{=}15$ in the previous section. \Cref{fig:ragtag-kcurve} shows the macro F1 of every model across this grid for both settings.
+
+% PENDING-DATA: "almost every" hedges around 32B PA at k=12,15 not yet
+% synced from NRP. Once those land, verify the claim still holds and
+% drop "almost" if so.
+PS marginally outperforms PA at almost every (model, $k$) pair evaluated. The close performance gap is due to the same top-$k$ neighbor overlap observed in the \votag analysis. This marginal improvement is significant because PS uses 11$\times$ less retrieval data per project: each PS index covers only its own 300 retrieval issues, while PA uses the full 3{,}300 across all 11 projects. Given this practical advantage, we conduct the rest of our RAGTAG analysis on the PS setting and report PS numbers throughout this section.
+
+% PENDING-DATA: the 0.001--0.015 range covers the 7 (model, setting) pairs
+% we have data for; 32B PA at k=12,15 is still on NRP. Re-verify the range
+% (and the "every model" claim) once those cells sync.
+The best $k$ value grows nearly monotonically with model size. Qwen-3B peaks at $k{=}3$ (macro F1 = 0.697), Qwen-7B at $k{=}6$ (0.718), and both Qwen-14B and Qwen-32B at $k{=}12$ (0.732 and 0.767 respectively). This shows that larger models can use the context from additional examples more effectively. However, adding neighbors past $k{=}12$ has no benefit and slightly degrades performance. Every model loses 0.001--0.015 macro F1 going from $k{=}12$ to $k{=}15$.
+
+% PENDING-DATA: "largest from Qwen-32B at $k{=}12$ (F1 = 0.767)" is 32B PS
+% k=12. 32B PA k=12 hasn't synced; verify it doesn't exceed 0.767 (very
+% unlikely based on pattern, but confirm and update once data lands).
+Every RAGTAG configuration outperforms \votag's best (0.604 at PA $k{=}16$), with the smallest margin from Qwen-3B zero-shot (F1 = 0.613, +0.009) and the largest from Qwen-32B at $k{=}12$ (F1 = 0.767, +0.163). Overall, this shows that adding the LLM's semantic understanding can meaningfully improve IRC on top of pure retrieval. It is impressive that \votag, a cost-efficient retrieval-only heuristic with no LLM reasoning, comes within 0.009 macro F1 of Qwen-3B zero-shot.
+
+
+

@@ -11,6 +11,7 @@ Items the next session should pick up. Live status of in-flight runs is in [SESS
 
 - [ ] **k=12/15 verdict.** If F1 stays flat or drops past k=9, we have a documented null result that strengthens §3.3's k-grid defense. If a model bumps up at k=12 or k=15, decide whether to extend the published grid or footnote the divergence.
 - [ ] **DeBERTa decision.** If DeBERTa-v3-large PA F1 is competitive with or above LLM-FT-PA, decide whether to add an encoder baseline section. If not, drop it from the paper entirely.
+- [ ] **Re-run `scripts/paper/fig_ragtag_kcurve.py`** after `scripts/nrp/sync.sh` pulls in the 32B k=12/15 cells. The script auto-picks whichever k values are on disk; the current PNG/PDF in `paper/figures/` is missing the 32B k=12, k=15 endpoints in both PS and PA curves. No code edits needed, just re-run.
 
 ## Writing — section drafts
 
