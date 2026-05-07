@@ -7,8 +7,12 @@ other visually communicates "PS is marginally better than PA at every (model,
 k)." A horizontal dashed line at VTAG's best (0.604, PA k=16) shows that
 every LLM-based result clears the retrieval-only floor.
 
-k=0 is the zero-shot anchor (no retrieval; identical across PA and PS by
-construction, so the PA zero_shot prediction file is used as the k=0 macro F1).
+This figure reports RAW \\ragtag\\ macro F1 (no \\votag-rescue applied). The
+rescue is reserved for the Fine-Tune comparison subsection where vanilla and
+debiased \\ragtag\\ are shown side-by-side with their rescued counterparts.
+
+k=0 (zero-shot) is the no-retrieval anchor. The PA zero_shot prediction
+file is used for both panels (zero-shot is retrieval-independent).
 
 Convention: pooled macro F1, see paper/sections/04_setup.tex.
 """
@@ -60,6 +64,7 @@ def _filename_for_k(k: int) -> str:
 
 
 def _pa_macro(model: str, k: int) -> float | None:
+    """Raw PA macro F1 for one (model, k); no rescue applied."""
     p = RESULTS / "agnostic" / model / "ragtag" / "predictions" / _filename_for_k(k)
     if not p.exists():
         return None
@@ -68,7 +73,7 @@ def _pa_macro(model: str, k: int) -> float | None:
 
 
 def _ps_macro(model: str, k: int, projects: list[str]) -> float | None:
-    """Pooled PS macro F1 for one (model, k) by concatenating per-project preds.
+    """Raw pooled PS macro F1 for one (model, k); no rescue applied.
 
     For k=0 (zero-shot), fall back to the PA zero_shot file since zero-shot
     is retrieval-independent and PS-zero_shot is not consistently materialised
@@ -79,7 +84,7 @@ def _ps_macro(model: str, k: int, projects: list[str]) -> float | None:
     parts = []
     for proj in projects:
         p = (RESULTS / "project_specific" / proj / model / "ragtag"
-             / "predictions" / _filename_for_k(k))
+             / "predictions" / f"preds_k{k}.csv")
         if not p.exists():
             return None
         parts.append(pd.read_csv(p, usecols=["ground_truth", "predicted_label"]))
