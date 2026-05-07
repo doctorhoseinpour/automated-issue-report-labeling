@@ -160,3 +160,4 @@ Live status, in-flight campaigns, and outstanding TODOs are tracked in [paper/SE
 - **Canonical paths only.** No `_v2` or other suffixes in active paths. Any new directory follows the structure above.
 - **Splits are deterministic** — regenerated from source CSVs on first run.
 - **Image SHA discipline.** Each `scripts/nrp/plan.yaml` change requires a commit + image rebuild + push + manifest update before submission. Stale image is the failure mode that has bitten this project most.
+- **Pooled aggregation for all reported metrics.** PA and PS macro $F_1$ are both computed by concat-then-evaluate over the 3,300-issue test set (never per-project mean). See [`paper/sections/04_setup.tex`](paper/sections/04_setup.tex) §"Evaluation Metrics" for the rationale. New paper figures/tables go in `scripts/paper/` with pooling baked in; do not retrofit `scripts/analysis/*.py` (legacy, uses per-project mean for PS).

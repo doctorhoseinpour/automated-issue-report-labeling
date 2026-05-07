@@ -14,9 +14,11 @@ Items the next session should pick up. Live status of in-flight runs is in [SESS
 
 ## Writing — section drafts
 
-- [ ] **§5.1 VOTAG retrieval floor.** Opener written; prose around the k-curve figure in progress. Two big tables (PS giant, PA small) for Qwen-7B per-class need replacement with all-4-models F1-only.
-- [ ] **§5.2 Bug-bias diagnosis.** Stub only. Build from the existing per-class numbers (precision/recall split between bug and feature) and confusion-matrix evidence.
-- [ ] **§5.3 Debiased RAGTAG.** Method recap + headline numbers + per-model curves. Margin-based retrieval debiasing (m=3) is the published intervention; keep wording careful since the FT baseline got tighter at 3 epochs and the Debias gap shrank for some cells.
+- [ ] **§5.1 VOTAG retrieval floor.** Three paragraphs essentially done (peak+plateau / PA-vs-PS / per-class with bug-bias inference). Two-panel figure (kcurve + per-class bar chart) generated under pooled aggregation. Two inline `% TODO:` blocks remaining in [`05_evaluations.tex`](sections/05_evaluations.tex):
+  - Motivate the k-sweep (why scan k=1..30 and not just one or two values).
+  - Write the RQ1 → §5.2 transition (position 0.60 as the retrieval-only floor; flag bug-bias as recurring across approaches).
+- [ ] **§5.2 Bug-bias diagnosis.** Stub only. Groundwork is in place from §5.1 (per-class F1 numbers, embedding-space inference, mechanism→misclass→geometric chain). Extend to the LLM-based methods (zero-shot, RAGTAG, Debiased RAGTAG, FT) and show the asymmetry persists across approaches and model scales.
+- [ ] **§5.3 RAGTAG / Debiased RAGTAG analysis (RQ2).** Method recap + headline numbers + per-model curves. Margin-based retrieval debiasing (m=3) is the published intervention; keep wording careful since the FT baseline got tighter at 3 epochs and the Debias gap shrank for some cells. **User picks this up next session.**
 - [ ] **§6 Discussion / §7 Threats.** Draft after §5 lands.
 
 ## Statistics (after all runs land)
@@ -26,7 +28,7 @@ Items the next session should pick up. Live status of in-flight runs is in [SESS
   - Debiased RAGTAG_PS vs FT_PS (per project + aggregated, per model)
   - Debiased RAGTAG_PS vs FT_PA per-project eval (per project + aggregated, per model)
   - RAGTAG_PA vs FT_PA (per model)
-- [ ] Implementation: ~50 lines of Python in `scripts/analysis/significance_tests.py`. Use `statsmodels.stats.contingency_tables.mcnemar` and `numpy` resampling for CIs. Document methodology in §4.4 (1,000 bootstraps; McNemar's with continuity correction; p < 0.05 threshold; b vs c counts in supplementary).
+- [ ] Implementation: ~50 lines of Python in **`scripts/paper/significance_tests.py`** (new-script convention; do not use `scripts/analysis/`). Use `statsmodels.stats.contingency_tables.mcnemar` and `numpy` resampling for CIs. Compute over pooled predictions (concat per-project preds for PS). Document methodology in §4.4 (1,000 bootstraps; McNemar's with continuity correction; p < 0.05 threshold; b vs c counts in supplementary).
 
 ## Hardware specs
 
@@ -36,3 +38,8 @@ Items the next session should pick up. Live status of in-flight runs is in [SESS
 
 - [ ] **§3.3 RAGTAG → §5.3 Debias signpost.** Once §5.3 has a stable label, insert in §3.3:
   > *We additionally introduce a retrieval-debiasing intervention applied on top of \ragtag; we describe its algorithm and present its empirical motivation in \cref{sec:debias}.*
+
+## Conventions / methodology
+
+- [x] **Pooled aggregation for all paper metrics** (decided 2026-05-06; methodology paragraph in [`04_setup.tex`](sections/04_setup.tex) §"Evaluation Metrics"). All macro $F_1$ numbers — PA and PS, every approach — are computed by concat-then-evaluate on the 3,300-issue test set. Per-project mean is not used for headline numbers.
+- [ ] **New paper-figure scripts go in `scripts/paper/`** with pooled aggregation baked in. Existing `scripts/analysis/*.py` use per-project mean for PS — do not retrofit, do not consume their PS outputs for paper artifacts. Two scripts already exist: `fig_vtag_kcurve.py`, `tab_vtag_peak.py`. Future additions for RQ2 (RAGTAG analysis), RQ3 (debiasing), bug-bias diagnosis, leaderboard, scaling curves, etc., should follow the same pattern.

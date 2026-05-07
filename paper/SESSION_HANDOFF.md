@@ -15,8 +15,8 @@ This is a **state report**, not a narrative. It describes what is on disk, what 
 | File | Status |
 |---|---|
 | [`paper/sections/03_approach.tex`](sections/03_approach.tex) | Done. RAGTAG, VOTAG, Fine-Tuning subsections written. |
-| [`paper/sections/04_setup.tex`](sections/04_setup.tex) | Done except §4.5 hardware (placeholder pending kubectl describe). Significance-test methodology TBD ([TODO.md](TODO.md)). |
-| [`paper/sections/05_evaluations.tex`](sections/05_evaluations.tex) | In progress. §5.1 *Retrieval Floor* prose has the VOTAG opener written. Two big result tables (PS giant, PA small) in place but currently report Qwen-7B per-class — needs regeneration to show all 4 models with F1 only (per locked discussion). §5.2 *Bug-Bias Diagnosis* exists as an empty-stub subsection (planning comments only). |
+| [`paper/sections/04_setup.tex`](sections/04_setup.tex) | Done except §4.5 hardware (placeholder pending kubectl describe). §"Evaluation Metrics" now has a methodology paragraph defining the **pooled aggregation** convention (added 2026-05-06). Significance-test methodology TBD ([TODO.md](TODO.md)). |
+| [`paper/sections/05_evaluations.tex`](sections/05_evaluations.tex) | §5.1 (RQ1, VOTAG) is essentially complete. Three paragraphs (peak+plateau / PA-vs-PS / per-class with bug-bias inference), two-panel figure (kcurve with peak markers + per-class bar chart), all numbers under pooled aggregation. Two inline `% TODO:` blocks remain: motivate the k-sweep and write the RQ1→§5.2 transition. §5.2 *Bug-Bias Diagnosis* still stub (planning comments only) — picked up next session. §5.3 (RAGTAG / FT / Debiased) not yet drafted; user starts RQ2 next session. |
 
 **Not yet drafted:** §1 Intro, §2 Related Work, §6 Discussion, §7 Threats, §8 Conclusion, §9 Data Availability.
 
@@ -157,10 +157,13 @@ To verify the running pod's image: `kubectl -n bgsu-cs-heydarnoori get pod mega-
 See [paper/TODO.md](TODO.md) for the live list. High-level items:
 
 - **Wait for the two in-flight 8K campaigns.** When both finish, regenerate the leaderboard tables to include k=12 and k=15 columns alongside k=1,3,6,9.
-- **Bootstrap CIs + McNemar's significance tests.** Run after all k=12/15 cells land. ~50 lines of Python in `scripts/analysis/significance_tests.py`. Per-method × model × setting.
+- **Bootstrap CIs + McNemar's significance tests.** Run after all k=12/15 cells land. ~50 lines of Python (likely a new `scripts/paper/significance_tests.py` per the new-script convention). Per-method × model × setting.
 - **Hardware specs (§4.5).** Run `kubectl describe node <L40-node>` once the mega-runner schedules to capture exact spec.
 - **§3.3 forward-pointer to debiasing.** Insert one-line cref to §5 once the §5 prose settles.
 - **Phase 2 (16K context).** Optional follow-up to test k=12/15 at ctx=16384. Locked plan exists; defer the decision until 8K results show whether 16K is necessary.
+- **§5.1 inline TODOs.** Two `% TODO:` blocks in `paper/sections/05_evaluations.tex` for the k-sweep motivation and the RQ1→§5.2 transition.
+- **§5.2 bug-bias diagnosis.** Groundwork is in place (per-class numbers, embedding-space inference in §5.1) — ready to draft.
+- **§5.3 RAGTAG / FT / Debiased analysis (RQ2).** User picks this up next session.
 - **Sections to draft** in order: §5 RQ-flow prose → §6 Discussion → §7 Threats → §8 Conclusion → §1 Intro → §2 Related Work.
 
 ---
@@ -175,15 +178,17 @@ paper/
 │   ├── 01_intro.tex          -- stub
 │   ├── 02_related.tex        -- stub
 │   ├── 03_approach.tex       -- DONE
-│   ├── 04_setup.tex          -- DONE except §4.5 hardware
-│   ├── 05_evaluations.tex    -- partial; §5.1 Retrieval Floor prose started
+│   ├── 04_setup.tex          -- DONE except §4.5 hardware; pooled-aggregation methodology paragraph added
+│   ├── 05_evaluations.tex    -- §5.1 (RQ1) essentially DONE w/ 2 inline TODOs; §5.2/§5.3 stubs
 │   ├── 06_discussion.tex     -- stub
 │   ├── 07_threats.tex        -- stub
 │   ├── 08_conclusion.tex     -- stub
 │   └── 09_data_availability.tex  -- stub
 ├── figures/
-│   ├── vtag_kcurve.pdf       -- VOTAG plateau figure (referenced from §5.1)
+│   ├── vtag_kcurve.pdf       -- 2-panel: kcurve (PA/PS w/ peak markers) + per-class F1 bar chart, pooled
 │   └── vtag_kcurve.png
+├── tables/                   -- NEW (2026-05-06); paper-figure-script outputs
+│   └── vtag_peak.tex         -- VOTAG peak performance tabular (currently unreferenced; standalone)
 ├── TODO.md                   -- deferred items, live
 ├── SESSION_HANDOFF.md        -- this file
 ├── REVIEW_PROMPT.md          -- adversarial-reviewer template (may not exist)
@@ -208,6 +213,12 @@ scripts/nrp/
 ├── runners/run_remaining_cells.py
 └── sync.sh                   -- pulls _outbox/ tarballs into local results/
 
+scripts/paper/                -- NEW (2026-05-06); paper-figure scripts using POOLED PS aggregation
+├── fig_vtag_kcurve.py        -- generates paper/figures/vtag_kcurve.{pdf,png} (2-panel)
+└── tab_vtag_peak.py          -- generates paper/tables/vtag_peak.tex (tabular block)
+
+scripts/analysis/             -- LEGACY; uses per-project-mean PS. DO NOT USE for new paper artifacts.
+
 # Top-level scripts (active)
 run_k12_k15_local_8k.sh       -- in-flight local 8K extension campaign
 run_transformer_ft.py         -- DeBERTa exploratory experiment
@@ -229,3 +240,4 @@ evaluate.py                   -- standard metric reporter
 - **Image SHA discipline:** every plan.yaml change → rebuild image with new SHA → push → update mega-runner manifest. Verify the running pod's image before letting it run for hours.
 - **Idempotency:** local shell drivers and the NRP runner skip cells whose `preds_*.csv` already exists. Safe to re-run after partial completion.
 - **Splits are deterministic** — regenerated from the source CSVs on first run; safe to delete and re-create.
+- **Pooled aggregation everywhere** (added 2026-05-06). All paper macro $F_1$ numbers are computed by concat-then-evaluate on the 3,300-issue test set (PA and PS alike). Per-project mean is a different metric and is not used for headline numbers. See methodology paragraph in [`paper/sections/04_setup.tex`](sections/04_setup.tex) §"Evaluation Metrics" for the rationale. Existing `scripts/analysis/` scripts use the old per-project-mean for PS — **do not retrofit them**; write new scripts under `scripts/paper/` with pooled aggregation baked in. Boilerplate: read raw `preds_*.csv` from each project, `pd.concat`, then `f1_score(... average="macro", labels=["bug","feature","question"])`.
