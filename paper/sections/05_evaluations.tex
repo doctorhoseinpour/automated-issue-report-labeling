@@ -40,6 +40,10 @@ Question consistently has the weakest performance among the three labels at ever
 %       is not unique to VOTAG -- it also shows up in the LLM-based
 %       methods, motivating the bug-bias diagnosis subsection.
 %   (c) Optional: name the specific RQ/subsection that picks up next.
+%   (d) Note (relocated from §5.3): VOTAG's best (0.604) comes within 0.009
+%       macro F1 of Qwen-3B zero-shot (0.613). A pure-retrieval heuristic
+%       essentially matches the smallest LLM at zero-shot. Could go here
+%       (descriptive form) or in §6 Discussion (interpretive form).
 
 
 \subsection{\ragtag}
@@ -48,31 +52,30 @@ Question consistently has the weakest performance among the three labels at ever
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/ragtag_kcurve.pdf}
-    \caption{\ragtag\ macro $F_1$ as a function of $k$ for all four Qwen sizes. Solid lines with filled markers are project-specific (PS); dashed lines with hollow markers are project-agnostic (PA). $k{=}0$ is the zero-shot baseline. The dotted horizontal line marks \votag's best (0.604, PA $k{=}16$).}
+    \caption{\ragtag\ macro $F_1$ as a function of $k$ for all four Qwen sizes. $k{=}0$ is the zero-shot baseline. The dotted horizontal line marks \votag's best (0.604, PA $k{=}16$).}
     \label{fig:ragtag-kcurve}
 \end{figure}
 
-We evaluate RAGTAG at $k$ values $\{0, 1, 3, 6, 9, 12, 15\}$ on both PA and PS settings, where $k{=}0$ is the zero-shot baseline~\cite{colavito2025benchmarking}. $k$ value grid selection is informed by \votag's peak results around $k{=}15$ in the previous section. \Cref{fig:ragtag-kcurve} shows the macro F1 of every model across this grid for both settings.
+We evaluate RAGTAG at $k$ values $\{0, 1, 3, 6, 9, 12, 15\}$ on both PA and PS settings, where $k{=}0$ is the zero-shot baseline~\cite{colavito2025benchmarking}. $k$ value grid selection is informed by \votag's peak performance around $k{=}15$ in the previous section. \Cref{fig:ragtag-kcurve} shows the macro F1 of every model across this grid for both settings.
 
-% PENDING-DATA: 32B PA at k=12 and k=15 not yet synced from NRP. Once
-% those land, confirm "almost every (model, $k$) pair" still holds.
-PS marginally outperforms PA at almost every (model, $k$) pair evaluated. The close performance gap is due to the same top-$k$ neighbor overlap observed in the \votag analysis. The marginal improvement is significant because PS uses 11$\times$ less retrieval data per project: each PS index covers only its own 300 retrieval issues, while PA uses the full 3{,}300 across all 11 projects. Given this practical advantage, we conduct the rest of our RAGTAG analysis on the PS setting and report PS numbers throughout this section.
+PS marginally outperforms PA at almost every (model, $k{\ge}1$) pair evaluated (zero-shot is identical between settings since no retrieval is performed). The close performance gap is due to the same top-$k$ neighbor overlap observed in the \votag analysis. The marginal improvement is significant because PS uses 11$\times$ less retrieval data per project: each PS index covers only its own 300 retrieval issues, while PA uses the full 3{,}300 across all 11 projects. Given this practical advantage, we conduct the rest of our RAGTAG analysis on the PS setting and report PS numbers throughout this section.
 
-% PENDING-DATA: 32B PA at k=12 and k=15 still on NRP. The "every model
-% loses 0.001--0.015" range covers the 7 (model, setting) pairs we have
-% data for. Re-verify once 32B PA cells sync.
 The best $k$ grows with model size: Qwen-3B peaks at $k{=}3$ (macro F1 = 0.697), Qwen-7B at $k{=}6$ (0.718), and both Qwen-14B and Qwen-32B at $k{=}12$ (0.732 and 0.767 respectively). This shows that larger models can use the context from additional examples more effectively. However, adding neighbors past $k{=}12$ has no benefit and slightly degrades performance: every model loses 0.001--0.015 macro F1 going from $k{=}12$ to $k{=}15$.
 
-% PENDING-DATA: "largest from Qwen-32B PS at $k{=}12$ (F1 = 0.767)" uses
-% the raw (un-rescued) metric. 32B PA k=12 hasn't synced; verify it doesn't
-% exceed 0.767 (very unlikely based on the consistent PS-over-PA pattern).
-Every RAGTAG configuration outperforms \votag's best (0.604 at PA $k{=}16$), with the smallest margin from Qwen-3B zero-shot (F1 = 0.613, +0.009) and the largest from Qwen-32B PS at $k{=}12$ (F1 = 0.767, +0.163). Overall, this shows that adding the LLM's semantic understanding can meaningfully improve IRC on top of pure retrieval. It is impressive that \votag, a cost-efficient retrieval-only heuristic with no LLM reasoning, comes within 0.009 macro F1 of Qwen-3B zero-shot.
+Every \ragtag\ configuration with $k{\ge}1$ outperforms the zero-shot baseline. At each model's peak, the gap over zero-shot averages +0.076 macro $F_1$ and ranges from +0.055 (Qwen-7B) to +0.087 (Qwen-14B). This shows that LLMs benefit substantially from the most similar labeled examples for IRC.
+
+Every \ragtag\ configuration outperforms \votag's best result (0.604 at PA $k{=}16$), with the smallest margin from Qwen-3B zero-shot (F1 = 0.613, +0.009) and the largest from Qwen-32B PS at $k{=}12$ (F1 = 0.767, +0.163). These results show that adding the LLM reasoning improves IRC on top of pure retrieval.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.85\linewidth]{figures/ragtag_perclass.pdf}
-    \caption{Per-class $F_1$ for each model size at its best \ragtag-PS configuration. Question consistently lags both bug and feature across all four models.}
+    \caption{Per-class $F_1$ for each model size at its best \ragtag-PS configuration.}
     \label{fig:ragtag-perclass}
 \end{figure}
 
-Similar to \votag, question consistently has the weakest performance among the three labels across all \ragtag settings. \Cref{fig:ragtag-perclass} shows per-class $F_1$ at each model's best $k$. Even the smallest gaps between question and the other labels, observed at Qwen-32B with $k{=}12$, are noticeable: question is 0.060 macro $F_1$ below bug and 0.143 below feature. Questions tend to be more frequently misclassified as bugs, similar to our observations for \votag. At zero-shot, 46--59\% of true-question issues are predicted as bugs while only 5--16\% are predicted as features, a 3--11$\times$ asymmetry. \ragtag\ narrows but does not eliminate this asymmetry: at each model's best $k$, 26--36\% of question issues are still predicted as bugs and only 9--15\% as features, a 2--3$\times$ asymmetry. The bug-bias therefore persists across all four model scales and across both zero-shot and few-shot retrieval. This indicates that the bias is a structural property of both the LLM prior and the retrieval geometry, not something an off-the-shelf \ragtag\ configuration can fix.
+Similar to \votag, question consistently has the weakest performance among the three labels across all \ragtag settings. \Cref{fig:ragtag-perclass} shows per-class $F_1$ at each model's best $k$. Even the smallest gaps between question and the other labels, observed at Qwen-32B with $k{=}12$, are noticeable: question is 0.060 macro $F_1$ below bug and 0.143 below feature. Similar to the \votag observations, questions tend to be more frequently misclassified as bugs. At zero-shot, across all four model sizes, 46--59\% of true-question issues are predicted as bugs while only 5--16\% are predicted as features. \ragtag\ narrows this misclassification asymmetry but does not eliminate it: at each model's best $k$, 26--36\% of question issues are still predicted as bugs and only 9--15\% as features. 
+
+These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps the misclassification. Based on this intuition, we propose a more balanced retrieval technique as an intervention to reduce question-to-bug misclassifications. To prevent damaging performance on true-bug issues, we apply this neighbor balancing only when the query is suspected to be a question. We use the label distribution of the retrieved top-$k$ neighbors as the suspicion signal. Averaged across $k\in[1,30]$, question query issues retrieve roughly balanced bug and question examples (mean $N_\text{bug} - N_\text{question} = -1.4$). Therefore, We treat a query issue as a suspected question when the question count in the top-$k$ is within a margin $m$ of the bug count. We select $m{=}3$ empirically from $m\in{1,2,3,4,5}$\footnote{The margin cannot be large given the small typical gap between bug and question counts for true-question retrieval.}. Averaged across $k\in[1,30]$, $m{=}3$ fires for 79\% of true-question issues while firing for only 41\% of true-bug issues. This trade-off is more favorable than other margin values. We further confirmed this choice with a margin sweep on Qwen-3B (the smallest model), where $m{=}3$ had the best performance.
+
+
+
