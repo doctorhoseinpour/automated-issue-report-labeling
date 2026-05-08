@@ -75,7 +75,32 @@ Every \ragtag\ configuration outperforms \votag's best result (0.604 at PA $k{=}
 
 Similar to \votag, question consistently has the weakest performance among the three labels across all \ragtag settings. \Cref{fig:ragtag-perclass} shows per-class $F_1$ at each model's best $k$. Even the smallest gaps between question and the other labels, observed at Qwen-32B with $k{=}12$, are noticeable: question is 0.060 macro $F_1$ below bug and 0.143 below feature. Similar to the \votag observations, questions tend to be more frequently misclassified as bugs. At zero-shot, across all four model sizes, 46--59\% of true-question issues are predicted as bugs while only 5--16\% are predicted as features. \ragtag\ narrows this misclassification asymmetry but does not eliminate it: at each model's best $k$, 26--36\% of question issues are still predicted as bugs and only 9--15\% as features. 
 
-These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps the misclassification. Based on this intuition, we propose a more balanced retrieval technique as an intervention to reduce question-to-bug misclassifications. To prevent damaging performance on true-bug issues, we apply this neighbor balancing only when the query is suspected to be a question. We use the label distribution of the retrieved top-$k$ neighbors as the suspicion signal. Averaged across $k\in[1,30]$, question query issues retrieve roughly balanced bug and question examples (mean $N_\text{bug} - N_\text{question} = -1.4$). Therefore, We treat a query issue as a suspected question when the question count in the top-$k$ is within a margin $m$ of the bug count. We select $m{=}3$ empirically from $m\in{1,2,3,4,5}$\footnote{The margin cannot be large given the small typical gap between bug and question counts for true-question retrieval.}. Averaged across $k\in[1,30]$, $m{=}3$ fires for 79\% of true-question issues while firing for only 41\% of true-bug issues. This trade-off is more favorable than other margin values. We further confirmed this choice with a margin sweep on Qwen-3B (the smallest model), where $m{=}3$ had the best performance.
+These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps the misclassification. Based on this intuition, we propose a more balanced retrieval technique as an intervention to reduce question$\rightarrow$bug misclassifications. To prevent damaging performance on true-bug issues, we apply this neighbor balancing only when the query is suspected to be a question. We use the label distribution of the retrieved top-$k$ neighbors as the suspicion signal. Averaged across $k\in[1,30]$, question query issues retrieve roughly balanced bug and question examples (mean $N_\text{bug} - N_\text{question} = -1.4$). Therefore, we treat a query issue as a suspected question when the question count in the top-$k$ is within a margin $m$ of the bug count ($N_\text{bug} - N_\text{question} \le m$). We select $m{=}3$ empirically from $m\in{1,2,3,4,5}$\footnote{The margin cannot be large given the small typical gap between bug and question counts for true-question retrieval.}. Averaged across $k\in[1,30]$, $m{=}3$ fires for 79\% of true-question issues while firing for only 41\% of true-bug issues. This trade-off is more favorable than other margin values. We further confirmed this choice with a margin sweep on Qwen-3B (the smallest model), where $m{=}3$ had the best performance. We refer to this method as \textbf{B}alanced \ragtag\ (\bragtag).
 
 
+\subsection{Balanced \ragtag}
+\label{sec:bragtag}
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/bragtag_kcurve.pdf}
+    \caption{Macro $F_1$ as a function of $k$ across all model sizes for both \ragtag and \bragtag (project-specific setting)}
+    \label{fig:bragtag-kcurve}
+\end{figure}
+
+Since the PS setting produced the best results for \ragtag, we use PS as the default for evaluating \bragtag\ on the same $k\in\{1, 3, 6, 9, 12, 15\}$ grid. \Cref{fig:bragtag-kcurve} shows macro F1 vs $k$ for both methods across all four model sizes. \bragtag\ outperforms \ragtag\ at every $k\ge 6$. At smaller $k\in\{1, 3\}$, \bragtag\ slightly underperforms by 0.001--0.010 macro F1, because the trigger fires too often, shrinking the prompt to 0 or 1 examples (56\% of queries at $k{=}1$ and 15\% at $k{=}3$ end with $\le 1$ remaining example).
+
+\bragtag's best $k$ almost always increases compared to \ragtag: Qwen-3B from $k{=}3$ to $k{=}6$, Qwen-7B from $k{=}6$ to $k{=}12$, Qwen-14B from $k{=}12$ to $k{=}15$, and Qwen-32B unchanged at $k{=}12$. When the trigger fires, \bragtag removes all bug examples from the top-$k$. Therefore, A higher initial $k$ is needed to leave enough remaining context for the LLM to use. At each method's best $k$, \bragtag outperforms \ragtag by +0.017 (Qwen-3B), +0.020 (Qwen-7B), +0.024 (Qwen-14B), and +0.015 (Qwen-32B) macro F1. \Cref{tab:bragtag-results} reports the full best configuration comparison.
+
+\input{tables/bragtag_results.tex}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/bragtag_perclass.pdf}
+    \caption{Per-class $F_1$ at each method's best $k$ across all model sizes for \ragtag\ and \bragtag.}
+    \label{fig:bragtag-perclass}
+\end{figure}
+
+The performance gain comes from an increase on the question and bug classes with minimal impact on feature. \Cref{fig:bragtag-perclass} shows per-class $F_1$ at each method's best $k$. Question $F_1$ improves by 0.030--0.068 across all four model sizes. Bug $F_1$ stays within 0.018 of \ragtag, with a slight loss for Qwen-3B and slight gains for the larger models. Feature $F_1$ is essentially unchanged. The question$\rightarrow$bug misclassification rate also drops sharply: at each model's best $k$, \ragtag\ misclassifies 26--36\% of true-question issues as bugs while \bragtag\ reduces this to 19--27\%. Averaged across $k\in[1,15]$, the rate drops from 31--40\% (\ragtag) to 24--36\% (\bragtag). Question$\rightarrow$feature misclassification is unaffected. This confirms that \bragtag's improvement comes from the targeted reduction of question$\rightarrow$bug misclassification.
+
+Outputs from both approaches that failed to parse to a valid label are marked as \textit{invalid} and counted as incorrect. Averaged across $k\in[1,15]$, \bragtag\ has a lower invalid rate than \ragtag\ (2.3\% vs 3.0\% across the four models).
