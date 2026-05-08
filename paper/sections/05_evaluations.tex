@@ -90,7 +90,11 @@ These results show that the LLMs are already prone to misclassifying question is
 
 Since the PS setting produced the best results for \ragtag, we use PS as the default for evaluating \bragtag\ on the same $k\in\{1, 3, 6, 9, 12, 15\}$ grid. \Cref{fig:bragtag-kcurve} shows macro F1 vs $k$ for both methods across all four model sizes. \bragtag\ outperforms \ragtag\ at every $k\ge 6$. At smaller $k\in\{1, 3\}$, \bragtag\ slightly underperforms by 0.001--0.010 macro F1, because the trigger fires too often, shrinking the prompt to 0 or 1 examples (56\% of queries at $k{=}1$ and 15\% at $k{=}3$ end with $\le 1$ remaining example).
 
-\bragtag's best $k$ almost always increases compared to \ragtag: Qwen-3B from $k{=}3$ to $k{=}6$, Qwen-7B from $k{=}6$ to $k{=}12$, Qwen-14B from $k{=}12$ to $k{=}15$, and Qwen-32B unchanged at $k{=}12$. When the trigger fires, \bragtag removes all bug examples from the top-$k$. Therefore, A higher initial $k$ is needed to leave enough remaining context for the LLM to use. At each method's best $k$, \bragtag outperforms \ragtag by +0.017 (Qwen-3B), +0.020 (Qwen-7B), +0.024 (Qwen-14B), and +0.015 (Qwen-32B) macro F1. \Cref{tab:bragtag-results} reports the full best configuration comparison.
+% TODO (author): learn bootstrap CI methodology and re-audit the
+% significance claim in this paragraph (CI numbers, footnote wording, and
+% whether to add Wilcoxon/McNemar as supplementary tests). Stats produced
+% by scripts/paper/significance_bragtag.py.
+\bragtag's best $k$ almost always increases compared to \ragtag: Qwen-3B from $k{=}3$ to $k{=}6$, Qwen-7B from $k{=}6$ to $k{=}12$, Qwen-14B from $k{=}12$ to $k{=}15$, and Qwen-32B unchanged at $k{=}12$. When the trigger fires, \bragtag removes all bug examples from the top-$k$. Therefore, A higher initial $k$ is needed to leave enough remaining context for the LLM to use. At each method's best $k$, \bragtag\ outperforms \ragtag\ on every model with paired bootstrap 95\% CIs\footnote{1000 paired bootstrap resamples of the 3{,}300-issue test set. The reported interval is the percentile 95\% CI on the (\bragtag\ $-$ \ragtag) macro $F_1$ difference.} that exclude zero: Qwen-3B $+0.017$ [+0.003, +0.031], Qwen-7B $+0.020$ [+0.007, +0.032], Qwen-14B $+0.024$ [+0.014, +0.034], Qwen-32B $+0.015$ [+0.007, +0.022]. \Cref{tab:bragtag-results} reports the full best configuration comparison.
 
 \input{tables/bragtag_results.tex}
 
@@ -104,3 +108,35 @@ Since the PS setting produced the best results for \ragtag, we use PS as the def
 The performance gain comes from an increase on the question and bug classes with minimal impact on feature. \Cref{fig:bragtag-perclass} shows per-class $F_1$ at each method's best $k$. Question $F_1$ improves by 0.030--0.068 across all four model sizes. Bug $F_1$ stays within 0.018 of \ragtag, with a slight loss for Qwen-3B and slight gains for the larger models. Feature $F_1$ is essentially unchanged. The question$\rightarrow$bug misclassification rate also drops sharply: at each model's best $k$, \ragtag\ misclassifies 26--36\% of true-question issues as bugs while \bragtag\ reduces this to 19--27\%. Averaged across $k\in[1,15]$, the rate drops from 31--40\% (\ragtag) to 24--36\% (\bragtag). Question$\rightarrow$feature misclassification is unaffected. This confirms that \bragtag's improvement comes from the targeted reduction of question$\rightarrow$bug misclassification.
 
 Outputs from both approaches that failed to parse to a valid label are marked as \textit{invalid} and counted as incorrect. Averaged across $k\in[1,15]$, \bragtag\ has a lower invalid rate than \ragtag\ (2.3\% vs 3.0\% across the four models).
+
+
+\subsection{Fine-Tuning}
+\label{sec:finetune-eval}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/finetune_comparison.pdf}
+    \caption{\textbf{(a)} Macro $F_1$ for \ragtag at its best $k$ in PS vs Fine-Tune in PS and PA across all four model sizes. \textbf{(b)} Per-class $F_1$ gain from Fine-Tune PS to Fine-Tune PA ($\Delta F_1$ = PA $-$ PS) for each class and model size.}
+    \label{fig:finetune-comparison}
+\end{figure}
+
+We fine-tune all models in both PA and PS settings. \Cref{fig:finetune-comparison}(a) compares macro $F_1$ for fine-tuning in both settings against \ragtag's PS at each model's best $k$. Fine-tune PA outperforms PS at every model size, by +0.033 (Qwen-3B), +0.084 (Qwen-7B), +0.082 (Qwen-14B), and +0.031 (Qwen-32B) macro $F_1$. This is the opposite of what we observed for \ragtag, where PS marginally outperformed PA. The 300 labeled issues per project exposed to the model in fine-tune PS is not sufficient to learn the label distributions. This trend matches prior findings on LLM fine-tuning for IRC~\cite{heo2025study}.
+
+\ragtag's PS outperforms Fine-Tune's PS at every model size, by +0.021 (Qwen-3B) to +0.040 (Qwen-7B) macro $F_1$. This shows that with only 300 labeled issues per project, retrieval-augmented few-shot is more effective than LoRA fine-tuning for IRC.
+
+\Cref{fig:finetune-comparison}(b) shows where the additional PA training data helps most in fine-tuning. Averaged across all four models, bug $F_1$ gains +0.070 going from PS to PA, question gains +0.053, and feature gains +0.050. Qwen-32B is the only exception to the PS$\to$PA gain: its question $F_1$ drops by 0.010 while bug gains +0.070.
+
+Fine-tune produces fewer invalid outputs than \ragtag and \bragtag in both settings, because the model learns the output format during training. Averaged across the four models, fine-tune's invalid rate is 0.28\% in PA and 0.38\% in PS, below \ragtag's 3.0\% and \bragtag's 2.3\% (averaged across $k\in[1,15]$).
+
+
+
+\subsection{Method Comparison}
+\label{sec:method-comparison}
+
+In a standard software development workflow, every issue needs a label, so any usable IRC approach must produce a valid output. Our previous analysis shows that all three LLM-based approaches produce some invalid outputs, even fine-tune at 0.28--0.38\%. To always have an output, we propose falling back to \votag\ for invalid LLM predictions. \votag\ never produces an invalid label and adds no LLM inference cost.
+
+We use this fallback to compare \ragtag, \bragtag, and fine-tune at their best configurations established by our experiments: \ragtag\ and \bragtag\ at their best $k$ on PS, and fine-tune on PA. Using the same fallback technique across all three ensures a fair comparison at each method's peak performance. To match each method's best data scope, we use \votag\ PS as the fallback for \ragtag\ and \bragtag, and \votag\ PA for fine-tune.
+
+
+
+

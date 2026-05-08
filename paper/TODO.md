@@ -13,6 +13,10 @@ Items the next session should pick up. Live status of in-flight runs is in [SESS
 - [ ] **DeBERTa decision.** If DeBERTa-v3-large PA F1 is competitive with or above LLM-FT-PA, decide whether to add an encoder baseline section. If not, drop it from the paper entirely.
 - [ ] **Re-run `scripts/paper/fig_ragtag_kcurve.py`** after `scripts/nrp/sync.sh` pulls in the 32B k=12/15 cells. The script auto-picks whichever k values are on disk; the current PNG/PDF in `paper/figures/` is missing the 32B k=12, k=15 endpoints in both PS and PA curves. No code edits needed, just re-run.
 
+## Supervisor questions
+
+- [ ] **§5.4 Fine-tune invalid-rate / \votag-rescue framing.** Confirm with supervisor the best way to claim this. The current paragraph at [`05_evaluations.tex`](sections/05_evaluations.tex) (after the per-class breakdown) reports fine-tune's invalid rate (0.28% PA, 0.38% PS) as well below \ragtag's 3.0% and \bragtag's 2.3%, then introduces \votag-PS as a free fallback for invalid outputs across all three LLM-based methods (no LLM inference, reuses already-retrieved top-$k$ neighbors for \ragtag/\bragtag). Open questions: (a) is "the model learns the output format during training" the right causal claim, or do we need to back it with a stricter analysis? (b) is the \votag-rescue methodology sound for cross-method comparison, or does it bias toward \ragtag/\bragtag (which share the same retrieval index)? (c) should rescue-vs-no-rescue numbers be reported side-by-side, or only the rescued ones?
+
 ## Writing — section drafts
 
 - [ ] **§5.1 VOTAG retrieval floor.** Three paragraphs essentially done (peak+plateau / PA-vs-PS / per-class with bug-bias inference). Two-panel figure (kcurve + per-class bar chart) generated under pooled aggregation. Two inline `% TODO:` blocks remaining in [`05_evaluations.tex`](sections/05_evaluations.tex):
