@@ -1,56 +1,67 @@
 # Paper TODO
 
-Items the next session should pick up. Live status of in-flight runs is in [SESSION_HANDOFF.md](SESSION_HANDOFF.md).
+Items the next session should pick up. Live state in [SESSION_HANDOFF.md](SESSION_HANDOFF.md).
 
-## In flight (no action needed yet — wait for completion)
+All NRP campaigns are done; all 3-epoch FT cells and the k=12/15 extension cells are in `results/issues11k/`. The §5 evaluation prose is drafted; the paper is now blocked on §1/§2/§6/§7/§8/§9 drafts and the statistical-significance numbers.
 
-- [ ] **k=12/15 extension at ctx=8192.** Local for 3B/7B/14B (`run_k12_k15_local_8k.sh`); NRP for 32B (waves 6 and 7 in `scripts/nrp/plan.yaml`). Both PA RAGTAG and PS RAGTAG, plus PS Debiased RAGTAG (margin=3). Idempotent skip on `preds_k15.csv`. Outputs land in canonical `ragtag/` and `ragtag_debias_m3/` directories. When done: re-run analysis utilities to see whether the {0,1,3,6,9} grid still represents the plateau.
-- [ ] **DeBERTa-v3-large PA fine-tune (exploratory).** Running locally via `run_transformer_ft.py`. Outputs to `results/issues11k/agnostic/microsoft_deberta_v3_large/finetune_transformer/`. Not yet committed to the paper — decide inclusion after seeing the F1 vs LLM-FT.
+## Inline `% TODO` blocks remaining in §5
 
-## After in-flight runs land
+- [ ] **§5.1: motivate the $k$-sweep.** 1–2 sentences before "We evaluate \votag…" in [`05_evaluations.tex`](sections/05_evaluations.tex#L19) explaining why we scan $k$=1..30 (only knob in VOTAG; plateau anchors the RAGTAG $k$-grid; range chosen to show diminishing returns).
+- [ ] **§5.1: write the RQ1 → §5.2 transition.** [`05_evaluations.tex`](sections/05_evaluations.tex#L35) — position \votag's ~0.60 macro $F_1$ as the retrieval-only floor LLM-based methods must clear; flag bug-bias as recurring across approaches.
+- [ ] **§5.3: re-audit bootstrap CI methodology.** [`05_evaluations.tex`](sections/05_evaluations.tex#L93) — current paragraph cites paired bootstrap 95% CIs on the (\bragtag − \ragtag) macro $F_1$ difference for §5.3. Author note flags re-checking the methodology and footnote wording, and considering Wilcoxon/McNemar as supplementary tests. Stats produced by [`scripts/paper/significance_bragtag.py`](../scripts/paper/significance_bragtag.py).
 
-- [ ] **k=12/15 verdict.** If F1 stays flat or drops past k=9, we have a documented null result that strengthens §3.3's k-grid defense. If a model bumps up at k=12 or k=15, decide whether to extend the published grid or footnote the divergence.
-- [ ] **DeBERTa decision.** If DeBERTa-v3-large PA F1 is competitive with or above LLM-FT-PA, decide whether to add an encoder baseline section. If not, drop it from the paper entirely.
-- [ ] **Re-run `scripts/paper/fig_ragtag_kcurve.py`** after `scripts/nrp/sync.sh` pulls in the 32B k=12/15 cells. The script auto-picks whichever k values are on disk; the current PNG/PDF in `paper/figures/` is missing the 32B k=12, k=15 endpoints in both PS and PA curves. No code edits needed, just re-run.
+## Statistics (paper-blocking)
 
-## Supervisor questions
+- [ ] **Bootstrap 95% CIs on macro $F_1$** for every method × model × setting cell shown in [`tables/method_comparison.tex`](tables/method_comparison.tex). 1,000 paired resamples on the 3,300-issue test set. Report alongside point estimates in §5.5.
+- [ ] **McNemar's test** for the §5.5 headline pairwise comparisons (same matrix as the table): \bragtag-PS vs Fine-Tune-PA per model; \ragtag-PS vs \bragtag-PS per model.
+- [ ] **Implementation:** new [`scripts/paper/significance_tests.py`](../scripts/paper/significance_tests.py). Use `statsmodels.stats.contingency_tables.mcnemar` and `numpy` resampling. Compute over pooled, rescued predictions (consistent with §5.5 methodology). Document in §4 Setup (1,000 bootstraps; McNemar's with continuity correction; p < 0.05 threshold; b vs c counts in supplementary).
 
-- [ ] **§5.4 Fine-tune invalid-rate / \votag-rescue framing.** Confirm with supervisor the best way to claim this. The current paragraph at [`05_evaluations.tex`](sections/05_evaluations.tex) (after the per-class breakdown) reports fine-tune's invalid rate (0.28% PA, 0.38% PS) as well below \ragtag's 3.0% and \bragtag's 2.3%, then introduces \votag-PS as a free fallback for invalid outputs across all three LLM-based methods (no LLM inference, reuses already-retrieved top-$k$ neighbors for \ragtag/\bragtag). Open questions: (a) is "the model learns the output format during training" the right causal claim, or do we need to back it with a stricter analysis? (b) is the \votag-rescue methodology sound for cross-method comparison, or does it bias toward \ragtag/\bragtag (which share the same retrieval index)? (c) should rescue-vs-no-rescue numbers be reported side-by-side, or only the rescued ones?
+## Sections still to draft (in order)
 
-## Writing — section drafts
+- [ ] **§6 Discussion.** Weave in the actionable insights captured below.
+- [ ] **§7 Threats to Validity.** Multi-seed FT validation gap (3-epoch FT-PA on 14B is unexpectedly higher than on 32B — possible single-seed variance), invalid-rate framing if held over from supervisor question, generalization to non-Qwen LLMs, dataset scope (11 OSS projects).
+- [ ] **§8 Conclusion.**
+- [ ] **§1 Introduction.**
+- [ ] **§2 Related Work.** Stub already cites Heo, Aracena, Colavito, Izadi, Trautsch, etc.
 
-- [ ] **§5.1 VOTAG retrieval floor.** Three paragraphs essentially done (peak+plateau / PA-vs-PS / per-class with bug-bias inference). Two-panel figure (kcurve + per-class bar chart) generated under pooled aggregation. Two inline `% TODO:` blocks remaining in [`05_evaluations.tex`](sections/05_evaluations.tex):
-  - Motivate the k-sweep (why scan k=1..30 and not just one or two values).
-  - Write the RQ1 → §5.2 transition (position 0.60 as the retrieval-only floor; flag bug-bias as recurring across approaches).
-- [ ] **§5.2 Bug-bias diagnosis.** Stub only. Groundwork is in place from §5.1 (per-class F1 numbers, embedding-space inference, mechanism→misclass→geometric chain). Extend to the LLM-based methods (zero-shot, RAGTAG, Debiased RAGTAG, FT) and show the asymmetry persists across approaches and model scales.
-- [ ] **§5.3 RAGTAG / Debiased RAGTAG analysis (RQ2).** Method recap + headline numbers + per-model curves. Margin-based retrieval debiasing (m=3) is the published intervention; keep wording careful since the FT baseline got tighter at 3 epochs and the Debias gap shrank for some cells. **User picks this up next session.**
-- [ ] **§6 Discussion / §7 Threats.** Draft after §5 lands.
+## Discussion — insights to weave into §6
 
-## Discussion — insights to weave in
+Concrete §5 findings that need explicit treatment in §6 (actionable, not just descriptive).
 
-Concrete findings from §5 that need explicit treatment in §6 Discussion (actionable, not just descriptive).
+- [ ] **Targeted retrieval can match large-scale fine-tuning on minority classes.** §5.5 [`tables/method_comparison.tex`](tables/method_comparison.tex) shows \bragtag\ delivers the best question $F_1$ on three of four models while fine-tune wins on bug/feature. Plausible cause: question is a minority label within IRC, so few-shot quality matters more than training-set volume on that class. **§6 framing:** when an IRC deployment has a rare/project-specific label with little labeled data, retrieval-augmented few-shot with bias correction may match or beat LoRA fine-tuning at a fraction of the cost. **Future-work hook:** map the fine-tune-vs-context trade-off curve in low-data / novel-label regimes (synthetic-rare-label sweep, or transfer to a new project with a custom label space).
+- [ ] **Fine-tune is cheaper than retrieval at large model size.** §5.5 cost analysis: at Qwen-32B, fine-tune total time (2.71 h) is below \ragtag/\bragtag (4.15–4.62 h) because RAGTAG inference at $k$=12 processes ~20M prompt tokens, exceeding fine-tune's training+inference token volume. Implication: at sufficiently large models with long best-$k$, the conventional "fine-tuning is more expensive" framing inverts.
+- [ ] **\bragtag is the most class-balanced approach.** Lowest per-class $F_1$ std (0.053) and highest worst-class floor (0.694) averaged across the four models. Practical implication for skewed-class deployments.
 
-- [ ] **Targeted retrieval can match large-scale fine-tuning on minority classes.** §5.5 \Cref{tab:method-comparison} shows \bragtag\ delivers the best question $F_1$ on three of four models (Qwen-3B, Qwen-7B, Qwen-32B) while fine-tune wins on bug/feature. Plausible cause: question is a minority label within IRC (and likely in any custom IRC schema), so few-shot quality matters more than training-set volume on that class. **Actionable insight to argue in §6:** when an IRC deployment has a rare/project-specific label with little labeled data (e.g., a custom label that exists in no other project), retrieval-augmented few-shot with bias correction may match or beat LoRA fine-tuning at a fraction of the cost. **Future-work hook:** map the fine-tune-vs-context trade-off curve in low-data / novel-label regimes — e.g., a synthetic-rare-label sweep on the 11k benchmark, or a transfer experiment to a new project with a custom label space.
+## Forward-pointers / cross-section consistency
 
-## Statistics (after all runs land)
+- [ ] **§3.3 RAGTAG → §5.3 BRAGTAG signpost.** Insert in §3.3:
+  > *We additionally introduce a retrieval-debiasing intervention applied on top of \ragtag; we describe its algorithm and present its empirical motivation in \cref{sec:bragtag}.*
 
-- [ ] **Bootstrap 95% CIs on macro F1** for every method × model × setting cell. 1,000 resamples. Report alongside point estimates.
-- [ ] **McNemar's test** for headline pairwise comparisons:
-  - Debiased RAGTAG_PS vs FT_PS (per project + aggregated, per model)
-  - Debiased RAGTAG_PS vs FT_PA per-project eval (per project + aggregated, per model)
-  - RAGTAG_PA vs FT_PA (per model)
-- [ ] Implementation: ~50 lines of Python in **`scripts/paper/significance_tests.py`** (new-script convention; do not use `scripts/analysis/`). Use `statsmodels.stats.contingency_tables.mcnemar` and `numpy` resampling for CIs. Compute over pooled predictions (concat per-project preds for PS). Document methodology in §4.4 (1,000 bootstraps; McNemar's with continuity correction; p < 0.05 threshold; b vs c counts in supplementary).
+## Fine-tune memory mitigations (§4 + §7)
 
-## Hardware specs
+- [ ] **Document the FT memory-saving knobs in §4 and reference in §7 Threats.** Our LoRA fine-tune uses Unsloth's gradient checkpointing ([`fixed_fine-tune.py:354`](../fixed_fine-tune.py#L354): `use_gradient_checkpointing="unsloth"`) and gradient accumulation ([`fixed_fine-tune.py:398`](../fixed_fine-tune.py#L398): `gradient_accumulation_steps=16`). The FT peak GPU RAM numbers reported in §5.5 [`tables/method_comparison.tex`](tables/method_comparison.tex) (5.5/9.9/16.7/31.5 GB for 3B/7B/14B/32B) are post-mitigation; without these knobs the peaks would be higher. **§4 (Setup):** add a sentence in the fine-tuning setup paragraph noting both mitigations are enabled. **§7 (Threats):** flag that absolute peak FT memory is implementation-dependent — different memory-optimization choices would shift the FT/RAG memory ratio reported in §5.5, though the ordering (FT > RAG/BRAG) is robust to these choices because activations + gradients + optimizer state are unique to training.
 
-- [ ] **§4.5 placeholder.** Need exact server specs. Run `kubectl describe node <node-name>` (or `kubectl describe pod <pod>` for the running mega-runner) to capture: GPU model + VRAM, CPU model + core count, RAM, OS/CUDA versions. Local 4090 specs already known.
+## Hardware specs (§4.5)
 
-## Forward-pointers
+- [ ] **§4.5 placeholder.** Local 4090 specs known. Need NRP node specs for L40 / L40S used for 14B/32B FT and 32B retrieval. Run `kubectl --context nautilus -n bgsu-cs-heydarnoori describe node <node-name>` (node names are recoverable from pod history). Capture: GPU model + VRAM, CPU model + core count, RAM, OS/CUDA versions.
 
-- [ ] **§3.3 RAGTAG → §5.3 Debias signpost.** Once §5.3 has a stable label, insert in §3.3:
-  > *We additionally introduce a retrieval-debiasing intervention applied on top of \ragtag; we describe its algorithm and present its empirical motivation in \cref{sec:debias}.*
+## Held-over supervisor question
 
-## Conventions / methodology
+- [ ] **§5.4/§5.5 invalid-rate / \votag-rescue framing.** Three open questions: (a) is "the model learns the output format during training" the right causal claim for the FT invalid-rate drop, or do we need a stricter analysis? (b) is the \votag-rescue methodology sound for cross-method comparison, or does it bias toward \ragtag/\bragtag (which share the same retrieval index)? (c) should rescue-vs-no-rescue numbers be reported side-by-side, or only the rescued ones?
 
-- [x] **Pooled aggregation for all paper metrics** (decided 2026-05-06; methodology paragraph in [`04_setup.tex`](sections/04_setup.tex) §"Evaluation Metrics"). All macro $F_1$ numbers — PA and PS, every approach — are computed by concat-then-evaluate on the 3,300-issue test set. Per-project mean is not used for headline numbers.
-- [ ] **New paper-figure scripts go in `scripts/paper/`** with pooled aggregation baked in. Existing `scripts/analysis/*.py` use per-project mean for PS — do not retrofit, do not consume their PS outputs for paper artifacts. Two scripts already exist: `fig_vtag_kcurve.py`, `tab_vtag_peak.py`. Future additions for RQ2 (RAGTAG analysis), RQ3 (debiasing), bug-bias diagnosis, leaderboard, scaling curves, etc., should follow the same pattern.
+## Conventions / methodology (reference, do not edit)
+
+- [x] **Pooled aggregation for all paper metrics** (decided 2026-05-06; methodology paragraph in [`04_setup.tex`](sections/04_setup.tex) §"Evaluation Metrics"). Concat-then-evaluate on the 3,300-issue test set (PA and PS alike). Per-project mean is not used for headline numbers.
+- [x] **\votag-rescue is §5.5-only.** Cross-method best-config comparison rescues invalid LLM outputs with \votag; all other §5 numbers are raw.
+- [x] **Paper-figure scripts go in [`scripts/paper/`](../scripts/paper/)** with pooled aggregation baked in. Existing `scripts/analysis/*.py` use legacy per-project mean for PS — do not retrofit, do not consume their PS outputs for paper artifacts.
+
+## Done / closed (kept for audit)
+
+- [x] All NRP campaigns (waves w1–w7) finished and integrated into `results/issues11k/`.
+- [x] k=12/15 extension at ctx=8192 — complete for all four Qwen sizes (3B/7B/14B local, 32B NRP). Best-$k$ ladder confirmed in §5.2/§5.3.
+- [x] DeBERTa-v3-large PA fine-tune — exploratory experiment failed (mode-collapse on `bug`, macro $F_1$ = 0.167). Dropped from the paper; outputs preserved for audit.
+- [x] §5.1 RQ1 \votag — drafted (3 paragraphs + 2-panel figure), 2 inline TODOs remain.
+- [x] §5.2 \ragtag — drafted (6 paragraphs + kcurve fig + perclass fig).
+- [x] §5.3 Balanced \ragtag — drafted (4 paragraphs + kcurve fig + perclass fig + bragtag_results table); 1 author TODO on bootstrap CI re-audit.
+- [x] §5.4 Fine-Tuning — drafted (4 paragraphs + finetune_comparison fig).
+- [x] §5.5 Method Comparison — drafted (7 paragraphs incl. cost analysis, method_comparison table, method_pareto fig).

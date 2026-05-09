@@ -200,6 +200,7 @@ def _row_few_shot(model_tag: str, model_lbl: str, approach: str) -> dict:
         time_source = "mtime"
 
     gpu_ram_mb = _ps_gpu_ram_mb(model_tag, approach)
+    # \ragtag / \bragtag have no training phase; gpu_time_s is inference only.
     return {
         "model": model_lbl,
         "method": approach,
@@ -210,7 +211,9 @@ def _row_few_shot(model_tag: str, model_lbl: str, approach: str) -> dict:
         "f1_feature": pc["feature"],
         "f1_question": pc["question"],
         "invalid_pct": 100.0 * n_inv / len(raw),
-        "gpu_time_s": gpu_time_s,
+        "train_time_s": 0.0,
+        "infer_time_s": gpu_time_s,
+        "total_time_s": gpu_time_s,
         "gpu_ram_mb": gpu_ram_mb,
         "time_source": time_source,
     }
@@ -223,11 +226,12 @@ def _row_finetune(model_tag: str, model_lbl: str) -> dict:
     pc = _per_class(rescued)
     n_inv = (~raw["predicted_label"].isin(LABELS)).sum()
 
-    # FT cost: training_time_s + wall_time_s (inference); excludes model_load_time_s.
+    # FT cost: training_time_s and wall_time_s (inference); excludes model_load_time_s.
     cost = pd.read_csv(
         RESULTS / "agnostic" / model_tag / "finetune_fixed" / "cost_metrics.csv"
     ).iloc[0]
-    gpu_time_s = float(cost["training_time_s"]) + float(cost["wall_time_s"])
+    train_s = float(cost["training_time_s"])
+    infer_s = float(cost["wall_time_s"])
     gpu_ram_mb = float(cost["gpu_peak_memory_mb"])
 
     return {
@@ -240,7 +244,9 @@ def _row_finetune(model_tag: str, model_lbl: str) -> dict:
         "f1_feature": pc["feature"],
         "f1_question": pc["question"],
         "invalid_pct": 100.0 * n_inv / len(raw),
-        "gpu_time_s": gpu_time_s,
+        "train_time_s": train_s,
+        "infer_time_s": infer_s,
+        "total_time_s": train_s + infer_s,
         "gpu_ram_mb": gpu_ram_mb,
         "time_source": "cost_metrics",
     }
@@ -264,16 +270,19 @@ def _emit_tex(rows: list[dict]) -> str:
         r"  \caption{\ragtag, \bragtag, and Fine-Tune at each method's best configuration "
         r"with the scope-matched \votag\ fallback applied "
         r"(\votag-PS for \ragtag/\bragtag, \votag-PA for Fine-Tune). "
-        r"Time is total wall-time on a single GPU "
-        r"(inference for \ragtag/\bragtag; training+inference for Fine-Tune; "
-        r"excludes model load). RAM is the peak GPU memory observed. Pooled.}",
+        r"Train and Inference are wall-times on a single GPU "
+        r"(\ragtag/\bragtag have no training phase). "
+        r"Total is their sum and excludes model load. "
+        r"RAM is the peak GPU memory observed. Pooled.}",
         r"  \label{tab:method-comparison}",
         r"  \footnotesize",
-        r"  \begin{tabular}{llcccccccc}",
+        r"  \setlength{\tabcolsep}{4pt}",
+        r"  \resizebox{\linewidth}{!}{%",
+        r"  \begin{tabular}{llccccccccc}",
         r"    \toprule",
         r"    Model & Method & $k^*$ & Macro $F_1$ & "
         r"$F_1^{\text{bug}}$ & $F_1^{\text{feat}}$ & $F_1^{\text{q}}$ & "
-        r"RAM (GB) & Time (h) \\",
+        r"RAM (GB) & Train (h) & Infer (h) & Total (h) \\",
         r"    \midrule",
     ]
 
@@ -282,17 +291,20 @@ def _emit_tex(rows: list[dict]) -> str:
         model_cell = r["model"] if r["model"] != prev_model else ""
         if r["model"] != prev_model and prev_model is not None:
             lines.append(r"    \addlinespace[2pt]")
+        # \ragtag / \bragtag don't train: show em-dash for Train.
+        train_cell = "--" if r["train_time_s"] == 0.0 else fhrs(r["train_time_s"])
         lines.append(
             f"    {model_cell} & {method_name[r['method']]} & "
             f"{r['best_k']} & {f3(r['macro'])} & "
             f"{f3(r['f1_bug'])} & {f3(r['f1_feature'])} & {f3(r['f1_question'])} & "
-            f"{fgb(r['gpu_ram_mb'])} & {fhrs(r['gpu_time_s'])} \\\\"
+            f"{fgb(r['gpu_ram_mb'])} & {train_cell} & {fhrs(r['infer_time_s'])} & {fhrs(r['total_time_s'])} \\\\"
         )
         prev_model = r["model"]
 
     lines += [
         r"    \bottomrule",
-        r"  \end{tabular}",
+        r"  \end{tabular}%",
+        r"  }",
         r"\end{table}",
         "",
     ]
@@ -310,15 +322,17 @@ def main() -> None:
 
     print(f"{'Model':<10} {'Method':<10} {'Set':<3} {'k*':<3}  "
           f"{'macro':>7}  {'F1 bug':>7}  {'F1 feat':>8}  {'F1 q':>6}  {'Inv':>6}  "
-          f"{'GPU h':>7}  {'GPU GB':>7}  src")
+          f"{'Train h':>8}  {'Infer h':>8}  {'Total h':>8}  {'GPU GB':>7}  src")
     for r in rows:
         method = {"ragtag": "RAGTAG", "ragtag_debias_m3": "BRAGTAG",
                   "finetune": "FT"}[r["method"]]
+        train_str = "--" if r["train_time_s"] == 0.0 else f"{r['train_time_s']/3600:>6.2f}h"
         print(f"{r['model']:<10} {method:<10} {r['setting']:<3} {r['best_k']:<3}  "
               f"{r['macro']:>7.4f}  "
               f"{r['f1_bug']:>7.4f}  {r['f1_feature']:>8.4f}  {r['f1_question']:>6.4f}  "
               f"{r['invalid_pct']:>5.2f}%  "
-              f"{r['gpu_time_s']/3600:>6.2f}h  {r['gpu_ram_mb']/1024:>6.1f}G  "
+              f"{train_str:>8}  {r['infer_time_s']/3600:>6.2f}h  "
+              f"{r['total_time_s']/3600:>6.2f}h  {r['gpu_ram_mb']/1024:>6.1f}G  "
               f"{r['time_source']}")
 
     out = TABLES_DIR / "method_comparison.tex"

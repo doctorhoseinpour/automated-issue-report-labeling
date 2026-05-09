@@ -26,7 +26,7 @@ This file gives Claude persistent context about this research project. Read it a
    - Assistant prefill (`<label>`) so the model only generates the label + closing tag.
    - Inference-only — no training.
    - Two settings: **project-agnostic** (one FAISS index over all 3,300 train issues) and **project-specific** (separate index per project, 300 train each).
-   - Active k values: {0 (zero-shot), 1, 3, 6, 9}. Grid extension to {12, 15} is in flight at ctx=8192 to defend against reviewer asks.
+   - Active k values: {0 (zero-shot), 1, 3, 6, 9, 12, 15} at ctx=8192. The {12, 15} extension is complete for all four Qwen sizes (3B/7B/14B local, 32B NRP).
 
 3. **Debiased RAGTAG** — RQ3 intervention
    - Margin-based retrieval debiasing (`--debias_retrieval --debias_margin 3`) on top of RAGTAG.
@@ -68,7 +68,7 @@ All Qwen2.5-Instruct, bnb-4bit (uniform quantization across the family for clean
 
 Llama-3B and Llama-8B from earlier experiments live on disk under `unsloth_Llama_*` for the historical record but are not in the active lineup.
 
-An exploratory DeBERTa-v3-large encoder fine-tune (PA only) is also in flight as a separate baseline candidate; not yet committed to the paper.
+An exploratory DeBERTa-v3-large encoder fine-tune (PA only) was run as a candidate encoder baseline but mode-collapsed (predicts only `bug`, macro $F_1$ = 0.167) and was dropped from the paper. Outputs preserved at `results/issues11k/agnostic/microsoft_deberta-v3-large/` for the audit trail.
 
 ---
 
@@ -88,8 +88,8 @@ End-to-end pipeline for the 11-project benchmark across both settings (agnostic 
 ### `run_11k_debias_qwen.sh` — debiased RAGTAG for Qwen on 11k
 Runs debiased RAGTAG (margin=3) for Qwen across all 11 projects. Expects neighbor files from a prior `run_11k_experiments.sh` run.
 
-### `run_k12_k15_local_8k.sh` — k-grid extension (in flight)
-Local 8K extension to k∈{12,15} for Qwen-3B/7B/14B. Qwen-32B counterpart runs on NRP via [scripts/nrp/plan.yaml](scripts/nrp/plan.yaml) waves 6 and 7. Idempotent skip on `preds_k15.csv`.
+### `run_k12_k15_local_8k.sh` — k-grid extension
+Local 8K extension to k∈{12,15} for Qwen-3B/7B/14B. Qwen-32B counterpart was run on NRP via [scripts/nrp/plan.yaml](scripts/nrp/plan.yaml) waves 6 and 7. Both campaigns are complete; idempotent skip on `preds_k15.csv` if re-run.
 
 ### `build_11k_index.py` — FAISS indexing for the 11k benchmark
 Builds project-agnostic and project-specific FAISS indices from `issues11k_train.csv`, queries with `issues11k_test.csv`, writes `neighbors_k{N}.csv` per setting.
