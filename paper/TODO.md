@@ -26,6 +26,12 @@ Items the next session should pick up. Live status of in-flight runs is in [SESS
 - [ ] **§5.3 RAGTAG / Debiased RAGTAG analysis (RQ2).** Method recap + headline numbers + per-model curves. Margin-based retrieval debiasing (m=3) is the published intervention; keep wording careful since the FT baseline got tighter at 3 epochs and the Debias gap shrank for some cells. **User picks this up next session.**
 - [ ] **§6 Discussion / §7 Threats.** Draft after §5 lands.
 
+## Discussion — insights to weave in
+
+Concrete findings from §5 that need explicit treatment in §6 Discussion (actionable, not just descriptive).
+
+- [ ] **Targeted retrieval can match large-scale fine-tuning on minority classes.** §5.5 \Cref{tab:method-comparison} shows \bragtag\ delivers the best question $F_1$ on three of four models (Qwen-3B, Qwen-7B, Qwen-32B) while fine-tune wins on bug/feature. Plausible cause: question is a minority label within IRC (and likely in any custom IRC schema), so few-shot quality matters more than training-set volume on that class. **Actionable insight to argue in §6:** when an IRC deployment has a rare/project-specific label with little labeled data (e.g., a custom label that exists in no other project), retrieval-augmented few-shot with bias correction may match or beat LoRA fine-tuning at a fraction of the cost. **Future-work hook:** map the fine-tune-vs-context trade-off curve in low-data / novel-label regimes — e.g., a synthetic-rare-label sweep on the 11k benchmark, or a transfer experiment to a new project with a custom label space.
+
 ## Statistics (after all runs land)
 
 - [ ] **Bootstrap 95% CIs on macro F1** for every method × model × setting cell. 1,000 resamples. Report alongside point estimates.

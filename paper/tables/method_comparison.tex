@@ -1,0 +1,27 @@
+\begin{table}[t]
+  \centering
+  \caption{\ragtag, \bragtag, and Fine-Tune at each method's best configuration with the \votag\ fallback applied. Time is total run time on a single GPU (inference for \ragtag/\bragtag and training+inference for Fine-Tune). RAM is the peak GPU memory observed.}
+  \label{tab:method-comparison}
+  \footnotesize
+  \begin{tabular}{llcccccccc}
+    \toprule
+    Model & Method & $k^*$ & Macro $F_1$ & $F_1^{\text{bug}}$ & $F_1^{\text{feat}}$ & $F_1^{\text{q}}$ & RAM (GB) & Time (h) \\
+    \midrule
+    Qwen-3B & \ragtag & 3 & 0.696 & 0.710 & 0.801 & 0.577 & 2.9 & 0.18 \\
+     & \bragtag & 6 & 0.720 & 0.707 & 0.803 & 0.652 & 2.9 & 0.22 \\
+     & Fine-Tune & -- & 0.711 & 0.739 & 0.789 & 0.604 & 5.5 & 0.42 \\
+    \addlinespace[2pt]
+    Qwen-7B & \ragtag & 6 & 0.729 & 0.751 & 0.815 & 0.620 & 6.8 & 0.50 \\
+     & \bragtag & 12 & 0.751 & 0.764 & 0.806 & 0.682 & 6.8 & 0.60 \\
+     & Fine-Tune & -- & 0.762 & 0.761 & 0.848 & 0.677 & 9.9 & 0.58 \\
+    \addlinespace[2pt]
+    Qwen-14B & \ragtag & 12 & 0.746 & 0.757 & 0.838 & 0.642 & 12.6 & 1.37 \\
+     & \bragtag & 15 & 0.771 & 0.773 & 0.841 & 0.699 & 12.6 & 1.35 \\
+     & Fine-Tune & -- & 0.785 & 0.792 & 0.828 & 0.736 & 16.7 & 1.71 \\
+    \addlinespace[2pt]
+    Qwen-32B & \ragtag & 12 & 0.779 & 0.780 & 0.842 & 0.715 & 22.3 & 4.62 \\
+     & \bragtag & 12 & 0.792 & 0.795 & 0.840 & 0.743 & 22.3 & 4.15 \\
+     & Fine-Tune & -- & 0.771 & 0.791 & 0.853 & 0.669 & 31.5 & 2.71 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
