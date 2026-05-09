@@ -1,0 +1,138 @@
+# Evaluation Section Audit Report
+
+**Target:** `paper/sections/05_evaluations.tex` (8 figures, 3 tables, ~50 inline numerical claims)
+**Method:** Pooled aggregation per project convention (concat-then-evaluate over 3,300 test queries). Re-derived from raw predictions under `results/issues11k/`.
+**Date:** 2026-05-09
+
+## Headline
+
+**33 of 36 audited claims pass.** 2 DRIFTs, 1 UNREPRODUCIBLE, 1 caption-only drift in a regenerated table file. None of the failures invalidate the paper's core results — they are localized to one parenthetical sentence (shrinkage 56% / 15%) and one auxiliary claim (Qwen-3B margin sweep).
+
+---
+
+## Pass Tally
+
+| Phase | OK | DRIFT | UNREPRODUCIBLE | Total |
+|------|----|-------|----------------|-------|
+| B (high-risk numbers) | 20 | 2 | 1 | 23 |
+| C+D (cross-consistency, stats) | 13 | 0 | 0 | 13 |
+
+Plus Phase A: all 8 figures + 3 tables regenerate byte-identically except the **method_comparison.tex caption** (text-only drift, no number drift).
+
+---
+
+## Findings That Need Attention (in priority order)
+
+### 1. Shrinkage claim "56% at k=1, 15% at k=3" — DRIFT
+[paper/sections/05_evaluations.tex:91](paper/sections/05_evaluations.tex#L91)
+
+> "the trigger fires too often, shrinking the prompt to 0 or 1 examples (56% of queries at k=1 and 15% at k=3 end with ≤1 remaining example)"
+
+**No reasonable definition produces these numbers.** I tested seven interpretations in [scripts/audit/probe_firing_shrinkage.py](scripts/audit/probe_firing_shrinkage.py):
+
+| Definition | k=1 | k=3 |
+|------------|-----|-----|
+| `remaining ≤ 1` over all queries | **100.0%** (trivial: always ≤1 at k=1) | 39.2% |
+| `remaining = 0` over all queries | 40.2% | 17.6% |
+| `remaining = 0` over question queries only | 30.1% | 7.6% |
+| trigger fires (= bug present in top-k) | 40.2% | 65.9% |
+| `remaining ≤ 1` over question queries only | 100.0% | 28.1% |
+
+The closest single match is **`remaining = 0` at k=3 = 17.6%** (vs prose 15%) but no consistent rule fits both k=1 and k=3 prose values.
+
+**Recommendation:** the author either (a) re-derive these numbers from a clean definition (e.g., "fraction of queries where the trigger fires AND removed at least one example" → at k=1 = 40.2%, at k=3 = 65.9%) and update the prose, or (b) reword to an inequality the data actually supports. Note that at k=1, "ends with ≤1 remaining" is 100% trivially, since the prompt only had 1 example to begin with — the prose number 56% cannot be a count of `remaining ≤ 1` in any direct reading.
+
+### 2. Margin firing rate 79% — definitional mismatch (logged OK with note)
+[paper/sections/05_evaluations.tex:78](paper/sections/05_evaluations.tex#L78)
+
+> "Averaged across k∈[1,30], m=3 fires for 79% of true-question issues while firing for only 41% of true-bug issues."
+
+The prose paragraph defines the suspicion criterion as `N_bug − N_question ≤ m`, but the actual implementation in [llm_labeler.py:365](llm_labeler.py#L365) adds `bug_count > 0` as a guard:
+
+```python
+if bug_count > 0 and bug_count - question_count <= margin:
+    return [n for n in neighbors if n.label != "bug"]
+```
+
+| Rule | true-Q fire rate | true-bug fire rate |
+|------|------------------|---------------------|
+| Prose-as-stated (`bug−q ≤ m`, no guard) | **80.2%** (matches "79%") | 43.5% |
+| Implementation (with `bug>0`) | 67.0% | **40.0%** (matches "41%") |
+
+Note the prose seems to have computed **79%** under the loose rule but **41%** under the strict rule (or with rounding). Functionally the two rules are equivalent — when `bug_count = 0` there is nothing to remove anyway — so this does not affect any downstream measurement, but the prose definition should either:
+- mention the `bug_count > 0` guard and update 79% → 67%, OR
+- keep the loose definition and update 41% → 44%.
+
+The audit logs this as **OK with a methodological note**.
+
+### 3. Margin sweep on Qwen-3B claim — UNREPRODUCIBLE
+[paper/sections/05_evaluations.tex:78](paper/sections/05_evaluations.tex#L78)
+
+> "We further confirmed this choice with a margin sweep on Qwen-3B (the smallest model), where m=3 had the best performance."
+
+Only `ragtag_debias_m3/` exists for Qwen-3B. No `_m1/`, `_m2/`, `_m4/`, `_m5/` predictions are present under `results/issues11k/project_specific/<proj>/unsloth_Qwen2_5_3B_Instruct_bnb_4bit/`. The sweep cannot be reproduced from current artefacts.
+
+**Recommendation:** either (a) run the sweep (5 settings × 11 projects × 6 k values = ~330 inference runs at Qwen-3B), or (b) reword to remove the explicit "margin sweep" claim, falling back on the global trade-off argument already established in the same paragraph.
+
+### 4. method_comparison.tex caption drift — TEXT ONLY
+[paper/tables/method_comparison.tex:3](paper/tables/method_comparison.tex#L3)
+
+The committed caption has been edited down from the regenerated version:
+
+| | Caption |
+|-|---------|
+| Committed | "...with the **\votag\ prediction fallback** applied... Total is their sum. RAM is the peak GPU memory observed." |
+| Regenerated by `tab_method_comparison.py` | "...with the **scope-matched \votag\ fallback** applied... Total is their sum **and excludes model load**. RAM is the peak GPU memory observed. **Pooled.**" |
+
+Numbers identical. The committed caption is shorter; the regenerator's caption explicitly notes (a) "scope-matched", (b) excludes model load, (c) pooling. Decide intentional or restore.
+
+### 5. TOST δ=0.01 claim is mathematically valid but not printed by the script
+[paper/sections/05_evaluations.tex:144](paper/sections/05_evaluations.tex#L144)
+
+> "...passing TOST equivalence at δ=0.01."
+
+The aggregate CI `[-0.0066, +0.0083]` lies inside `(-0.01, +0.01)`, so TOST at δ=0.01 PASSES. ✓ But [scripts/paper/significance_method_comparison.py](scripts/paper/significance_method_comparison.py) only prints δ=0.02 and δ=0.05, so the δ=0.01 claim has no transparent regenerator. **Recommendation:** add δ=0.01 to the script's TOST line so the reproducibility chain is complete.
+
+---
+
+## Verified Successes (selected)
+
+All of the following match the prose to within ≤0.001 macro F1 / ≤1 percentage point:
+
+- VOTAG: PS 0.595/k=15, PA 0.604/k=16 ✓
+- VOTAG bug-bias: 32% Q→bug both settings; 18% PS / 17% PA Q→feature ✓
+- PA-PS neighbor overlap: 84–91% across k∈{3,9,30} ✓
+- RAGTAG best-k macro F1 per model (3B 0.697, 7B 0.718, 14B 0.732, 32B 0.767) ✓
+- RAGTAG zero-shot Q→bug 46–59%, Q→feature 5–16% ✓
+- RAGTAG best-k Q→bug 26–36%, Q→feature 9–15% ✓
+- BRAGTAG best-k Q→bug 19–27% ✓
+- N_bug − N_q = −1.349 (prose: −1.4) ✓
+- BRAGTAG paired bootstrap CIs (all 4 models) ✓
+- BRAGTAG vs FT paired bootstrap CIs (all 4 + aggregate) ✓
+- **RAGTAG vs FT paired bootstrap CIs (all 4 + aggregate)** ✓ (no script existed for this in `scripts/paper/`; reproduced in `scripts/audit/verify_high_risk.py` claim #10)
+- Class-balance std (0.052/0.065/0.076 ≈ 0.053/0.066/0.076) and worst-class floor (0.694/0.672/0.638 ≈ 0.694/0.672/0.639) ✓ (prose uses **population std** ddof=0)
+- Question F1 gain range +0.030 to +0.068 (BRAGTAG vs RAGTAG, per-model) ✓
+- Qwen-3B zero-shot macro F1 0.6132 ≈ prose 0.613, gap to VOTAG-PA = +0.009 ✓
+- Fallback magnitude in tab:method-comparison consistent with invalid rates ✓
+- Cost-table numbers (2.71h FT-32B, 4.62h RAG-32B, 4.15h BRAG-32B, 33% RAM savings averaged) ✓
+
+---
+
+## Generators Added by This Audit
+
+Three numerical claims in the prose previously had **no regenerator script** in `scripts/paper/`. The audit fills the gap:
+
+1. **RAGTAG-vs-FT paired bootstrap CIs** — claim #10 in [scripts/audit/verify_high_risk.py](scripts/audit/verify_high_risk.py). Recommend porting this to `scripts/paper/significance_ragtag_vs_ft.py` if these CIs stay in the paper.
+2. **Confusion-matrix percentages** (VOTAG, RAGTAG zero-shot, RAGTAG best-k, BRAGTAG) — claims #2–#4, #8 in the same audit script.
+3. **Margin firing & shrinkage diagnostics** — claims #5–#7. Some of these supplement the BRAGTAG mechanism story (§5.2 and §5.3); a permanent script would help future authors edit these numbers safely.
+
+---
+
+## Files
+
+- **Audit log (claim-level)**: [scripts/audit/audit_log.csv](scripts/audit/audit_log.csv), [scripts/audit/audit_log_phase_cd.csv](scripts/audit/audit_log_phase_cd.csv)
+- **Verification scripts**: [scripts/audit/verify_high_risk.py](scripts/audit/verify_high_risk.py), [scripts/audit/verify_cross_and_stats.py](scripts/audit/verify_cross_and_stats.py)
+- **Probing**: [scripts/audit/probe_firing_shrinkage.py](scripts/audit/probe_firing_shrinkage.py)
+- **Captured stdouts**: `/tmp/audit_regen/*.txt` (regenerated figure/table script outputs and significance bootstrap outputs)
+- **Discussion seeds**: [scripts/audit/discussion_seeds.md](scripts/audit/discussion_seeds.md)
+

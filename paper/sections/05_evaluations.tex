@@ -88,7 +88,7 @@ These results show that the LLMs are already prone to misclassifying question is
     \label{fig:bragtag-kcurve}
 \end{figure}
 
-Since the PS setting produced the best results for \ragtag, we use PS as the default for evaluating \bragtag\ on the same $k\in\{1, 3, 6, 9, 12, 15\}$ grid. \Cref{fig:bragtag-kcurve} shows macro F1 vs $k$ for both methods across all four model sizes. \bragtag\ outperforms \ragtag\ at every $k\ge 6$. At smaller $k\in\{1, 3\}$, \bragtag\ slightly underperforms by 0.001--0.010 macro F1, because the trigger fires too often, shrinking the prompt to 0 or 1 examples (56\% of queries at $k{=}1$ and 15\% at $k{=}3$ end with $\le 1$ remaining example).
+Since the PS setting produced the best results for \ragtag, we use PS as the default for evaluating \bragtag\ on the same $k\in\{1, 3, 6, 9, 12, 15\}$ grid. \Cref{fig:bragtag-kcurve} shows macro F1 vs $k$ for both methods across all four model sizes. \bragtag\ outperforms \ragtag\ at every $k\ge 6$. At smaller $k\in\{1, 3\}$, \bragtag\ slightly underperforms by 0.001--0.010 macro F1, because the trigger fires too often and removes every retrieved example, practically reverting the query to zero-shot (40\% of queries at $k{=}1$ and 18\% at $k{=}3$).
 
 % TODO (author): learn bootstrap CI methodology and re-audit the
 % significance claim in this paragraph (CI numbers, footnote wording, and
