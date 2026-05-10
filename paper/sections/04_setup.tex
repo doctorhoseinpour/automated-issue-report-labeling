@@ -25,7 +25,7 @@ training set of 3,300 issue reports. In both configurations, \ragtag
 and \votag only use the training splits as their retrieval index to
 ensure fair comparison with the fine-tuning baseline.
 
-\subsection{Models}
+\subsection{Model Zoo}
 \label{sec:setup-models}
 We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluations with four different parameter sizes: 3B, 7B, 14B, and 32B. Qwen2.5 is an open-source LLM with strong performance on general-purpose benchmarks. Using the same model at different parameter sizes isolates the effect of model scale from model architecture across LLM-based IRC approaches. Model temperature is set at 0.1 for deterministic classifications.
 
@@ -34,8 +34,6 @@ We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluation
 \label{sec:setup-metrics}
 We report the per-class $F_1$ and the macro-averaged $F_1$ over the three classes (\texttt{bug}, \texttt{feature}, \texttt{question}). The macro $F_1$ is calculated over the total 3{,}300-issue test set in all settings. We also report the rate of outputs that fail to parse to a valid label (\textit{invalid rate}). For statistical significance checks, we report paired bootstrap 95\% confidence intervals on the macro $F_1$ differences between methods.
 
-\subsection{Setup Hardware}
+\subsection{Hardware Setup}
 \label{sec:setup-hardware}
-% Points to cover:
-% 24. All experiments were run on a server with the following specifications: NVIDIA RTX A6000 GPU (48 GB VRAM), [CPU model + core count], [RAM amount], [OS / CUDA version].
-% 25. TODO: confirm exact hardware specs (see paper/TODO.md) -- need to check via kubectl on the cluster.
+The experiments were conducted on a machine with one NVIDIA L40 GPU (48~GB VRAM), 8~allocated CPU cores from an Intel Xeon Scalable processor, and 64~GiB of system RAM.
