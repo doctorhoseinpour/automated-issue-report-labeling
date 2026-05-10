@@ -40,6 +40,18 @@ Concrete §5 findings that need explicit treatment in §6 (actionable, not just 
 
 - [ ] **§4.5 placeholder.** Local 4090 specs known. Need NRP node specs for L40 / L40S used for 14B/32B FT and 32B retrieval. Run `kubectl --context nautilus -n bgsu-cs-heydarnoori describe node <node-name>` (node names are recoverable from pod history). Capture: GPU model + VRAM, CPU model + core count, RAM, OS/CUDA versions.
 
+## Industry-anchor for §6.2 *Wrong templates cause misclassifications* (added 2026-05-10)
+
+- [ ] **GitHub Copilot for issue creation already implements the workflow we propose** (public preview since **May 19, 2025**). Copilot drafts title, body, labels, assignees, issue type from a natural-language description and routes the draft into the repository's preferred template. This is exactly the "*classify-then-template*" inversion in our §6.2 paragraph. Action: add 1–2 sentences and a footnote to §6.2 citing this as live industry validation, and re-frame our contribution as the *methodological grounding* (RAG-based classification + bias correction + the 77% template-confound finding) for a workflow that is already shipping but not empirically evaluated in the literature.
+  - [GitHub Changelog: Creating issues with Copilot on github.com is in public preview](https://github.blog/changelog/2025-05-19-creating-issues-with-copilot-on-github-com-is-in-public-preview/)
+  - [GitHub Docs: Using GitHub Copilot to create or update issues](https://docs.github.com/en/copilot/how-tos/copilot-on-github/copilot-for-github-tasks/use-copilot-to-create-or-update-issues)
+  - [GitHub Docs: Triaging an issue with AI](https://docs.github.com/en/issues/tracking-your-work-with-issues/administering-issues/triaging-an-issue-with-ai)
+  - [GitHub Blog: Building AI-powered GitHub issue triage with the Copilot SDK](https://github.blog/ai-and-ml/github-copilot/building-ai-powered-github-issue-triage-with-the-copilot-sdk/)
+  - [GitHub Blog: Continuous AI for accessibility (2026)](https://github.blog/ai-and-ml/github-copilot/continuous-ai-for-accessibility-how-github-transforms-feedback-into-inclusion/)
+  - [GitLab Duo Security Analyst Agent (vulnerability triage; Nov 2025 beta, Jan 2026 GA)](https://about.gitlab.com/blog/vulnerability-triage-made-simple-with-gitlab-security-analyst-agent/) — adjacent (security-focused) but same agentic-triage paradigm.
+  - [InfoQ: GitLab 18.8 Marks General Availability of the Duo Agent Platform (Jan 2026)](https://www.infoq.com/news/2026/01/gitlab-18-8-duo-agent-platform/)
+
+
 ## Held-over supervisor question
 
 - [ ] **§5.4/§5.5 invalid-rate / \votag-rescue framing.** Three open questions: (a) is "the model learns the output format during training" the right causal claim for the FT invalid-rate drop, or do we need a stricter analysis? (b) is the \votag-rescue methodology sound for cross-method comparison, or does it bias toward \ragtag/\bragtag (which share the same retrieval index)? (c) should rescue-vs-no-rescue numbers be reported side-by-side, or only the rescued ones?
