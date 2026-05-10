@@ -32,11 +32,7 @@ We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluation
 
 \subsection{Evaluation Metrics}
 \label{sec:setup-metrics}
-
-We report macro-averaged precision, recall, and $F_1$ over the three labels (\texttt{bug}, \texttt{feature}, \texttt{question}), along with overall accuracy. Per-class metrics are reported when the asymmetry across classes is itself the subject of analysis. Outputs that fail to parse a valid label (after the XML-tag extraction and regex fallback described in \Cref{sec:approach}) are counted as incorrect, and an \emph{invalid rate} is reported separately so any parsing-induced loss is auditable.
-
-\paragraph{Aggregation convention (PA vs PS).}
-The PA setting produces a single set of predictions over the full 3{,}300-issue test set, and we compute macro $F_1$ directly over that set. The PS setting produces eleven sets of predictions, one per project, each over its own ${\sim}300$-issue test slice. Throughout the paper we report PS results using \emph{pooled} aggregation: the eleven per-project prediction sets are concatenated into one 3{,}300-issue test set and macro $F_1$ is computed once on the pool. This treats each test issue as one observation in both settings and yields apples-to-apples comparisons between PA and PS. The alternative --- computing macro $F_1$ separately within each project and averaging the eleven numbers --- weights projects rather than issues; because macro $F_1$ is non-linear in the underlying confusion-matrix counts, the two conventions disagree, and on our data the per-project mean is consistently 0.002--0.011 macro $F_1$ below the pooled value with the gap largest for fine-tuning. We adopt pooling as the canonical reporting convention to remove this asymmetry; per-project breakdowns appear only where the project is the unit of analysis and are explicitly labelled as such.
+We report the per-class $F_1$ and the macro-averaged $F_1$ over the three classes (\texttt{bug}, \texttt{feature}, \texttt{question}). The macro $F_1$ is calculated over the total 3{,}300-issue test set in all settings. We also report the rate of outputs that fail to parse to a valid label (\textit{invalid rate}). For statistical significance checks, we report paired bootstrap 95\% confidence intervals on the macro $F_1$ differences between methods.
 
 \subsection{Setup Hardware}
 \label{sec:setup-hardware}
