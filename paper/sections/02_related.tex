@@ -10,5 +10,5 @@ To overcome this limitation, more recent work has adopted BERT-like transformer 
 
 These challenges have motivated the exploration of LLMs, which exhibit strong zero-shot text classification capabilities thanks to extensive pretraining on massive corpora~\cite{heo2025study, aracena2025applying, aracena2024applyinglargelanguagemodels, brown2020language, wei2021finetuned, colavito2024leveraging}. State-of-the-art LLM-based methods achieve their best performance by fine-tuning the models with Low-Rank Adaptation (LoRA~\cite{hu2022lora}) on labeled issue datasets~\cite{heo2025study, aracena2025applying, aracena2024applyinglargelanguagemodels}. However, fine-tuning remains computationally expensive and must be repeated whenever the underlying model is swapped or as newly labeled issues accumulate in the project~\cite{fan2017road, kallis2019ticket}.
 
-In this study, we conduct an empirical evaluation of retrieval-augmented few-shot prompting to assess whether it is a more cost-efficient and practical alternative to fine-tuning for IRC.
+In this study, we conduct an empirical evaluation of retrieval-augmented few-shot prompting to assess whether it is a more cost-efficient and practical alternative to fine-tuning LLMs for IRC.
 
