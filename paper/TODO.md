@@ -18,8 +18,30 @@ Concrete §5 findings that need explicit treatment in §6 (actionable, not just 
 - [ ] **§6 Discussion.** Lead with the headline narrative arc above. Weave in the other three insights as supporting points.
 - [ ] **§7 Threats to Validity.** Multi-seed FT validation gap (3-epoch FT-PA on 14B is unexpectedly higher than on 32B — possible single-seed variance), invalid-rate framing if held over from supervisor question, generalization to non-Qwen LLMs, dataset scope (11 OSS projects), FT memory mitigations are implementation-dependent (see entry below).
 - [ ] **§8 Conclusion.**
-- [ ] **§1 Introduction.**
-- [ ] **§2 Related Work.** Stub already cites Heo, Aracena, Colavito, Izadi, Trautsch, etc.
+- [x] **§1 Introduction.** Drafted end-to-end on 2026-05-11. Polish items and open decisions tracked in the next section below.
+- [ ] **§2 Related Work.** Stub already cites Heo, Aracena, Colavito, Izadi, Trautsch, etc. **Concurrent-work additions to absorb:** (a) Dinç & Tüzün, *"Judge the Votes"* (2025) — Bugzilla single-project, binary VALID/INVALID, fixed $k{=}5$ retrieval+few-shot; defense via differentiator stack (different task, single project, no $k$-curve, no model-scale study, no debiasing). (b) LLM-Cure (Assi et al., *ACM TOSEM* 2025) — app-review feature assignment with fixed five-shot prompts; cite as further evidence that retrieval-augmented few-shot is gaining traction in SE-adjacent text classification but does not constitute a systematic IRC evaluation.
+- [ ] **§9 Data Availability.** Stub and **ESEM-mandatory** (desk-reject if missing). ESEM 2026 requires the section placed immediately after Conclusions. Cover: dataset source (Heo et al. 2025 11-project benchmark), code repository, reproducibility scripts in `scripts/paper/`, model weights handling (Qwen2.5-Instruct from Hugging Face), retrieval index reproducibility.
+
+## §1 / §5 polish items (loose ends from 2026-05-11 session)
+
+§1 Introduction was drafted end-to-end. The following items remain open before submission.
+
+**Decisions to make:**
+
+- [ ] **Add explicit Contributions paragraph to §1?** §1 currently has findings paragraphs (¶19–¶23) flowing into a concluding "Overall, results indicate…" sentence (¶25). No `\textbf{Contributions}`-style enumeration. If the abstract or §8 Conclusion leans on a "we contribute X, Y, Z" framing, §1 should mirror it; otherwise the findings-driven structure stands as-is.
+- [ ] **Re-add 77%-template-misuse finding to §1?** Currently lives only in [`§6.1`](sections/06_discussion.tex). Was in an earlier §1 draft but dropped during restructuring. Add back as a 4th finding paragraph if the abstract's *Results* or *Conclusions* sub-section mentions it; otherwise leave it as a §6-only insight.
+
+**§5 structural work:**
+
+- [ ] **§5 opener listing RQ1–RQ4.** §5 currently begins with `% TODO` at [`05_evaluations.tex`](sections/05_evaluations.tex#L8). After retitling §5.2/§5.3/§5.5 with RQ-style titles and merging §5.4+§5.5 into the RQ4 subsection, the RQs now appear without an enumeration up front. Draft a short opener that lists RQ1–RQ4 and notes that §5.4 (Fine-Tuning) is preparatory for RQ4's two-part answer (Classification Performance + Compute and Data Cost).
+
+**§1 typo / micro-fix sweep (mechanical, before submission):**
+
+- [ ] `individaul` → `individual` in [`01_intro.tex`](sections/01_intro.tex#L17).
+- [ ] `\ragtag\ outperforms \votag in every setting` → `\votag\ in` (missing macro-trailing-space) in [`01_intro.tex`](sections/01_intro.tex#L19).
+- [ ] Roadmap missing verb: `\Cref{sec:03_approach} our proposed methods` → `\Cref{sec:03_approach} describes our proposed methods` in [`01_intro.tex`](sections/01_intro.tex#L27).
+- [ ] Roadmap missing period: `reports the results \Cref{sec:discussion}` → `reports the results. \Cref{sec:discussion}` in [`01_intro.tex`](sections/01_intro.tex#L27).
+- [ ] Verify `\cite{assi2026llm}` and `\cite{le2023log}` keys exist in [`refs.bib`](refs.bib). LLM-Cure was 2025 (ACM TOSEM), not 2026 — `assi2026llm` may be a year typo.
 
 ## Inline `% TODO` blocks remaining in §5
 
