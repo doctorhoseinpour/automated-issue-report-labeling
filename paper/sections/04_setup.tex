@@ -27,7 +27,7 @@ ensure fair comparison with the fine-tuning baseline.
 
 \subsection{Model Zoo}
 \label{sec:setup-models}
-We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluations with four different parameter sizes: 3B, 7B, 14B, and 32B. Qwen2.5 is an open-source LLM with strong performance on general-purpose benchmarks. Using the same model at different parameter sizes isolates the effect of model scale from model architecture across LLM-based IRC approaches. Model temperature is set at 0.1 for deterministic classifications.
+We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluations with four different parameter sizes: 3B, 7B, 14B, and 32B. Qwen2.5 is an open-source LLM with strong performance on general-purpose benchmarks. Using the same model at different parameter sizes isolates the effect of model scale from model architecture across LLM-based IRC approaches. For memory efficiency the models are loaded in 4-bit quantization with Unsloth\footnote{\url{https://unsloth.ai}}. Temperature is set at 0.1 for deterministic classifications.
 
 
 \subsection{Evaluation Metrics}

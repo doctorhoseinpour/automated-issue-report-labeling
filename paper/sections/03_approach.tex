@@ -73,7 +73,7 @@ label field. Regular expressions are used to extract the prediction
 from the output, and unparseable outputs are marked as
 \textit{invalid}. We use this established methodology as our fine-tuning baseline.
 
-For memory efficiency, each model is loaded in 4-bit quantization with Unsloth\footnote{\url{https://unsloth.ai}}. The LoRA rank and alpha are set to 16, with a learning rate of $2 \times 10^{-4}$ and the paged AdamW 8-bit optimizer. Training runs for 3 epochs with a per-device batch size of 1 and gradient accumulation steps of 16. The max sequence length is set to 2,048 tokens, which covers 94.9\% of the issues in our dataset. Issues that exceed this budget get truncated from the right side of their description text to fit.
+The LoRA rank and alpha are set to 16, with a learning rate of $2 \times 10^{-4}$ and the paged AdamW 8-bit optimizer. Training runs for 3 epochs with a per-device batch size of 1 and gradient accumulation steps of 16. The max sequence length is set to 2,048 tokens, which covers 94.9\% of the issues in our dataset. Issues that exceed this budget get truncated from the right side of their description text to fit.
 
 
 
