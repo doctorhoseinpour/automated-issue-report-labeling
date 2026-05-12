@@ -16,7 +16,7 @@ Concrete §5 findings that need explicit treatment in §6 (actionable, not just 
 ## Sections still to draft (in order)
 
 - [ ] **§6 Discussion.** Lead with the headline narrative arc above. Weave in the other three insights as supporting points.
-- [ ] **§7 Threats to Validity.** Multi-seed FT validation gap (3-epoch FT-PA on 14B is unexpectedly higher than on 32B — possible single-seed variance), invalid-rate framing if held over from supervisor question, generalization to non-Qwen LLMs, dataset scope (11 OSS projects), FT memory mitigations are implementation-dependent (see entry below).
+- [ ] **§7 Threats to Validity.** Multi-seed FT validation gap (3-epoch FT-PA on 14B is unexpectedly higher than on 32B — possible single-seed variance), invalid-rate framing if held over from supervisor question, generalization to non-Qwen LLMs, dataset scope (11 OSS projects), FT memory mitigations are implementation-dependent (see entry below). **Also include BRAGTAG margin-selection defense (see dedicated entry below).**
 - [ ] **§8 Conclusion.**
 - [x] **§1 Introduction.** Drafted end-to-end on 2026-05-11. Polish items and open decisions tracked in the next section below.
 - [ ] **§2 Related Work.** Stub already cites Heo, Aracena, Colavito, Izadi, Trautsch, etc. **Concurrent-work additions to absorb:** (a) Dinç & Tüzün, *"Judge the Votes"* (2025) — Bugzilla single-project, binary VALID/INVALID, fixed $k{=}5$ retrieval+few-shot; defense via differentiator stack (different task, single project, no $k$-curve, no model-scale study, no debiasing). (b) LLM-Cure (Assi et al., *ACM TOSEM* 2025) — app-review feature assignment with fixed five-shot prompts; cite as further evidence that retrieval-augmented few-shot is gaining traction in SE-adjacent text classification but does not constitute a systematic IRC evaluation.
@@ -35,28 +35,25 @@ Concrete §5 findings that need explicit treatment in §6 (actionable, not just 
 
 - [ ] **§5 opener listing RQ1–RQ4.** §5 currently begins with `% TODO` at [`05_evaluations.tex`](sections/05_evaluations.tex#L8). After retitling §5.2/§5.3/§5.5 with RQ-style titles and merging §5.4+§5.5 into the RQ4 subsection, the RQs now appear without an enumeration up front. Draft a short opener that lists RQ1–RQ4 and notes that §5.4 (Fine-Tuning) is preparatory for RQ4's two-part answer (Classification Performance + Compute and Data Cost).
 
-**§1 typo / micro-fix sweep (mechanical, before submission):**
-
-- [ ] `individaul` → `individual` in [`01_intro.tex`](sections/01_intro.tex#L17).
-- [ ] `\ragtag\ outperforms \votag in every setting` → `\votag\ in` (missing macro-trailing-space) in [`01_intro.tex`](sections/01_intro.tex#L19).
-- [ ] Roadmap missing verb: `\Cref{sec:03_approach} our proposed methods` → `\Cref{sec:03_approach} describes our proposed methods` in [`01_intro.tex`](sections/01_intro.tex#L27).
-- [ ] Roadmap missing period: `reports the results \Cref{sec:discussion}` → `reports the results. \Cref{sec:discussion}` in [`01_intro.tex`](sections/01_intro.tex#L27).
-- [ ] Verify `\cite{assi2026llm}` and `\cite{le2023log}` keys exist in [`refs.bib`](refs.bib). LLM-Cure was 2025 (ACM TOSEM), not 2026 — `assi2026llm` may be a year typo.
-
 ## Inline `% TODO` blocks remaining in §5
 
 - [ ] **§5.1: motivate the $k$-sweep.** 1–2 sentences before "We evaluate \votag…" in [`05_evaluations.tex`](sections/05_evaluations.tex#L19) explaining why we scan $k$=1..30 (only knob in VOTAG; plateau anchors the RAGTAG $k$-grid; range chosen to show diminishing returns).
 - [ ] **§5.1: write the RQ1 → §5.2 transition.** [`05_evaluations.tex`](sections/05_evaluations.tex#L35) — position \votag's ~0.60 macro $F_1$ as the retrieval-only floor LLM-based methods must clear; flag bug-bias as recurring across approaches.
 - [ ] **§5.3: re-audit bootstrap CI methodology.** [`05_evaluations.tex`](sections/05_evaluations.tex#L93) — current paragraph cites paired bootstrap 95% CIs on the (\bragtag − \ragtag) macro $F_1$ difference for §5.3. Author note flags re-checking the methodology and footnote wording, and considering Wilcoxon/McNemar as supplementary tests. Stats produced by [`scripts/paper/significance_bragtag.py`](../scripts/paper/significance_bragtag.py).
 
-## Forward-pointers / cross-section consistency
-
-- [ ] **§3.3 RAGTAG → §5.3 BRAGTAG signpost.** Insert in §3.3:
-  > *We additionally introduce a retrieval-debiasing intervention applied on top of \ragtag; we describe its algorithm and present its empirical motivation in \cref{sec:bragtag}.*
-
 ## Fine-tune memory mitigations (§4 + §7)
 
 - [ ] **Document the FT memory-saving knobs in §4 and reference in §7 Threats.** Our LoRA fine-tune uses Unsloth's gradient checkpointing ([`fixed_fine-tune.py:354`](../fixed_fine-tune.py#L354): `use_gradient_checkpointing="unsloth"`) and gradient accumulation ([`fixed_fine-tune.py:398`](../fixed_fine-tune.py#L398): `gradient_accumulation_steps=16`). The FT peak GPU RAM numbers reported in §5.5 [`tables/method_comparison.tex`](tables/method_comparison.tex) (5.5/9.9/16.7/31.5 GB for 3B/7B/14B/32B) are post-mitigation; without these knobs the peaks would be higher. **§4 (Setup):** add a sentence in the fine-tuning setup paragraph noting both mitigations are enabled. **§7 (Threats):** flag that absolute peak FT memory is implementation-dependent — different memory-optimization choices would shift the FT/RAG memory ratio reported in §5.5, though the ordering (FT > RAG/BRAG) is robust to these choices because activations + gradients + optimizer state are unique to training.
+
+## BRAGTAG margin-selection defense (§7)
+
+Pre-emptive strike against the "you tuned $m{=}3$ on the same test data you evaluate on" reviewer attack. Two text-level moves; no new experiments required.
+
+- [ ] **Move 1 — Reframe the $m$ selection signal as a retrieval-prior, not a test-$F_1$-posterior.** The 79%/41% fire-rate trade-off used to pick $m$ at [`05_evaluations.tex:78`](sections/05_evaluations.tex#L78) depends only on the retrieval index's neighbor-label distribution and the test set's ground-truth labels — *not* on any model's predictions. Add one sentence to §5.3 (or §7) making this explicit:
+  > "The fire-rate trade-off used to select $m$ depends only on the retrieval index's neighbor-label distribution, not on any model's predictions; test-set labels enter the selection signal, but no test-set classifier outcome does."
+- [ ] **Move 2 — Make the Qwen-3B → larger-models transfer explicit.** Edit [`05_evaluations.tex:78`](sections/05_evaluations.tex#L78) to clarify $m{=}3$ was locked on Qwen-3B and held fixed across Qwen-7B/14B/32B *without* retuning. This converts three of four BRAGTAG cells into transfer results, narrowing the selection-bias attack to one cell. Suggested wording:
+  > "We select $m{=}3$ empirically on Qwen-3B and hold it fixed across Qwen-7B, Qwen-14B, and Qwen-32B without retuning. The BRAGTAG gains reported for those three models are therefore transfer results from a Qwen-3B-tuned hyperparameter."
+- [ ] **§7 mention (optional, single sentence).** Acknowledge that a fully held-out validation split was not used for $m$ selection; cite the Qwen-3B → 7B/14B/32B transfer as the mitigation. Do *not* expand into a long confession — that signposts the weakness.
 
 ## Hardware specs (§4.5)
 
