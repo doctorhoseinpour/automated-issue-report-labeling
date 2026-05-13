@@ -8,12 +8,12 @@
 
 
 % TODO
-% 1- the votag fallbac
 % 4- variance estimate
 % 5- single choice embedding model and llm
-% 6- result generalizability accorss projects its a large benchmark of 11 projects so stfu
+% 6- result generalizability accorss projects its a large benchmark of 11
 % 8- remove statistical equivalence
 % 9 - Per-project (300 vs. 3,300)
 
 \textbf{Internal validity}. Empirically selecting \bragtag's margin can potentially be an internal threat, since the value could be specifically tuned for the models and test data in this study. To mitigate this, margin calibration used only the training split and did not involve the test split (\Cref{sec:ragtag}). Furthermore, the same fixed margin is used across all models and projects with no per-project or per-model tuning. Finally, the selected margin in this study is not framed as a universally optimal constant. Any project can re-derive the margin with negligible cost by only using the retrieval index of available historical issue reports.
+
 

@@ -42,6 +42,11 @@ from _rescue import (  # noqa: E402
     load_rescued_preds,
 )
 
+# Default mode: "raw" (invalid LLM outputs count as incorrect; matches the
+# headline reporting in §5.4). Pass --with-fallback on the CLI to regenerate
+# the deployment-realistic-fallback variant for §7 / appendix use.
+MODE = "raw"
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TABLES_DIR = REPO_ROOT / "paper" / "tables"
 
@@ -180,12 +185,28 @@ def _ft_pa_rescued(model: str) -> pd.DataFrame:
     return ft
 
 
+def _load_preds(model: str, setting: str, k: int, approach: str) -> pd.DataFrame:
+    """Mode-aware few-shot loader: raw (default) or fallback-rescued."""
+    if MODE == "raw":
+        return load_raw_preds(model, setting, k, approach)
+    return load_rescued_preds(model, setting, k, approach)
+
+
+def _load_ft(model: str) -> pd.DataFrame:
+    """Mode-aware FT-PA loader: raw (default) or fallback-rescued."""
+    return _ft_pa_raw(model) if MODE == "raw" else _ft_pa_rescued(model)
+
+
 def _row_few_shot(model_tag: str, model_lbl: str, approach: str) -> dict:
-    """RAGTAG or BRAGTAG row at best k on PS, rescued with VTAG-PS."""
+    """RAGTAG or BRAGTAG row at best k on PS.
+
+    Reports both raw and \\votag-rescued macro $F_1$ in the same row; per-class
+    $F_1$ is raw. Best k is selected on raw macro $F_1$ (independent of mode).
+    """
     best_k = max(KS_RAG, key=lambda k: _macro(load_raw_preds(model_tag, "PS", k, approach)))
     raw = load_raw_preds(model_tag, "PS", best_k, approach)
     rescued = load_rescued_preds(model_tag, "PS", best_k, approach)
-    pc = _per_class(rescued)
+    pc = _per_class(raw)
     n_inv = (raw["predicted_label"] == "invalid").sum()
 
     # GPU time: try cost_metrics first; for 32B fall back to fetched/; otherwise
@@ -206,7 +227,8 @@ def _row_few_shot(model_tag: str, model_lbl: str, approach: str) -> dict:
         "method": approach,
         "setting": "PS",
         "best_k": str(best_k),
-        "macro": _macro(rescued),
+        "macro": _macro(raw),
+        "macro_rescued": _macro(rescued),
         "f1_bug": pc["bug"],
         "f1_feature": pc["feature"],
         "f1_question": pc["question"],
@@ -220,10 +242,13 @@ def _row_few_shot(model_tag: str, model_lbl: str, approach: str) -> dict:
 
 
 def _row_finetune(model_tag: str, model_lbl: str) -> dict:
-    """Fine-Tune-PA row, rescued with VTAG-PA."""
+    """Fine-Tune-PA row.
+
+    Reports both raw and \\votag-PA-rescued macro $F_1$; per-class $F_1$ is raw.
+    """
     raw = _ft_pa_raw(model_tag)
     rescued = _ft_pa_rescued(model_tag)
-    pc = _per_class(rescued)
+    pc = _per_class(raw)
     n_inv = (~raw["predicted_label"].isin(LABELS)).sum()
 
     # FT cost: training_time_s and wall_time_s (inference); excludes model_load_time_s.
@@ -239,7 +264,8 @@ def _row_finetune(model_tag: str, model_lbl: str) -> dict:
         "method": "finetune",
         "setting": "PA",
         "best_k": "--",
-        "macro": _macro(rescued),
+        "macro": _macro(raw),
+        "macro_rescued": _macro(rescued),
         "f1_bug": pc["bug"],
         "f1_feature": pc["feature"],
         "f1_question": pc["question"],
@@ -268,7 +294,10 @@ def _emit_tex(rows: list[dict]) -> str:
         r"\begin{table}[t]",
         r"  \centering",
         r"  \caption{\ragtag, \bragtag, and Fine-Tune at each method's best configuration "
-        r"with the scope-matched \votag\ fallback applied "
+        r"(\ragtag/\bragtag\ at their best $k$ on PS, Fine-Tune on PA). "
+        r"Macro $F_1$ and per-class $F_1$ are computed on raw predictions "
+        r"(invalid LLM outputs count as incorrect); "
+        r"the +\votag\ column reports macro $F_1$ when invalid LLM outputs are filled by the deployment-realistic \votag\ fallback "
         r"(\votag-PS for \ragtag/\bragtag, \votag-PA for Fine-Tune). "
         r"Train and Inference are wall-times on a single GPU "
         r"(\ragtag/\bragtag have no training phase). "
@@ -278,9 +307,9 @@ def _emit_tex(rows: list[dict]) -> str:
         r"  \footnotesize",
         r"  \setlength{\tabcolsep}{4pt}",
         r"  \resizebox{\linewidth}{!}{%",
-        r"  \begin{tabular}{llccccccccc}",
+        r"  \begin{tabular}{llcccccccccc}",
         r"    \toprule",
-        r"    Model & Method & $k^*$ & Macro $F_1$ & "
+        r"    Model & Method & $k^*$ & Macro $F_1$ & +\votag & "
         r"$F_1^{\text{bug}}$ & $F_1^{\text{feat}}$ & $F_1^{\text{q}}$ & "
         r"RAM (GB) & Train (h) & Infer (h) & Total (h) \\",
         r"    \midrule",
@@ -295,7 +324,7 @@ def _emit_tex(rows: list[dict]) -> str:
         train_cell = "--" if r["train_time_s"] == 0.0 else fhrs(r["train_time_s"])
         lines.append(
             f"    {model_cell} & {method_name[r['method']]} & "
-            f"{r['best_k']} & {f3(r['macro'])} & "
+            f"{r['best_k']} & {f3(r['macro'])} & {f3(r['macro_rescued'])} & "
             f"{f3(r['f1_bug'])} & {f3(r['f1_feature'])} & {f3(r['f1_question'])} & "
             f"{fgb(r['gpu_ram_mb'])} & {train_cell} & {fhrs(r['infer_time_s'])} & {fhrs(r['total_time_s'])} \\\\"
         )
@@ -312,6 +341,9 @@ def _emit_tex(rows: list[dict]) -> str:
 
 
 def main() -> None:
+    global MODE
+    if "--with-fallback" in sys.argv:
+        MODE = "rescued"
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
 
     rows = []

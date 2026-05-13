@@ -47,13 +47,7 @@ Concrete §5 findings that need explicit treatment in §6 (actionable, not just 
 
 ## BRAGTAG margin-selection defense (§7)
 
-Pre-emptive strike against the "you tuned $m{=}3$ on the same test data you evaluate on" reviewer attack. Two text-level moves; no new experiments required.
-
-- [ ] **Move 1 — Reframe the $m$ selection signal as a retrieval-prior, not a test-$F_1$-posterior.** The 79%/41% fire-rate trade-off used to pick $m$ at [`05_evaluations.tex:78`](sections/05_evaluations.tex#L78) depends only on the retrieval index's neighbor-label distribution and the test set's ground-truth labels — *not* on any model's predictions. Add one sentence to §5.3 (or §7) making this explicit:
-  > "The fire-rate trade-off used to select $m$ depends only on the retrieval index's neighbor-label distribution, not on any model's predictions; test-set labels enter the selection signal, but no test-set classifier outcome does."
-- [ ] **Move 2 — Make the Qwen-3B → larger-models transfer explicit.** Edit [`05_evaluations.tex:78`](sections/05_evaluations.tex#L78) to clarify $m{=}3$ was locked on Qwen-3B and held fixed across Qwen-7B/14B/32B *without* retuning. This converts three of four BRAGTAG cells into transfer results, narrowing the selection-bias attack to one cell. Suggested wording:
-  > "We select $m{=}3$ empirically on Qwen-3B and hold it fixed across Qwen-7B, Qwen-14B, and Qwen-32B without retuning. The BRAGTAG gains reported for those three models are therefore transfer results from a Qwen-3B-tuned hyperparameter."
-- [ ] **§7 mention (optional, single sentence).** Acknowledge that a fully held-out validation split was not used for $m$ selection; cite the Qwen-3B → 7B/14B/32B transfer as the mitigation. Do *not* expand into a long confession — that signposts the weakness.
+- [x] **Margin defense paragraph written in §7** (2026-05-12). The §7 paragraph at [`07_threats.tex`](sections/07_threats.tex#L18) addresses: (i) training-split-only calibration (test set untouched), (ii) single fixed $m{=}3$ across all 11 projects and 4 model sizes with no per-cell tuning, (iii) calibration uses only the retrieval index of historical issue reports — any project can re-derive $m$ at negligible cost.
 
 ## Hardware specs (§4.5)
 
@@ -73,7 +67,7 @@ Pre-emptive strike against the "you tuned $m{=}3$ on the same test data you eval
 
 ## Held-over supervisor question
 
-- [ ] **§5.4/§5.5 invalid-rate / \votag-rescue framing.** Three open questions: (a) is "the model learns the output format during training" the right causal claim for the FT invalid-rate drop, or do we need a stricter analysis? (b) is the \votag-rescue methodology sound for cross-method comparison, or does it bias toward \ragtag/\bragtag (which share the same retrieval index)? (c) should rescue-vs-no-rescue numbers be reported side-by-side, or only the rescued ones?
+- [ ] **§5.4/§5.5 invalid-rate / \votag-rescue framing.** (a) is "the model learns the output format during training" the right causal claim for the FT invalid-rate drop, or do we need a stricter analysis? (b) ~~is the \votag-rescue methodology sound for cross-method comparison~~ — resolved 2026-05-12 by reframing raw as primary and fallback as secondary deployment-realistic finding; defense in §7 [`07_threats.tex`](sections/07_threats.tex#L20). (c) ~~should rescue-vs-no-rescue numbers be reported side-by-side~~ — resolved 2026-05-12: §5.5 reports raw numbers in headline + tightened TOST $\delta{=}0.01$ as fallback secondary; per-model fallback CIs not tabulated.
 
 ## Optional follow-ups (not paper-blocking)
 
@@ -83,8 +77,8 @@ Pre-emptive strike against the "you tuned $m{=}3$ on the same test data you eval
 ## Conventions / methodology (reference, do not edit)
 
 - [x] **Pooled aggregation for all paper metrics** (decided 2026-05-06; methodology paragraph in [`04_setup.tex`](sections/04_setup.tex) §"Evaluation Metrics"). Concat-then-evaluate on the 3,300-issue test set (PA and PS alike). Per-project mean is not used for headline numbers.
-- [x] **\votag-rescue is §5.5-only.** Cross-method best-config comparison rescues invalid LLM outputs with \votag (\votag-PS for \ragtag/\bragtag, \votag-PA for fine-tune); all other §5 numbers are raw.
-- [x] **TOST equivalence margin: $\delta=0.01$.** Aggregate \bragtag-vs-fine-tune CI [-0.007, +0.008] fits inside ±0.01.
+- [x] **\votag-rescue is §5.5 secondary only** (decided 2026-05-12). Headline numbers in §5.5 / abstract / §1 / §6 / §8 use **raw** predictions (invalid LLM outputs count as incorrect). The \votag\ fallback (\votag-PS for \ragtag/\bragtag, \votag-PA for fine-tune) is reported as a deployment-realistic secondary protocol that tightens \bragtag's equivalence threshold from $\delta{=}0.02$ to $\delta{=}0.01$.
+- [x] **TOST equivalence margin: $\delta{=}0.02$ raw, $\delta{=}0.01$ with \votag\ fallback.** Aggregate \bragtag-vs-fine-tune raw CI [-0.018, -0.003] fits inside ±0.02; rescued CI [-0.007, +0.008] fits inside ±0.01.
 - [x] **§5.5 narrative arc.** \ragtag-as-competitive leads, \bragtag-closes-gap supports. See SESSION_HANDOFF.md §6 "Decisions logged".
 - [x] **Paper-figure scripts go in [`scripts/paper/`](../scripts/paper/)** with pooled aggregation baked in. Existing `scripts/analysis/*.py` use legacy per-project mean for PS — do not retrofit, do not consume their PS outputs for paper artifacts.
 
