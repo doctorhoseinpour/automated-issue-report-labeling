@@ -1,8 +1,18 @@
+% !TEX root = ../main.tex
 % Approach
 % Claims to support: RAGTAG, VTAG, fine-tuning, margin-based debiasing
 
 \section{Approach}
 \label{sec:03_approach}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/approach_diagram.pdf}
+    \caption{Overview of the four IRC approaches evaluated in this paper. All approaches share the same embedding and retrieval pipeline (\Cref{sec:retrieval}); they differ in how the retrieved neighbors and the query issue are converted into a label.}
+    \label{fig:approach-overview}
+\end{figure}
+
+\Cref{fig:approach-overview} provides an overview of the four approaches evaluated in this paper: \ragtag, \bragtag, \votag, and the fine-tuning baseline.
 
 \subsection{Problem Formulation}
 Given a query issue report, we classify it into only one of the three labels: \textit{bug}, \textit{feature}, or \textit{question}. Only the issue's title and description text are used for classification with no other signals from the issue tracker. The defined label space is adopted directly from prior IRC studies~\cite{aracena2024applyinglargelanguagemodels,aracena2025applying,izadi2022catiss,kallis2019ticket,antoniol2008bug}. 
