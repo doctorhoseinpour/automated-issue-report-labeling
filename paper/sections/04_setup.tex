@@ -25,6 +25,14 @@ setting, the train splits of all projects are merged into a single
 training set of 3,300 issue reports. In both configurations, \ragtag
 and \votag only use the training splits as their retrieval index to
 ensure fair comparison with the fine-tuning baseline.
+\Cref{fig:ps-pa} illustrates the difference between the two settings.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/PS-PA.pdf}
+    \caption{Project-Specific (PS) vs.\ Project-Agnostic (PA) settings. PS uses one separate retrieval index per project (300 train issues each); PA merges all 11 projects' train splits into a single 3{,}300-issue index.}
+    \label{fig:ps-pa}
+\end{figure}
 
 \subsection{Model Zoo}
 \label{sec:setup-models}

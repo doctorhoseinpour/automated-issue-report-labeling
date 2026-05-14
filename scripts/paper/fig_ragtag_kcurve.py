@@ -1,11 +1,11 @@
 """Generate paper/figures/ragtag_kcurve.{pdf,png} with POOLED PS aggregation.
 
-Single-panel figure: RAGTAG macro F1 vs k for all four Qwen sizes, with PS
-(solid line, filled markers) and PA (dashed thin line, hollow markers) overlaid
-in the same color per model. The PS/PA pairs sitting nearly on top of each
-other visually communicates "PS is marginally better than PA at every (model,
-k)." A horizontal dashed line at VTAG's best (0.604, PA k=16) shows that
-every LLM-based result clears the retrieval-only floor.
+Two-panel figure used by Section 5 (RQ2):
+  (left)  RAGTAG macro F1 vs k for all four Qwen sizes, with PS (solid,
+          filled markers) and PA (dashed thin, hollow markers) overlaid in
+          the same color per model. Horizontal dotted line at VTAG's best
+          (0.604, PA k=16) marks the retrieval-only floor.
+  (right) Per-class F1 (bug/feature/question) at each model's best PS k.
 
 This figure reports RAW \\ragtag\\ macro F1 (no \\votag-rescue applied). The
 rescue is reserved for the Fine-Tune comparison subsection where vanilla and
@@ -21,9 +21,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_recall_fscore_support
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS = REPO_ROOT / "results" / "issues11k"
@@ -72,15 +73,8 @@ def _pa_macro(model: str, k: int) -> float | None:
     return _macro_f1(df)
 
 
-def _ps_macro(model: str, k: int, projects: list[str]) -> float | None:
-    """Raw pooled PS macro F1 for one (model, k); no rescue applied.
-
-    For k=0 (zero-shot), fall back to the PA zero_shot file since zero-shot
-    is retrieval-independent and PS-zero_shot is not consistently materialised
-    on disk for every model.
-    """
-    if k == 0:
-        return _pa_macro(model, 0)
+def _ps_pooled(model: str, k: int, projects: list[str]) -> pd.DataFrame | None:
+    """Concatenated PS predictions for (model, k) across projects."""
     parts = []
     for proj in projects:
         p = (RESULTS / "project_specific" / proj / model / "ragtag"
@@ -90,7 +84,28 @@ def _ps_macro(model: str, k: int, projects: list[str]) -> float | None:
         parts.append(pd.read_csv(p, usecols=["ground_truth", "predicted_label"]))
     if not parts:
         return None
-    return _macro_f1(pd.concat(parts, ignore_index=True))
+    return pd.concat(parts, ignore_index=True)
+
+
+def _ps_macro(model: str, k: int, projects: list[str]) -> float | None:
+    """Raw pooled PS macro F1 for one (model, k); no rescue applied.
+
+    For k=0 (zero-shot), fall back to the PA zero_shot file since zero-shot
+    is retrieval-independent and PS-zero_shot is not consistently materialised
+    on disk for every model.
+    """
+    if k == 0:
+        return _pa_macro(model, 0)
+    df = _ps_pooled(model, k, projects)
+    return None if df is None else _macro_f1(df)
+
+
+def _per_class_f1(df: pd.DataFrame) -> dict[str, float]:
+    _, _, f1, _ = precision_recall_fscore_support(
+        df["ground_truth"], df["predicted_label"],
+        labels=LABELS, zero_division=0,
+    )
+    return dict(zip(LABELS, f1))
 
 
 def _build_curves() -> dict:
@@ -102,9 +117,13 @@ def _build_curves() -> dict:
     return out
 
 
-def _plot(curves: dict, out_pdf: Path, out_png: Path) -> None:
-    fig, ax = plt.subplots(figsize=(8.5, 5.0))
+def _plot(curves: dict, per_class: dict, out_pdf: Path, out_png: Path) -> None:
+    fig, (ax_l, ax_r) = plt.subplots(
+        1, 2, figsize=(13.5, 4.8),
+        gridspec_kw={"width_ratios": [1.45, 1.0]},
+    )
 
+    # ============== LEFT PANEL: k-curve ==============
     # Per-model: PS (solid, filled marker) overlaid with PA (dashed thin,
     # hollow marker) in the same color. The pair sitting nearly on top of
     # each other visually communicates the marginal PS-vs-PA gap.
@@ -121,25 +140,43 @@ def _plot(curves: dict, out_pdf: Path, out_png: Path) -> None:
                     ys.append(v)
             if not ks:
                 continue
-            ax.plot(ks, ys, color=color, linestyle=ls, linewidth=lw,
-                    marker=marker, markersize=6.0,
-                    markerfacecolor=mfc, markeredgecolor=color,
-                    alpha=alpha,
-                    # Only the PS line carries the model legend entry.
-                    label=(label if setting == "PS" else None))
+            ax_l.plot(ks, ys, color=color, linestyle=ls, linewidth=lw,
+                      marker=marker, markersize=6.0,
+                      markerfacecolor=mfc, markeredgecolor=color,
+                      alpha=alpha,
+                      # Only the PS line carries the model legend entry.
+                      label=(label if setting == "PS" else None))
 
     # VTAG retrieval-only floor.
-    ax.axhline(VOTAG_BEST_F1, color="0.35", linestyle=":", linewidth=1.4,
-               label=f"VTAG best ({VOTAG_BEST_SETTING}, $k{{=}}{VOTAG_BEST_K}$): {VOTAG_BEST_F1:.3f}")
+    ax_l.axhline(VOTAG_BEST_F1, color="0.35", linestyle=":", linewidth=1.4,
+                 label=f"VTAG best ({VOTAG_BEST_SETTING}, $k{{=}}{VOTAG_BEST_K}$): {VOTAG_BEST_F1:.3f}")
 
-    ax.axvline(0, color="black", linestyle=":", alpha=0.35, linewidth=0.9)
-    ax.set_xlabel(r"$k$ (number of retrieved few-shot neighbors; $k{=}0$ is zero-shot)")
-    ax.set_ylabel("Macro $F_1$ (pooled)")
-    ax.set_xticks(K_VALUES)
-    ax.grid(True, alpha=0.3)
+    ax_l.axvline(0, color="black", linestyle=":", alpha=0.35, linewidth=0.9)
+    ax_l.set_xlabel(r"$k$ (number of retrieved few-shot neighbors; $k{=}0$ is zero-shot)")
+    ax_l.set_ylabel("Macro $F_1$ (pooled)")
+    ax_l.set_xticks(K_VALUES)
+    ax_l.grid(True, alpha=0.3)
 
-    # Build a legend that adds two style-key handles (PS solid / PA dashed)
-    # in addition to the model-color entries.
+    # ============== RIGHT PANEL: per-class bars at each model's best PS k ==============
+    n_models = len(MODELS)
+    x = np.arange(len(LABELS))
+    width = 0.20
+    for i, (_, model_label, color, _) in enumerate(MODELS):
+        f1s = [per_class[model_label]["f1"][lab] for lab in LABELS]
+        offset = (i - (n_models - 1) / 2) * width
+        bars = ax_r.bar(x + offset, f1s, width, color=color,
+                        label=f"{model_label} (k={per_class[model_label]['best_k']})")
+        ax_r.bar_label(bars, fmt="%.3f", padding=2, fontsize=7.5)
+    ax_r.set_xticks(x)
+    ax_r.set_xticklabels([lab.capitalize() for lab in LABELS])
+    ax_r.set_ylabel("Per-class $F_1$ (pooled)")
+    all_vals = [per_class[m]["f1"][lab] for _, m, _, _ in MODELS for lab in LABELS]
+    ax_r.set_ylim(min(all_vals) * 0.92, max(all_vals) * 1.08)
+    ax_r.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02),
+                ncol=4, fontsize=8.5, frameon=False, borderaxespad=0)
+    ax_r.grid(True, axis="y", alpha=0.3)
+
+    # Left-panel legend: model colors + PS/PA style indicators + VTAG floor.
     style_handles = [
         Line2D([0], [0], color="black", linestyle="-",  linewidth=1.8,
                marker="o", markersize=6, markerfacecolor="black",
@@ -149,12 +186,12 @@ def _plot(curves: dict, out_pdf: Path, out_png: Path) -> None:
                markeredgecolor="black", alpha=0.7,
                label="PA (dashed, hollow)"),
     ]
-    handles, labels = ax.get_legend_handles_labels()
+    handles, labels = ax_l.get_legend_handles_labels()
     handles = handles + style_handles
     labels = labels + [h.get_label() for h in style_handles]
-    ax.legend(handles, labels, loc="lower center",
-              bbox_to_anchor=(0.5, 1.02), ncol=4,
-              fontsize=9, frameon=False, borderaxespad=0)
+    ax_l.legend(handles, labels, loc="lower center",
+                bbox_to_anchor=(0.5, 1.02), ncol=4,
+                fontsize=8.5, frameon=False, borderaxespad=0)
 
     fig.tight_layout(rect=(0, 0, 1, 0.88))
     fig.savefig(out_pdf, bbox_inches="tight")
@@ -164,6 +201,7 @@ def _plot(curves: dict, out_pdf: Path, out_png: Path) -> None:
 
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
+    projects = sorted(p.name for p in (RESULTS / "project_specific").iterdir() if p.is_dir())
     curves = _build_curves()
 
     # Print the data table.
@@ -178,11 +216,26 @@ def main() -> None:
                 cells.append(f"{v:.4f}" if v is not None else " --- ")
             print(f"{label:<10} {setting:<3} " + "  ".join(f"{c:<5}" for c in cells))
 
+    # Per-class F1 at each model's best PS k (excluding k=0 zero-shot).
+    per_class: dict = {}
+    for tag, label, color, _ in MODELS:
+        ps_curve = {k: v for k, v in curves["PS"][tag].items() if k > 0 and v is not None}
+        best_k = max(ps_curve, key=ps_curve.get)
+        df = _ps_pooled(tag, best_k, projects)
+        per_class[label] = {"color": color, "best_k": best_k, "f1": _per_class_f1(df)}
+
     out_pdf = FIG_DIR / "ragtag_kcurve.pdf"
     out_png = FIG_DIR / "ragtag_kcurve.png"
-    _plot(curves, out_pdf, out_png)
+    _plot(curves, per_class, out_pdf, out_png)
     print(f"\nwrote {out_pdf.relative_to(REPO_ROOT)}")
     print(f"wrote {out_png.relative_to(REPO_ROOT)}")
+
+    print("\n--- per-class F1 at each model's best PS k ---")
+    print(f"{'model':<10} {'k':<3}  " + "  ".join(f"{lab:<8}" for lab in LABELS))
+    for tag, label, *_ in MODELS:
+        d = per_class[label]
+        cells = "  ".join(f"{d['f1'][lab]:<8.4f}" for lab in LABELS)
+        print(f"{label:<10} {d['best_k']:<3}  {cells}")
 
 
 if __name__ == "__main__":
