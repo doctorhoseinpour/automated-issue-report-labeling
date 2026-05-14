@@ -1,0 +1,15 @@
+% !TEX root = ../main.tex
+% Conclusion
+% Claims to support: summary + future work
+
+\section{Conclusion}
+\label{sec:conclusion}
+\textbf{Method.}  We evaluate all three against a LoRA fine-tuning baseline on an 11-project benchmark, in both \emph{project-specific} (PS) and \emph{project-agnostic} (PA) data scope settings. Experiments use Qwen2.5-Instruct at four sizes.
+
+In this study, we investigated retrieval-augmented few-shot prompting as a cost-efficient alternative to LoRA fine-tuning for issue report classification (IRC). Given a query issue, we retrieved its top-$k$ nearest neighbors from historical issue reports to be used in three proposed methods. First, \ragtag, which presents the neighbors as labeled examples in a few-shot prompt. Second, \bragtag, a \ragtag\ variant that drops bug-labeled neighbors when the retrieved label distribution indicates the query is likely a question. Third, \votag, which predicts the label by a weighted vote on the neighbors' labels, establishing a non-parametric baseline. 
+
+We evaluated all three methods against the LoRA fine-tuning baseline using the Qwen2.5-Instruct model at four sizes. Evaluations were conducted under both project-specific (PS) and project-agnostic (PA) data scope settings.
+
+The results show that retrieval-augmented few-shot prompting is a practical alternative to fine-tuning for IRC. \ragtag\ PS outperforms fine-tuning PS by 0.021--0.040 macro $F_1$ across all four model sizes, and trails fine-tuning PA by 0.029 macro $F_1$ in aggregate despite using 11$\times$ less labeled data per project. \bragtag\ PS closes this gap to TOST equivalence at $\delta{=}0.02$, tightening to statistical equivalence at $\delta{=}0.01$ under the \votag\ fallback protocol for invalid LLM outputs. Averaged across all models, retrieval-augmented few-shot also required 33\% less peak GPU memory than fine-tuning.
+
+These findings position retrieval-augmented few-shot prompting as the more practical IRC method, particularly when hardware is constrained, labeled data is limited, or deployment requires frequent model or data updates. We encourage future work to evaluate these methods in diverse data distribution scenarios and to explore additional retrieval techniques and configurations.

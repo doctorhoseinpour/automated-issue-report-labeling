@@ -1,0 +1,15 @@
+% !TEX root = ../main.tex
+% Related Work
+% Claims to support: RAG for classification, ML4SE issue triage, retrieval debiasing
+
+\section{Related Work}
+\label{sec:02_related}
+
+Early IRC studies employed data mining and classic ML classifiers~\cite{antoniol2008bug, kallis2019ticket, fan2017road}. For example, Antoniol et al.~\cite{antoniol2008bug} leveraged a naive Bayes classifier to distinguish bugs from other issue reports. However, these methods yielded limited performance due to their shallow semantic understanding of issue report text~\cite{heo2025study}.
+
+To overcome this limitation, more recent work has adopted BERT-like transformer models for their stronger contextual understanding~\cite{colavito2022issue, bharadwaj2022github, trautsch2022predicting, izadi2022catiss, izadi2022predicting}. These studies typically fine-tune the models on historical issues in a supervised setting. For instance, Izadi et al.~\cite{izadi2022catiss} fine-tuned a RoBERTa~\cite{liu2019roberta} model to classify issues into \textit{Bugs}, \textit{Features}, or \textit{Questions}. Similarly, Trautsch et al.~\cite{trautsch2022predicting} trained a seBERT~\cite{von2022validity} model to classify issues into the same three categories. Although transformer-based approaches achieve strong results, they rely on large amounts of training data, which hinders their generalization to projects with few labeled issues~\cite{heo2025study, izadi2022catiss}. They also struggle to accurately classify minority classes that have fewer training examples~\cite{izadi2022predicting, colavito2022issue}.
+
+These challenges have motivated the exploration of LLMs, which exhibit strong zero-shot text classification capabilities thanks to extensive pretraining on massive corpora~\cite{heo2025study, aracena2025applying, aracena2024applyinglargelanguagemodels, brown2020language, wei2021finetuned, colavito2024leveraging}. State-of-the-art LLM-based methods achieve their best performance by fine-tuning the models with Low-Rank Adaptation (LoRA~\cite{hu2022lora}) on labeled issue datasets~\cite{heo2025study, aracena2025applying, aracena2024applyinglargelanguagemodels}. However, fine-tuning remains computationally expensive and must be repeated whenever the underlying model is swapped or as newly labeled issues accumulate in the project~\cite{fan2017road, kallis2019ticket}.
+
+In this study, we conduct an empirical evaluation of retrieval-augmented few-shot prompting to assess whether it is a more cost-efficient and practical alternative to fine-tuning LLMs for IRC.
+
