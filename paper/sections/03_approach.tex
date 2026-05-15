@@ -8,7 +8,7 @@
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.85\linewidth]{figures/approach_diagram.pdf}
-    \caption{Overview of the four IRC approaches evaluated in this paper: \votag, \ragtag, \bragtag.}
+    \caption{Overview of the four IRC approaches evaluated in this paper: \votag, \ragtag, \bragtag, and the LoRA fine-tuning baseline.}
     \label{fig:approach-overview}
 \end{figure}
 
@@ -83,11 +83,11 @@ Finally, models are loaded with Unsloth\footnote{\url{https://unsloth.ai}} For m
 
 \subsection{Balanced \ragtag (\bragtag)}
 \label{sec:approach-bragtag}
-\bragtag\ is a \ragtag\ variant designed to reduce the frequent question$\rightarrow$bug misclassifications, without sacrificing performance on the other two labels (\Cref{sec:ragtag}). We hypothesize that bug-labeled neighbors retrieved for true-question queries reinforce the question$\rightarrow$bug misclassification. Therefore, before prompt construction, \bragtag\ inspects the top-K neighbors and drops the bug-labeled ones when their count is within a small margin $m$ of the question-labeled count ($N_\text{bug} - N_\text{question} \le m$). The full misclassification analysis and the empirical justification for \bragtag\ and margin selection are presented in \Cref{sec:bragtag,sec:ragtag}.
+Our empirical evaluations in (\Cref{sec:ragtag}) reveal that \ragtag has the worst performance on the question label, and it frequently misclassifies true-question queries as bugs. Furthermore, LLM zero-shot results also show that the models are already biased towards predicting bug for true-question queries even before the examples are presented. Based on these insights, we hypothesize that presenting bug-labeled examples for true-question queries likely reinforces the question$\rightarrow$bug misclassification trend. To address this, we propose a more balanced retrieval intervention, called balanced \ragtag (\bragtag), that removes the bug-labeled neighbors whenever the query is a suspected question based on its nearest neighbors' label distribution. (\Cref{sec:ragtag}) shows that true-question queries retrieve almost balanced bug and question neighbors. Due to this balanced distribution, \bragtag should remove the bug-labeled examples from the prompt whenever bug neighbor count is within a small positive margin $m$ from the question neighbor count ($N_\text{bug} - N_\text{question} \le m$). The margin is empirically calibrated on a holdout validation set. The empirical motivations for \bragtag and its margin calibration are fully detailed in (\Cref{sec:ragtag})  
 
 
 
-\subsection{Fine-Tuning}
+\subsection{LoRA Fine-Tuning Baseline}
 \label{sec:finetune}
 SOTA IRC approaches have achieved strong performance by supervised
 fine-tuning of LLMs~\cite{heo2025study,aracena2025applying,

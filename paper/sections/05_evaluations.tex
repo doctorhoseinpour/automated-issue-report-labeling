@@ -17,34 +17,12 @@
     \label{fig:vtag-kcurve}
 \end{figure}
 
-% TODO: motivate the k-sweep. Why scan k=1..30 instead of just one or two
-% k values? Suggested points to cover:
-%   (a) k is the only knob in VOTAG -- nothing else to tune, so the
-%       sweep characterizes the entire design space.
-%   (b) The plateau location empirically anchors the RAGTAG k grid in §3
-%       (we use {0,1,3,6,9} because the curve flattens around k=7).
-%   (c) Going up to k=30 lets us show diminishing returns and the decline
-%       past the peak; a smaller range would hide the plateau.
-% Insert as a 1--2 sentence framing right before "We evaluate ...".
-
-We evaluate \votag's performance on both PA and PS settings at $k$ values 1 to 30. The resulting macro F1 scores are shown in \Cref{fig:vtag-kcurve}. \votag's best macro F1 is 0.595 ($k{=}15$) in PS and 0.604 ($k{=}16$) in PA. Both settings reach 99.8\% (PS) and 98.5\% (PA) of their respective peak by $k{=}7$. When adding neighbors beyond the peak, PS loses 0.015 and PA loses 0.011 by $k{=}30$.
+We evaluate \votag's performance on both PA and PS settings at $k$ values 1 to 30. The resulting macro F1 scores are shown in \Cref{fig:vtag-kcurve}. \votag's best macro F1 is 0.595 ($k{=}15$) in PS and 0.604 ($k{=}16$) in PA. When adding neighbors beyond the peak, PS loses 0.015 and PA loses 0.011 by $k{=}30$.
 
 PA consistently outperforms PS at every $k$. However, the performance gap is marginal: averaging 0.007 macro F1, with a maximum of 0.015 at $k{=}18$. This similar performance is due to the large overlap of the top-$k$ neighbors in both settings. Specifically, PA and PS share 84--90\% of the top-$k$ neighbors across $k\in[3,30]$. Therefore, even when using the full 3{,}300-issue retrieval index, most of the retrieved neighbors are from the same project. This means issue reports from the same project tend to be closer in the embedding space.
 
 Question consistently has the weakest performance among the three labels at every $k$ in both settings. At best $k$, PS per-class F1 is 0.630 for bug, 0.614 for feature, and 0.541 for question. The corresponding PA values are 0.632, 0.629, and 0.550 (\Cref{fig:vtag-kcurve}). Additionally, questions are more frequently misclassified as bugs: 32\% of question issues are predicted as bugs in both settings, while 18\% (PS) and 17\% (PA) are predicted as features. Since \votag predicts the label with the most accumulated similarity weight, this misclassification asymmetry indicates that question issues are more similar to bugs than to features in the embedding space.
 
-% TODO: write a transition sentence/paragraph closing RQ1 and leading into
-% the next subsection. Suggested points to cover:
-%   (a) Position VOTAG's ~0.60 macro F1 as the retrieval-only floor that
-%       LLM-based methods (RAGTAG, Debiased RAGTAG, Fine-tune) must clear.
-%   (b) Flag that the bug-bias / question-as-floor asymmetry observed here
-%       is not unique to VOTAG -- it also shows up in the LLM-based
-%       methods, motivating the bug-bias diagnosis subsection.
-%   (c) Optional: name the specific RQ/subsection that picks up next.
-%   (d) Note (relocated from §5.3): VOTAG's best (0.604) comes within 0.009
-%       macro F1 of Qwen-3B zero-shot (0.613). A pure-retrieval heuristic
-%       essentially matches the smallest LLM at zero-shot. Could go here
-%       (descriptive form) or in §6 Discussion (interpretive form).
 
 
 \subsection{RQ2. How well does retrieval-augmented few-shot prompting classify issue reports across model scales, and how does performance vary with the number of in-context examples?}
@@ -69,14 +47,14 @@ Every \ragtag\ configuration outperforms \votag's best result (0.604 at PA $k{=}
 
 Similar to \votag, question consistently has the weakest performance among the three labels across all \ragtag settings. \Cref{fig:ragtag-kcurve} (right panel) shows per-class $F_1$ at each model's best $k$. Even the smallest gaps between question and the other labels, observed at Qwen-32B with $k{=}12$, are noticeable: question is 0.060 macro $F_1$ below bug and 0.143 below feature. Similar to the \votag observations, questions tend to be more frequently misclassified as bugs. At zero-shot, across all four model sizes, 46--59\% of true-question issues are predicted as bugs while only 5--16\% are predicted as features. \ragtag\ narrows this misclassification asymmetry but does not eliminate it: at each model's best $k$, 26--36\% of question issues are still predicted as bugs and only 9--15\% as features. 
 
-These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps the misclassification. Based on this intuition, we propose a more balanced retrieval technique as an intervention to reduce question$\rightarrow$bug misclassifications. To prevent damaging performance on true-bug issues, we apply this neighbor balancing only when the query is suspected to be a question. We calibrate this signal without including the test set. From each project's total 300 training issues, we assign 30 issues stratified by label as queries and 270 as the retrieval index, mirroring the PS setting. On this validation split, true-question queries retrieve almost balanced bug and question examples: averaged across $k\in[1,15]$, the mean of $N_\text{bug} - N_\text{question}$ is $-1.36$. We therefore treat a query as a suspected question when the question count in the top-$k$ is within a small margin $m$ of the bug count ($N_\text{bug} - N_\text{question} \le m$). Sweeping $m\in\{1,2,3,4,5\}$\footnote{The margin cannot be large given the small typical gap between bug and question neighbor counts for a true-question.} on the validation split and averaging across $k\in[1,15]$, $m{=}3$ had a more favorable trade-off against the other values, firing for 89.1\% of true-question and 56.7\% of true-bug queries. We adopt $m{=}3$ and refer to the resulting method as \textbf{B}alanced \ragtag\ (\bragtag).
+These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps these misclassifications. Based on this intuition, we propose a more balanced retrieval technique as an intervention that removes the bug-labeled neighbors whenever the query is a suspected question. We base the suspicion signal on the nearest neighbors' label distribution and calibrate it without including the test set. From each project's total 300 training issues, we assign 30 issues stratified by label as queries and 270 as the retrieval index, mirroring the PS setting. On this validation split, true-question queries retrieve almost balanced bug and question examples: averaged across $k\in[1,15]$, the mean of $N_\text{bug} - N_\text{question}$ is $-1.36$. We therefore treat a query as a suspected question when the bug count in the top-$k$ is within a small positive margin $m$ of the question count ($N_\text{bug} - N_\text{question} \le m$). Sweeping $m\in\{1,2,3,4,5\}$\footnote{We cap the sweep at $m{=}5$, since it is the 95th percentile of $N_\text{bug} - N_\text{question}$ on true-question queries.} on the validation split and averaging across $k\in[1,15]$, $m{=}3$ had a more favorable trade-off against the other values, firing for 89.1\% of true-question and 56.7\% of true-bug queries. We adopt $m{=}3$ and refer to the resulting method as \textbf{B}alanced \ragtag\ (\bragtag).
 
 \subsection{RQ3. Can a balanced retrieval intervention for retrieval-augmented few-shot prompting boost IRC performance?}
 \label{sec:bragtag}
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/bragtag_kcurve.pdf}
+    \includegraphics[width=\linewidth]{figures/bragtag_kcurve.pdf}
     \caption{Macro $F_1$ as a function of $k$ across all model sizes for both \ragtag and \bragtag (project-specific setting)}
     \label{fig:bragtag-kcurve}
 \end{figure}
@@ -107,7 +85,7 @@ Outputs from both approaches that failed to parse to a valid label are marked as
 \label{sec:finetune-eval}
 \label{sec:method-comparison}
 
-\paragraph{Classification Performance.}
+\subsubsection{Classification Performance.}
 
 \begin{figure}[t]
     \centering
@@ -132,7 +110,7 @@ We fine-tune all models in both PA and PS settings. \Cref{fig:finetune-compariso
 
 Fine-tune produces fewer invalid outputs than \ragtag\ and \bragtag\ in both settings, because the model learns the output format during training. Averaged across the four models, fine-tune's invalid rate is 0.28\% in PA and 0.38\% in PS, below \ragtag's 3.0\% and \bragtag's 2.3\% (averaged across $k\in[1,15]$). In an ideal triage scenario, every issue report receives a label, so a known limitation of LLMs is the production of outputs that do not comply with the instructions~\cite{sclar2023quantifying, akhavan2026linkanchorautonomousllmbasedagent}. To compensate for the invalid predictions we propose using \votag\ as a fallback mechanism. \votag\ never produces an invalid label and uses the neighbors already retrieved for \ragtag/\bragtag\ with no LLM inference cost. We apply the fallback to all three methods at their best data scopes for fair comparison: \votag-PS for \ragtag/\bragtag\ and \votag-PA for fine-tune. Under this protocol, \bragtag's reaches statistical equivalence with fine-tune, passing TOST at $\delta{=}0.01$ (bootstrap 95\% CI $[-0.007, +0.008]$).
 
-\paragraph{Computation and Data Cost.}
+\subsubsection{Computation and Data Cost.}
 
 \begin{figure}[t]
     \centering
