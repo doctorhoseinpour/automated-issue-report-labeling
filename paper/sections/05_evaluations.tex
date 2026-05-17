@@ -8,7 +8,8 @@
 
 % TODO
 
-\subsection{RQ1.\ How effectively can retrieval alone classify issue reports, and at what point does adding more retrieved neighbors stop helping?}
+%\subsection{RQ1. To what extent can similarity-weighted voting on the nearest neighbors classify issue reports, and at what point does adding neighbors stop helping?}
+\subsection{\fixme{RQ1: Effectiveness of Similarity-Weighted Voting}}
 \label{sec:rq1}
 \begin{figure}[t]
     \centering
@@ -24,9 +25,14 @@ PA consistently outperforms PS at every $k$. However, the performance gap is mar
 
 Question consistently has the weakest performance among the three labels at every $k$ in both settings. PS per-class F1 at best $k$ is 0.630 for bug, 0.614 for feature, and 0.541 for question. The corresponding PA values are 0.632, 0.629, and 0.550 (\Cref{fig:vtag-kcurve} right panel). Additionally, questions are more frequently misclassified as bugs: 32\% of question issues are predicted as bugs in both settings, while 18\% (PS) and 17\% (PA) are predicted as features. Since \votag predicts the label with the most accumulated similarity weight, this misclassification asymmetry indicates that question issues are more similar to bugs than to features in the embedding space.
 
+%% I intentionally used this tcolorbox to make it different from our other submission.
+\begin{myboxi}
+\textbf{Answer to RQ1:} \fixme{To be completed!}
+\end{myboxi}
 
-
-\subsection{RQ2. How well does retrieval-augmented few-shot prompting classify issue reports, and how does performance vary with the number of in-context examples?}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{RQ2. How well does retrieval-augmented few-shot prompting classify issue reports across model scales, and how does performance vary with the number of in-context examples?}
+\subsection{\fixme{RQ2: Retrieval-Augmented Few-Shot Classification performance}}
 \label{sec:ragtag}
 
 \begin{figure}[t]
@@ -50,7 +56,13 @@ Similar to \votag, question consistently has the weakest performance among the t
 
 These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps these misclassifications. Based on this intuition, we propose a more balanced retrieval technique as an intervention that removes the bug-labeled neighbors whenever the query is a suspected question. We base the suspicion signal on the nearest neighbors' label distribution and calibrate it without including the test set. From each project's total 300 training issues, we assign 30 issues stratified by label as queries and 270 as the retrieval index, mirroring the PS setting. On this validation split, true-question queries retrieve almost balanced bug and question examples: averaged across $k\in[1,15]$, the mean of $N_\text{bug} - N_\text{question}$ is $-1.36$. We therefore treat a query as a suspected question when $N_\text{bug} - N_\text{question} \le m$, where $N_\text{label}$ is the count of neighbors with that label in the top-$k$ and $m$ is a small positive margin. Sweeping $m\in\{1,2,3,4,5\}$\footnote{We cap the sweep at $m{=}5$, since it is the 95th percentile of $N_\text{bug} - N_\text{question}$ on true-question queries.} on the validation split and averaging across $k\in[1,15]$, $m{=}3$ had a more favorable trade-off against the other values, firing for 89.1\% of true-question and 56.7\% of true-bug queries. We adopt $m{=}3$ and refer to the resulting method as \textbf{B}alanced \ragtag\ (\bragtag).
 
-\subsection{RQ3. Can a balanced retrieval intervention reduce question-to-bug misclassification and improve retrieval-augmented few-shot performance?}
+\begin{myboxi}
+\textbf{Answer to RQ2:} \fixme{To be completed!}
+\end{myboxi}
+
+%%%%%%%%%%%%%%%%%%
+%\subsection{RQ3. Can a balanced retrieval intervention for retrieval-augmented few-shot prompting boost IRC performance?}
+\subsection{\fixme{RQ3: Impact of Balanced Retrieval Intervention}}
 \label{sec:bragtag}
 
 \begin{figure}[t]
@@ -81,12 +93,17 @@ The performance gain comes from an increase on the question and bug classes with
 
 Outputs from both approaches that failed to parse to a valid label are marked as \textit{invalid} and counted as incorrect. Averaged across $k\in[1,15]$, \bragtag\ has a lower invalid rate than \ragtag\ (2.3\% vs 3.0\% across the four models).
 
+\begin{myboxi}
+\textbf{Answer to RQ3:} \fixme{To be completed!}
+\end{myboxi}
 
-\subsection{RQ4. Can retrieval-augmented few-shot prompting match LoRA fine-tuning for IRC, and what are the costs of each approach?}
-\label{sec:finetune-eval}
+%%%%%%%%%%%%%%%%%%%
+%\subsection{RQ4. Can retrieval-augmented few-shot prompting match LoRA fine-tuning for IRC, and what are the costs of each approach?}
+\subsection{\fixme{RQ4: Few-Shot Prompting vs. LoRA Fine-Tuning}}
 \label{sec:method-comparison}
 
-\subsubsection{Classification Performance.}
+%%%%%%%%%%%
+\myparagraph{Classification Performance.}
 
 \begin{figure}[t]
     \centering
@@ -111,7 +128,8 @@ We fine-tune all models in both PA and PS settings. \Cref{fig:finetune-compariso
 
 Fine-tune produces fewer invalid outputs than \ragtag\ and \bragtag\ in both settings, because the model learns the output format during training. Averaged across the four models, fine-tune's invalid rate is 0.28\% in PA and 0.38\% in PS, below \ragtag's 3.0\% and \bragtag's 2.3\% (averaged across $k\in[1,15]$). In an ideal triage scenario, every issue report receives a label, so a known limitation of LLMs is the production of outputs that do not comply with the instructions~\cite{sclar2023quantifying, akhavan2026linkanchorautonomousllmbasedagent}. To compensate for the invalid predictions we propose using \votag\ as a fallback mechanism. \votag\ never produces an invalid label and uses the neighbors already retrieved for \ragtag/\bragtag\ with no LLM inference cost. We apply the fallback to all three methods at their best data scopes for fair comparison: \votag-PS for \ragtag/\bragtag\ and \votag-PA for fine-tune. Under this protocol, \bragtag's reaches statistical equivalence with fine-tune, passing TOST at $\delta{=}0.01$ (bootstrap 95\% CI $[-0.007, +0.008]$).
 
-\subsubsection{Computation and Data Cost.}
+%%%%%%%%%%%%%%%%%%%%%
+\myparagraph{Computation and Data Cost.}
 
 \begin{figure}[t]
     \centering
@@ -127,6 +145,8 @@ The methods have different hardware requirements. \Cref{fig:cost-analysis}(a) sh
 
 Notably, \ragtag\ and \bragtag\ in PS retrieve only from 300 labeled issues per project, while fine-tune PA trains on the full 3{,}300 issues across all 11 projects to reach its best configuration. Therefore, at 11$\times$ less labeled data per project, \ragtag\ remains competitive with fine-tune, and \bragtag\ closes the gap to TOST equivalence at $\delta{=}0.02$, tightening to statistical equivalence at $\delta{=}0.01$ under the \votag\ fallback for invalid LLM outputs.
 
-
+\begin{myboxi}
+\textbf{Answer to RQ4:} \fixme{To be completed!}
+\end{myboxi}
 
 
