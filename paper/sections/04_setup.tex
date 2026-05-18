@@ -5,26 +5,19 @@
 \myparagraph{Dataset and Settings.}
 \label{sec:setup-dataset}
 We use the dataset introduced in Heo et al.~\cite{heo2025study} for our experiments. The dataset has a total of 6,600 issue reports gathered from eleven active open-source projects:
-\texttt{ansible/ansible}, \texttt{bitcoin/bitcoin},
-\texttt{dart-lang/sdk}, \texttt{dotnet/roslyn},
-\texttt{facebook/react}, \texttt{flutter/flutter},
-\texttt{kubernetes/kubernetes}, \texttt{microsoft/TypeScript},
-\texttt{microsoft/vscode}, \texttt{opencv/opencv}, and
-\texttt{tensorflow/tensorflow}. Each project has 600 issue reports
+\texttt{ansible}, \texttt{bitcoin},
+\texttt{dart-lang}, \texttt{roslyn},
+\texttt{react}, \texttt{flutter},
+\texttt{kubernetes}, \texttt{TypeScript},
+\texttt{vscode}, \texttt{opencv}, and
+\texttt{tensorflow}. Each project has 600 issue reports
 with an equal distribution across the labels
 (\textit{bug, feature, question}). To support their LLM fine-tuning
 method, Heo et al. divided the dataset into 50/50 train and test
 splits, stratified by project and label. This results in 300 train
 and 300 test issue reports per project.
 
-We also adopt Heo et al.'s project-specific (PS) and project-agnostic (PA) configurations to examine how data scope affects IRC performance. In the PS setting, each project's train and test data are used in isolation, resulting in eleven different train-test pairs. In the PA setting, the train splits of all projects are merged into a single training set of 3,300 issue reports. In both configurations, \ragtag and \votag only use the training splits as their retrieval index to ensure fair comparison with the fine-tuning baseline. \Cref{fig:ps-pa} illustrates the difference between the two settings.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.8\linewidth]{figures/PS-PA.pdf}
-    \caption{\fixme{AH: Not a good figure. Remove it.} Project-Specific (PS) vs.\ Project-Agnostic (PA) data scope settings.}
-    \label{fig:ps-pa}
-\end{figure}
+We also adopt Heo et al.'s project-specific (PS) and project-agnostic (PA) configurations to examine how data scope affects IRC performance. In the PS setting, each project's train and test data are used in isolation, resulting in eleven different train-test pairs. In the PA setting, the train splits of all projects are merged into a single training set of 3,300 issue reports. In both configurations, \ragtag and \votag only use the training splits as their retrieval index to ensure fair comparison with the fine-tuning baseline.
 
 %%%%%%%%%%%%
 \myparagraph{Models.}

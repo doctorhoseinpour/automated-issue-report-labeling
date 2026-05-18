@@ -6,10 +6,11 @@
 \section{Evaluations}
 \label{sec:evaluations}
 
-% TODO
-
+In this section, we present the results of our experiments and answer
+the four research questions posed in \Cref{sec:01_intro}, one per
+subsection.
 %\subsection{RQ1. To what extent can similarity-weighted voting on the nearest neighbors classify issue reports, and at what point does adding neighbors stop helping?}
-\subsection{\fixme{RQ1: Effectiveness of Similarity-Weighted Voting}}
+\subsection{RQ1: Effectiveness of Retrieval-Only IRC}
 \label{sec:rq1}
 \begin{figure}[t]
     \centering
@@ -27,12 +28,12 @@ Question consistently has the weakest performance among the three labels at ever
 
 %% I intentionally used this tcolorbox to make it different from our other submission.
 \begin{myboxi}
-\textbf{Answer to RQ1:} \fixme{To be completed!}
+\textbf{Answer to RQ1:} Retrieval alone establishes a non-parametric baseline with a peak macro $F_1$ of 0.604 and bounds the useful number of in-context examples at $k\approx15$. 
 \end{myboxi}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\subsection{RQ2. How well does retrieval-augmented few-shot prompting classify issue reports across model scales, and how does performance vary with the number of in-context examples?}
-\subsection{\fixme{RQ2: Retrieval-Augmented Few-Shot Classification performance}}
+\subsection{RQ2: Effectiveness of Retrieval-Augmented Few-Shot IRC}
 \label{sec:ragtag}
 
 \begin{figure}[t]
@@ -48,7 +49,7 @@ PS marginally outperforms PA at almost every (model, $k{\ge}1$) pair evaluated (
 
 The best $k$ grows with model size: Qwen-3B peaks at $k{=}3$ (macro F1 = 0.697), Qwen-7B at $k{=}6$ (0.718), and both Qwen-14B and Qwen-32B at $k{=}12$ (0.732 and 0.767 respectively). This shows that larger models can use the context from additional examples more effectively. However, adding neighbors past $k{=}12$ has no benefit and slightly degrades performance: every model loses 0.001--0.015 macro F1 going from $k{=}12$ to $k{=}15$.
 
-Every \ragtag\ configuration with $k{\ge}1$ outperforms the zero-shot baseline. At each model's peak, the gap over zero-shot averages +0.076 macro $F_1$ and ranges from +0.055 (Qwen-7B) to +0.087 (Qwen-14B). This shows that LLMs benefit substantially from the most similar labeled examples for IRC.
+Every \ragtag\ configuration with $k{\ge}1$ outperforms the zero-shot baseline. At each model's peak, the gap over zero-shot averages +0.076 macro $F_1$ and ranges from +0.055 (Qwen-7B) to +0.087 (Qwen-14B). This shows that LLMs benefit substantially from the most siClassification performancemilar labeled examples for IRC.
 
 Every \ragtag\ configuration outperforms \votag's best result (0.604 at PA $k{=}16$), with the smallest margin from Qwen-3B zero-shot (+0.009 F1) and the largest from Qwen-32B PS at $k{=}12$ (+0.163 F1). These results show that adding the LLM reasoning improves IRC on top of pure retrieval.
 
@@ -57,17 +58,17 @@ Similar to \votag, question consistently has the weakest performance among the t
 These results show that the LLMs are already prone to misclassifying question issues as bugs, even before the top-$k$ examples are used. Therefore, presenting bug-labeled examples for true-question query issues likely helps these misclassifications. Based on this intuition, we propose a more balanced retrieval technique as an intervention that removes the bug-labeled neighbors whenever the query is a suspected question. We base the suspicion signal on the nearest neighbors' label distribution and calibrate it without including the test set. From each project's total 300 training issues, we assign 30 issues stratified by label as queries and 270 as the retrieval index, mirroring the PS setting. On this validation split, true-question queries retrieve almost balanced bug and question examples: averaged across $k\in[1,15]$, the mean of $N_\text{bug} - N_\text{question}$ is $-1.36$. We therefore treat a query as a suspected question when $N_\text{bug} - N_\text{question} \le m$, where $N_\text{label}$ is the count of neighbors with that label in the top-$k$ and $m$ is a small positive margin. Sweeping $m\in\{1,2,3,4,5\}$\footnote{We cap the sweep at $m{=}5$, since it is the 95th percentile of $N_\text{bug} - N_\text{question}$ on true-question queries.} on the validation split and averaging across $k\in[1,15]$, $m{=}3$ had a more favorable trade-off against the other values, firing for 89.1\% of true-question and 56.7\% of true-bug queries. We adopt $m{=}3$ and refer to the resulting method as \textbf{B}alanced \ragtag\ (\bragtag).
 
 \begin{myboxi}
-\textbf{Answer to RQ2:} \fixme{To be completed!}
+\textbf{Answer to RQ2:} Every Retrieval-augmented few-shot prompting (\ragtag) configuration with $k{\ge}1$ consistently outperforms the zero-shot and \votag baselines. The best $k$ grows with model size but plateaus within the $k\approx15$ bound established by \votag\. \ragtag\ is weakest on the question class and frequently misclassifies questions as bugs, motivating a more balanced retrieval method. 
 \end{myboxi}
 
 %%%%%%%%%%%%%%%%%%
 %\subsection{RQ3. Can a balanced retrieval intervention for retrieval-augmented few-shot prompting boost IRC performance?}
-\subsection{\fixme{RQ3: Impact of Balanced Retrieval Intervention}}
+\subsection{RQ3: Effectiveness of the Balanced Retrieval method}
 \label{sec:bragtag}
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\linewidth]{figures/bragtag_kcurve.pdf}
+    \includegraphics[width=0.7\linewidth]{figures/bragtag_kcurve.pdf}
     \caption{Macro $F_1$ as a function of $k$ across all model sizes for both \ragtag and \bragtag (project-specific setting)}
     \label{fig:bragtag-kcurve}
 \end{figure}
@@ -82,24 +83,24 @@ Since the PS setting produced the best results for \ragtag, we use PS as the def
 
 \input{tables/bragtag_results.tex}
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/bragtag_perclass.pdf}
-    \caption{Per-class $F_1$ at each method's best $k$ across all model sizes for \ragtag\ and \bragtag.}
-    \label{fig:bragtag-perclass}
-\end{figure}
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{figures/bragtag_perclass.pdf}
+%     \caption{Per-class $F_1$ at each method's best $k$ across all model sizes for \ragtag\ and \bragtag.}
+%     \label{fig:bragtag-perclass}
+% \end{figure}
 
-The performance gain comes from an increase on the question and bug classes with minimal impact on feature. \Cref{fig:bragtag-perclass} shows per-class $F_1$ at each method's best $k$. Question $F_1$ improves by 0.030--0.068 across all four model sizes. Bug $F_1$ stays within 0.018 of \ragtag, with a slight loss for Qwen-3B and slight gains for the larger models. Therefore, removing bug neighbors in some cases did not decrease overall bug performance. Feature $F_1$ is essentially unchanged. The question-to-bug misclassification rate drops: at each model's best $k$, \ragtag\ misclassifies 26--36\% of true-question issues as bugs while \bragtag\ reduces this to 19--27\%. Averaged across $k\in[1,15]$, the rate drops from 31--40\% (\ragtag) to 24--36\% (\bragtag). Question-to-feature misclassification is unaffected. This confirms that \bragtag's improvement comes from the targeted reduction of question-to-bug misclassification.
+The performance gain comes from an increase on the question and bug classes with minimal impact on feature. \Cref{tab:bragtag-results} reports per-class $F_1$ at each method's best $k$. Question $F_1$ improves by 0.030--0.068 across all four model sizes. Bug $F_1$ stays within 0.018 of \ragtag, with a slight loss for Qwen-3B and slight gains for the larger models. Therefore, removing bug neighbors in some cases did not decrease overall bug performance. Feature $F_1$ is essentially unchanged. The question-to-bug misclassification rate drops: at each model's best $k$, \ragtag\ misclassifies 26--36\% of true-question issues as bugs while \bragtag\ reduces this to 19--27\%. Averaged across $k\in[1,15]$, the rate drops from 31--40\% (\ragtag) to 24--36\% (\bragtag). Question-to-feature misclassification is unaffected. This confirms that \bragtag's improvement comes from the targeted reduction of question-to-bug misclassification.
 
 Outputs from both approaches that failed to parse to a valid label are marked as \textit{invalid} and counted as incorrect. Averaged across $k\in[1,15]$, \bragtag\ has a lower invalid rate than \ragtag\ (2.3\% vs 3.0\% across the four models).
 
 \begin{myboxi}
-\textbf{Answer to RQ3:} \fixme{To be completed!}
+\textbf{Answer to RQ3:} The balanced retrieval method (\bragtag), outperforms \ragtag\ at every $k{\ge}6$. The gain comes from a targeted reduction of question-to-bug misclassifications, raising question $F_1$ by 0.030--0.068 without sacrificing bug or feature performance.
 \end{myboxi}
 
 %%%%%%%%%%%%%%%%%%%
 %\subsection{RQ4. Can retrieval-augmented few-shot prompting match LoRA fine-tuning for IRC, and what are the costs of each approach?}
-\subsection{\fixme{RQ4: Few-Shot Prompting vs. LoRA Fine-Tuning}}
+\subsection{RQ4: Few-Shot Prompting vs. LoRA Fine-Tuning for IRC}
 \label{sec:method-comparison}
 
 %%%%%%%%%%%
@@ -122,11 +123,18 @@ We fine-tune all models in both PA and PS settings. \Cref{fig:finetune-compariso
 
 \Cref{tab:method-comparison} reports macro and per-class $F_1$ at each method's best configuration. \ragtag\ has competitive macro $F_1$ with fine-tuning: aggregated across the four model sizes (13{,}200 paired predictions), fine-tune leads \ragtag\ by 0.029 macro $F_1$ (paired bootstrap 95\% CI $[-0.037, -0.022]$). \ragtag\ is closer to fine-tune at the smallest and largest models and farther in the middle, with per-model (\ragtag\ $-$ fine-tune) macro $F_1$ deltas (paired bootstrap 95\% CIs in brackets) of $-0.011$ [$-0.028, +0.007$] (Qwen-3B), $-0.044$ [$-0.059, -0.029$] (Qwen-7B), $-0.053$ [$-0.068, -0.039$] (Qwen-14B), and $-0.004$ [$-0.020, +0.009$] (Qwen-32B). \ragtag\ and fine-tune are statistically equal at Qwen-3B and Qwen-32B.
 
-\bragtag's balanced retrieval narrows this gap: the aggregate (\bragtag\ $-$ fine-tune) difference is $-0.010$ with paired bootstrap 95\% CI $[-0.018, -0.003]$, passing TOST equivalence at $\delta{=}0.02$.\footnote{1{,}000 paired bootstrap resamples per model for both \ragtag\ vs fine-tune and \bragtag\ vs fine-tune comparisons.} Similar to \ragtag, \bragtag\ performs better relative to fine-tune at the smallest and largest models: \bragtag\ is statistically tied with fine-tune at Qwen-3B and Qwen-32B while fine-tune leads on the mid-sized ones, with per-model (\bragtag\ $-$ fine-tune) deltas of $+0.006$ [$-0.012, +0.024$] (Qwen-3B), $-0.024$ [$-0.039, -0.009$] (Qwen-7B), $-0.029$ [$-0.044, -0.013$] (Qwen-14B), and $+0.010$ [$-0.005, +0.024$] (Qwen-32B).
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/per_project_diff.pdf}
+    \caption{Per-(project, model) macro $F_1$ difference between \bragtag\ (PS) and fine-tune (PA), across the 11 projects and four Qwen sizes. Each \bragtag\ row uses that model's best $k$.}
+    \label{fig:per-project-diff}
+\end{figure}
+
+\bragtag's balanced retrieval narrows this gap: the aggregate (\bragtag\ $-$ fine-tune) macro $F_1$ difference is $-0.010$. However, fine-tuning does not consistently lead across projects. \Cref{fig:per-project-diff} reports the per-(project, model) macro $F_1$ difference between \bragtag\ and fine-tune. \bragtag\ outperforms fine-tune in 16 of the 44 (project, model) cells, winning all four model sizes on \texttt{opencv} and three of four on \texttt{bitcoin}. Similar to \ragtag, \bragtag\ performs better relative to fine-tune at the smallest and largest models: \bragtag\ is statistically tied with fine-tune at Qwen-3B and Qwen-32B while fine-tune leads on the mid-sized ones, with per-model (\bragtag\ $-$ fine-tune) deltas of $+0.006$ [$-0.012, +0.024$] (Qwen-3B), $-0.024$ [$-0.039, -0.009$] (Qwen-7B), $-0.029$ [$-0.044, -0.013$] (Qwen-14B), and $+0.010$ [$-0.005, +0.024$] (Qwen-32B). 
 
 \bragtag\ has the best question $F_1$ on Qwen-3B and Qwen-32B, while fine-tune leads on Qwen-7B and Qwen-14B. Fine-tune leads on bug across all four model sizes; on feature, \bragtag\ wins Qwen-3B and Qwen-14B while fine-tune wins Qwen-7B and Qwen-32B. These results show that \bragtag\ is able to compete with fine-tune due to its targeted question-to-bug correction, boosting question $F_1$ without sacrificing bug or feature. Averaged across the four models, \bragtag\ is also the most class-balanced approach, with the lowest per-class $F_1$ standard deviation (0.058 vs 0.067 for fine-tune and 0.082 for \ragtag) and the highest worst-class $F_1$ floor (0.681 vs 0.671 and 0.626).
 
-Fine-tune produces fewer invalid outputs than \ragtag\ and \bragtag\ in both settings, because the model learns the output format during training. Averaged across the four models, fine-tune's invalid rate is 0.28\% in PA and 0.38\% in PS, below \ragtag's 3.0\% and \bragtag's 2.3\% (averaged across $k\in[1,15]$). In an ideal triage scenario, every issue report receives a label, so a known limitation of LLMs is the production of outputs that do not comply with the instructions~\cite{sclar2023quantifying, akhavan2026linkanchorautonomousllmbasedagent}. To compensate for the invalid predictions we propose using \votag\ as a fallback mechanism. \votag\ never produces an invalid label and uses the neighbors already retrieved for \ragtag/\bragtag\ with no LLM inference cost. We apply the fallback to all three methods at their best data scopes for fair comparison: \votag-PS for \ragtag/\bragtag\ and \votag-PA for fine-tune. Under this protocol, \bragtag's reaches statistical equivalence with fine-tune, passing TOST at $\delta{=}0.01$ (bootstrap 95\% CI $[-0.007, +0.008]$).
+Fine-tune produces fewer invalid outputs than \ragtag\ and \bragtag\ in both settings, because the model learns the output format during training. Averaged across the four models, fine-tune's invalid rate is 0.28\% in PA and 0.38\% in PS, below \ragtag's 3.0\% and \bragtag's 2.3\% (averaged across $k\in[1,15]$). In an ideal triage scenario, every issue report receives a label, so a known limitation of LLMs is the production of outputs that do not comply with the instructions~\cite{sclar2023quantifying, akhavan2026linkanchorautonomousllmbasedagent}. To compensate for the invalid predictions we propose using \votag\ as a fallback mechanism. \votag\ never produces an invalid label and uses the neighbors already retrieved for \ragtag/\bragtag\ with no LLM inference cost. We apply the fallback to all three methods at their best data scopes for fair comparison: \votag-PS for \ragtag/\bragtag\ and \votag-PA for fine-tune. Under this protocol, \bragtag's reaches statistical equivalence with fine-tune, passing TOST at $\delta{=}0.01$ (bootstrap 95\% CI $[-0.007, +0.008]$\footnote{1{,}000 paired bootstrap resamples per model for both \ragtag\ vs fine-tune and \bragtag\ vs fine-tune comparisons.}).
 
 %%%%%%%%%%%%%%%%%%%%%
 \myparagraph{Computation and Data Cost.}
@@ -146,7 +154,7 @@ The methods have different hardware requirements. \Cref{fig:cost-analysis}(a) sh
 Notably, \ragtag\ and \bragtag\ in PS retrieve only from 300 labeled issues per project, while fine-tune PA trains on the full 3{,}300 issues across all 11 projects to reach its best configuration. Therefore, at 11$\times$ less labeled data per project, \ragtag\ remains competitive with fine-tune, and \bragtag\ closes the gap to TOST equivalence at $\delta{=}0.02$, tightening to statistical equivalence at $\delta{=}0.01$ under the \votag\ fallback for invalid LLM outputs.
 
 \begin{myboxi}
-\textbf{Answer to RQ4:} \fixme{To be completed!}
+\textbf{Answer to RQ4:} \ragtag\ outperforms LoRA fine-tuning by 0.021--0.040 macro $F_1$ at every model size with project-specific data scope. Fine-tuning outperforms \ragtag\ only when trained on $11\times$ more labeled data via cross-project pooling (PA), and leads by 0.029 aggregate macro $F_1$. \bragtag\ narrows the aggregate gap to $-0.010$, reaching statistical equivalence with fine-tuning once a \votag\ fallback handles invalid LLM outputs. Finally, Retrieval-augmented few-shot requires 33\% less peak GPU memory than fine-tuning.
 \end{myboxi}
 
 

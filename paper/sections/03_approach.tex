@@ -53,20 +53,60 @@ where $\mathcal{L}$ is the label set, and $\mathbf{1}[l_i = c]$ is the indicator
 learning~\cite{brown2020language}. The choice to present the top-K nearest neighbors as examples is based on two insights from prior research: First, retrieval-based example selection outperforms random selection~\cite{liu2022makes}. Second, the most similar neighbors tend to share the same labels~\cite{cover1967nearest}; therefore, they are informative for the classification.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{prompttitlebar}{HTML}{3A3A55}
+\definecolor{promptbody}{HTML}{F2F2FF}
 \begin{figure}[t]
     \centering
-    \begin{promptbox}
-    \ttfamily\footnotesize
-
-    \fixme{Prompt to come here!!!}
-        
-    \end{promptbox}
-    \caption{\fixme{System prompt for ...}}
+    \begin{tikzpicture}[
+        font=\fontsize{6}{7}\selectfont\ttfamily,
+        sec/.style={anchor=north, text width=10.3cm, align=left,
+                    inner xsep=0.2cm, inner ysep=6pt, fill=promptbody},
+        seclabel/.style={anchor=east, font=\sffamily\scriptsize,
+                    align=right, text=prompttitlebar},
+    ]
+    % --- title bar ---
+    \node[anchor=north, text width=10.3cm, align=center,
+          inner xsep=0.2cm, inner ysep=4pt, fill=prompttitlebar,
+          text=white, font=\sffamily\small\bfseries] (title) at (0,0)
+        {Retrieval-augmented few-shot prompt format};
+    % --- (1) system message ---
+    \node[sec, below=0pt of title.south] (s1)
+        {Classify the GitHub issue into exactly one category: bug, feature,
+         or question. Respond with ONLY the label wrapped in XML tags
+         (e.g., <label>bug</label>). Do NOT write anything else --- no
+         explanation, no reasoning, no extra text.};
+    % --- (2) retrieved examples ---
+    \node[sec, below=0pt of s1.south] (s2)
+        {Here are some examples of correctly classified issues:\\[2pt]
+         -{}-{}- Example 1 -{}-{}-\quad Title: \textit{$\langle$title$\rangle$}\quad
+         Body: \textit{$\langle$body$\rangle$}\quad
+         Answer: <label>feature</label>\\[2pt]
+         \textit{$\cdots$}\\[2pt]
+         -{}-{}- Example K -{}-{}-\quad Title: \textit{$\langle$title$\rangle$}\quad
+         Body: \textit{$\langle$body$\rangle$}\quad
+         Answer: <label>bug</label>};
+    % --- (3) query issue ---
+    \node[sec, below=0pt of s2.south] (s3)
+        {Now, classify the following target issue:\quad
+         Title: \textit{$\langle$query title$\rangle$}\quad
+         Body: \textit{$\langle$query description$\rangle$}};
+    % --- dashed section dividers, extended beyond the border ---
+    \draw[dashed] ([xshift=-1.9cm]s1.south west) -- ([xshift=0.35cm]s1.south east);
+    \draw[dashed] ([xshift=-1.9cm]s2.south west) -- ([xshift=0.35cm]s2.south east);
+    % --- outer border ---
+    \draw[line width=0.8pt] (title.north west) rectangle (s3.south east);
+    % --- section names, outside the border on the left ---
+    \node[seclabel] at ([xshift=-0.22cm]s1.west) {System message};
+    \node[seclabel] at ([xshift=-0.22cm]s2.west) {Retrieved examples\\($K$ nearest neighbors)};
+    \node[seclabel] at ([xshift=-0.22cm]s3.west) {Query issue};
+    \end{tikzpicture}
+    \caption{The retrieval-augmented few-shot prompt structure used for \ragtag and
+    \bragtag.}
     \label{fig:prompt}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\fixme{We create the few-shot prompt in three parts as shown in \figref{prompt}.} First, the system message frames the classification task and the label space. Second, the top-K nearest neighbors are listed in retrieval order (descending similarity), each formatted as \textit{title + description + label}. Finally, the query issue is appended to the end of the prompt, ensuring it receives high attention from the LLM~\cite{liu2024lost}. $K=0$ produces a zero-shot prompting baseline, similar to prior work~\cite{colavito2025benchmarking}.
+We create the few-shot prompt in three parts as shown in \figref{prompt}. First, the system message frames the classification task and the label space. Second, the top-K nearest neighbors are listed in retrieval order (descending similarity), each formatted as \textit{title + description + label}. Finally, the query issue is appended to the end of the prompt, ensuring it receives high attention from the LLM~\cite{liu2024lost}. $K=0$ produces a zero-shot prompting baseline, similar to prior work~\cite{colavito2025benchmarking}.
 
 We evaluate \ragtag at top-K values in $\{0, 1, 3, 6, 9, 12, 15\}$. Details for the K value grid selection are provided in \cref{sec:rq1,sec:ragtag}. The maximum prompt sequence length is set to 8,192 tokens.\footnote{Maximum prompt sequence length is selected empirically. 8,192 tokens offered the best trade-off between classification accuracy and inference speed across our preliminary experiments.} Roughly 30\% of the context quota is reserved for the query issue and 70\% for the neighbors. If the neighbors exceed their overall quota, they are truncated proportionally based on their length (longer neighbors get more truncation). The query issue gets truncated if it exceeds its budget as well. Truncation happens on the right side of the
 description text, preserving all titles and labels (if any).
@@ -88,7 +128,11 @@ aracena2024applyinglargelanguagemodels}, using Low-Rank Adaptation
 model is trained on labeled issue reports and predicts the labels for
 unseen test issues. Each training example is formatted as an
 instruction prompt which includes the issue's title and description
-as input, and its label as output. At inference, the trained model
+as input, and its label as output. We adopt the instruction-style
+prompt template used in these prior LoRA fine-tuning
+studies~\cite{heo2025study,aracena2025applying} verbatim, rather than
+designing our own, so that the baseline faithfully reproduces their
+established methodology. At inference, the trained model
 receives the test issue in the same format, and predicts the empty
 label field. Regular expressions are used to extract the prediction
 from the output, and unparseable outputs are marked as
