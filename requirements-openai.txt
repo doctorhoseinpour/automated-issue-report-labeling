@@ -1,0 +1,5 @@
+# Extra dependencies for the OpenAI RAGTAG variant (openai_labeler.py).
+# Kept separate from requirements.txt so the GPU/Unsloth pipeline is untouched.
+# Install into the existing venv:  venv/bin/pip install -r requirements-openai.txt
+openai>=1.40.0
+tiktoken>=0.7.0

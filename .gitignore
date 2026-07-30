@@ -44,3 +44,6 @@ fetched/
 
 # Archived data (OOM runs, 1-epoch FT backup) — preserved on disk, not in git
 archive/
+
+# OpenAI RAGTAG canary outputs — disposable, never archival
+canary_openai/
