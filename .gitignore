@@ -7,6 +7,10 @@
 # Exception: analysis output CSVs are paper artifacts (small, derived from results/)
 !docs/analysis/*.csv
 
+# Exception: the source dataset pool — does not regenerate, needed to bootstrap
+# a fresh clone. The train/test splits stay ignored; they are deterministic.
+!issues11k.csv
+
 # Results
 results/
 
