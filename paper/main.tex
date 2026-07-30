@@ -112,7 +112,7 @@
 \newcommand{\alref}[1]{Algorithm~\ref{al:#1}}
 
 % --- Metadata (TODO: fill in before submission) ---
-\title{Retrieval-Augmented Few-Shot Prompting vs. LoRA Fine-Tuning for Issue Report Classification: An Empirical Study}
+\title{Can Retrieval-Augmented Few-Shot Prompting Match LoRA Fine-Tuning for Issue Report Classification? An Empirical Study}
 \titlerunning{Retrieval-Augmented Few-Shot vs. Fine-Tuning for IRC} % uncomment if title is longer than one line
 
 % An Empirical Study of Retrieval-Augmented Few-Shot Prompting for Issue Report Classification
@@ -149,16 +149,18 @@
 \maketitle
 
 \begin{abstract}
-\myparagraph{Background.} Issue report classification (IRC) accelerates modern software maintenance. State-of-the-art automated IRC methods fine-tune Large Language Models (LLMs) with Low-Rank Adaptation (LoRA), which is computationally expensive and must be repeated to incorporate newly labeled issue reports or whenever the model is swapped.
+\myparagraph{Background.} Issue report classification (IRC) accelerates modern software maintenance, yet it remains a challenging task. State-of-the-art automated IRC methods fine-tune Large Language Models (LLMs) with Low-Rank Adaptation (LoRA), which is computationally expensive and must be repeated to incorporate newly labeled issue reports or whenever the model is swapped.
 
-\myparagraph{Aims.} We empirically investigate whether retrieval-augmented few-shot prompting offers a practical alternative to LoRA fine-tuning for IRC.
+\myparagraph{Aims.} We empirically investigate the hypothesis that low-cost, retrieval-augmented generation (RAG) based approaches can achieve competitive IRC performance with the LoRA fine-tuning baseline. If validated, this would introduce the possibility of cost-efficient IRC solutions; An avenue that, to our knowledge, remains unexplored in the literature.
 
-\myparagraph{Method.} Given a query issue, we retrieve its top-$k$ nearest neighbors from an index of classified issues, and propose three methods: (i) \votag, a similarity-weighted vote on the neighbors' labels, (ii) \ragtag, which presents the neighbors as classified examples in a few-shot prompt to an LLM, and (iii) \bragtag, a \ragtag\ variant with a more balanced retrieval scheme. We evaluate all three against a LoRA fine-tuning baseline on an 11-project benchmark, in both \emph{project-specific} and \emph{project-agnostic} data scope settings. Experiments use Qwen2.5-Instruct at four sizes.
+\myparagraph{Method.} To test this hypothesis, we conduct a case study on the Qwen2.5-Instruct family, a set of open-source models with strong public-benchmark performance, evaluated at four parameter sizes to analyze the effect of model scale. We propose three retrieval-based methods --- \votag, \ragtag, and \bragtag\ --- each of which works by retrieving the top-$k$ most similar issues from an index of labeled issues and reasoning on them. Specifically, \votag\ assigns the label via a similarity-weighted vote over the retrieved neighbors; \ragtag\ presents the neighbors as classified examples in a few-shot LLM prompt; and \bragtag\ extends \ragtag\ with a more balanced retrieval scheme that better covers the label space. We evaluate all three methods against a LoRA fine-tuning baseline on an 11-project benchmark, under both \emph{project-specific} and \emph{project-agnostic} data scope settings.
 
-\myparagraph{Results.} With project-specific data, \ragtag\ outperforms fine-tuning by 0.021--0.040 macro $F_1$ across all model sizes. Fine-tuning on cross-project data beats project-specific \ragtag\ by only 0.029 aggregate macro $F_1$ despite $11\times$ more labeled data. The balanced retrieval approach, \bragtag\, closes this performance gap, achieving statistical equivalence with fine-tuning when using a retrieval fallback for invalid LLM outputs. Averaged across model sizes, Retrieval-augmented few-shot prompting requires 33\% less peak GPU memory than fine-tuning.
+\myparagraph{Results.} With project-specific data, \ragtag\ outperforms fine-tuning by 0.021--0.040 macro $F_1$ across all model sizes. Fine-tuning on cross-project data beats project-specific \ragtag\ by only 0.029 aggregate macro $F_1$ despite $11\times$ more labeled data. The balanced retrieval approach, \bragtag\, closes this performance gap, achieving statistical equivalence with fine-tuning when using a retrieval fallback for invalid LLM outputs. Averaged across model sizes, retrieval-augmented few-shot prompting requires 33\% less peak GPU memory than fine-tuning.
 
-\myparagraph{Conclusions.} Retrieval-augmented few-shot prompting is a practical alternative to LoRA fine-tuning for IRC, particularly when hardware resources are constrained, labeled data is limited, or the deployment has frequent model or data updates.
+\myparagraph{Conclusions.} Under our experimental setup and case study, RAG-based approaches demonstrate competitive performance against LoRA fine-tuning, suggesting they represent a viable and cost-efficient alternative for IRC, one that the literature has yet to fully explore.
 \end{abstract}
+
+
 
 \input{sections/01_intro}
 \input{sections/02_related}
@@ -168,10 +170,10 @@
 \input{sections/06_discussion}
 \input{sections/07_threats}
 \input{sections/08_conclusion}
-\input{sections/09_data_availability}
 
 %%%%%%%%%%%%%%%%%%%% References
 \clearpage
+\input{sections/09_data_availability}
 \bibliography{refs}
 
 \end{document}
