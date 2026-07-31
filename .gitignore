@@ -51,3 +51,4 @@ archive/
 
 # OpenAI RAGTAG canary outputs — disposable, never archival
 canary_openai/
+venv-setfit/
