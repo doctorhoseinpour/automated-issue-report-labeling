@@ -1,0 +1,20 @@
+% !TEX root = ../SANER2027-main-labeling.tex
+% Threats to Validity
+% Claims to support: single dataset, prompt sensitivity, deterministic splits
+
+\section{Threats to Validity}
+\label{sec:threats}
+
+\myparagraph{Internal Validity.} 
+\bragtag's margin uses the same empirically derived fixed value across all models and projects with no per-project or per-model tuning, and is not framed as a universally optimal constant. Furthermore, the choice of hyperparameters and prompt format can also pose an internal threat to validity as different hyperparameters and prompts can change fine-tuning performance~\cite{heo2025study,aracena2025applying}. 
+
+
+
+\myparagraph{External Validity.}
+% Our approach classifies issues solely by their titles and descriptions, ignoring the discussion thread. In practice, an issue's label can shift through community discussion. Since this dynamic is not reflected in our dataset, this may cause false negatives. 
+Issue report text can vary substantially in writing style, vocabulary, and structure across software projects~\cite{akhavan2026linkanchorautonomousllmbasedagent}, which may threaten the generalizability of our findings.
+Another threat to external validity is generalizability across settings. We note that many configurations, including LLM architecture, prompt structure, embedding model, and retrieval technique, can each lead to different results. Assessing how far our findings generalize to other settings is itself an important question, but one that falls outside this paper's scope and warrants its own dedicated studies.
+\myparagraph{Construct Validity.}
+The inherent randomness of LLM outputs can pose a potential threat to construct validity. The reported performance metrics can vary between different runs due to LLM randomness. To mitigate this variance, we ran the experiments three times and report the average.
+
+%\myparagraph{Reliability.} \fixme{Provide the link to replication package here.} 

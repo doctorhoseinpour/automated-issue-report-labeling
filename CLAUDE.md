@@ -1,12 +1,14 @@
 # CLAUDE.md — RAGTAG vs Fine-Tuning Project
 
-This file gives Claude persistent context about this research project. Read it at the start of every session, then read [paper/SESSION_HANDOFF.md](paper/SESSION_HANDOFF.md) for the live state.
+This file gives Claude persistent context about this research project. Read it at the start of every session, then read [docs/SANER_REVISION_PLAN.md](docs/SANER_REVISION_PLAN.md) (post-rejection revision plan), [paper/TODO.md](paper/TODO.md), and [docs/MACHINES.md](docs/MACHINES.md) (which machine holds what). `paper/SESSION_HANDOFF.md` no longer exists; older references to it are stale.
 
 ---
 
 ## Project Overview
 
-**Title:** RAGTAG vs Fine-Tuning: Automated GitHub Issue Classification (ESEM 2026 submission, LIPIcs template, anonymous mode).
+**Title:** RAGTAG vs Fine-Tuning: Automated GitHub Issue Classification.
+
+**Venue history:** Submitted to ESEM 2026 (LIPIcs template, sources in `paper/`) and **rejected** (reviews summarized in [docs/SANER_REVISION_PLAN.md](docs/SANER_REVISION_PLAN.md)). **Now targeting SANER 2027 Research Track** — IEEE conference format (`\documentclass[10pt,conference]{IEEEtran}`), double-blind, 10 pages main text + 2 pages references only, mandatory Data Availability statement after the Conclusion, abstract due 2026-09-21 and paper due 2026-09-25 (UTC-12), EasyChair. The active sources are in `SANER2027/` (see [SANER2027/README.md](SANER2027/README.md)); `paper/` is the frozen ESEM version and is kept for reference only.
 
 **Goal:** An academic research paper comparing four approaches to classifying GitHub issues into `bug`, `feature`, or `question`.
 
@@ -74,9 +76,23 @@ An exploratory DeBERTa-v3-large encoder fine-tune (PA only) was run as a candida
 
 ## Infrastructure
 
-- **Local machine:** RTX 4090 (24GB VRAM). Runs all RAGTAG / zero-shot / VOTAG inference and Qwen-3B / Qwen-7B fine-tuning.
+- **Two machines share this repo** (full details in [docs/MACHINES.md](docs/MACHINES.md)):
+  - **Local PC** (this clone, `~/Desktop/my_projects/automated-issue-report-labeling`): GTX 1650 4GB — no LLM inference or fine-tuning possible. Used for paper writing, docs, and small offline analyses. No `results/` here.
+  - **BGSU lab machine:** `ssh bgsulab` (needs the BGSU VPN on). Host `heydarnoori`, RTX 4090 24GB, Ubuntu 24.04. Project lives at **`~/llm-labler`** (directory name is spelled without the second "e"). Holds the only copy of `results/` (81 GB, gitignored), `venv/`, `venv-setfit/`, and the NRP `kubectl` config. All GPU experiments run here; original RAGTAG / zero-shot / VOTAG inference and Qwen-3B / Qwen-7B fine-tuning were done on this 4090.
 - **NRP (Nautilus Research Platform):** Shared Kubernetes cluster, namespace `bgsu-cs-heydarnoori`. Pipeline lives in `scripts/nrp/`. Strategy: a single mega-runner Job ([scripts/nrp/runners/run_remaining_cells.py](scripts/nrp/runners/run_remaining_cells.py)) holds one GPU and processes all cells sequentially via subprocess, with idempotent skip on existing `preds_*.csv`. Image is SHA-pinned in [scripts/nrp/plan.yaml](scripts/nrp/plan.yaml). Two CephFS RWX PVCs back the run: `hf-cache-pvc` (model weights) and `results-pvc` (outputs + `_outbox/` for `sync.sh` pickup). Live status in [paper/SESSION_HANDOFF.md](paper/SESSION_HANDOFF.md).
 - **OSC Ascend:** Available as a fine-tuning backup via `run_server_11k.sh` (Slurm, A100 partition).
+
+---
+
+## Paper Sources
+
+| Directory | Status | Notes |
+|-----------|--------|-------|
+| `SANER2027/` | **Active** | IEEEtran sources for SANER 2027. Build with `SANER2027/build.sh`. Sections in `sections/`, tables in `tables/`, figures in `figures/`. `IEEEtran.cls`/`.bst` are vendored so it compiles without `texlive-publishers`. |
+| `paper/` | Frozen | ESEM 2026 LIPIcs submission (`main.tex`, `main.pdf`). Do not edit; copy text from here into `SANER2027/sections/` if something was lost in the port. |
+| `esem/` | Frozen | Earlier ESEM figure/section snapshot. |
+
+Paper-figure and table generators live in `scripts/paper/` and read from `results/` (lab machine only). Regenerate there, then copy the PDFs into `SANER2027/figures/`.
 
 ---
 
@@ -150,7 +166,7 @@ Fine-tuning scripts: load model → reset peak tracker → train (record `gpu_pe
 
 ## Current Status
 
-Live status, in-flight campaigns, and outstanding TODOs are tracked in [paper/SESSION_HANDOFF.md](paper/SESSION_HANDOFF.md) and [paper/TODO.md](paper/TODO.md). Read those at the start of every session.
+Live status: ESEM rejection → SANER 2027 revision. The revision plan (encoder baselines, label-homophily analysis, title/abstract reframe, stats protocol, page trimming) is in [docs/SANER_REVISION_PLAN.md](docs/SANER_REVISION_PLAN.md); the SetFit/RoBERTa results that the plan called for are already in [docs/ENCODER_BASELINES_RESULTS.md](docs/ENCODER_BASELINES_RESULTS.md) and `paper/tables/encoder_baselines.tex` (not yet integrated into `SANER2027/`). Outstanding writing TODOs are in [paper/TODO.md](paper/TODO.md). Read those at the start of every session.
 
 ---
 
@@ -159,5 +175,6 @@ Live status, in-flight campaigns, and outstanding TODOs are tracked in [paper/SE
 - **`results/` is paper-archival.** See above. OOM/superseded runs go to `archive/`, not deletion.
 - **Canonical paths only.** No `_v2` or other suffixes in active paths. Any new directory follows the structure above.
 - **Splits are deterministic** — regenerated from source CSVs on first run.
+- **`results/` lives only on the lab machine.** Any script that reads `results/` must be run over `ssh bgsulab` in `~/llm-labler`; the local PC has no copy.
 - **Image SHA discipline.** Each `scripts/nrp/plan.yaml` change requires a commit + image rebuild + push + manifest update before submission. Stale image is the failure mode that has bitten this project most.
 - **Pooled aggregation for all reported metrics.** PA and PS macro $F_1$ are both computed by concat-then-evaluate over the 3,300-issue test set (never per-project mean). See [`paper/sections/04_setup.tex`](paper/sections/04_setup.tex) §"Evaluation Metrics" for the rationale. New paper figures/tables go in `scripts/paper/` with pooling baked in; do not retrofit `scripts/analysis/*.py` (legacy, uses per-project mean for PS).

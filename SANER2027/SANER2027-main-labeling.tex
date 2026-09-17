@@ -1,0 +1,183 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SANER 2027 Research Track submission.
+%%
+%% Format : IEEE Conference Proceedings, \documentclass[10pt,conference]{IEEEtran}
+%%          (no "compsoc" / "compsocconf" option -- mandated by the CfP).
+%% Limits : 10 pages of main text (all figures/tables/appendices included)
+%%          + up to 2 extra pages containing ONLY references.
+%% Review : double-blind. No author names/affiliations; own prior work cited
+%%          in the third person; anonymous artifact links only.
+%% Extra  : a Data Availability statement must directly follow the Conclusion.
+%% Dates  : abstract 2026-09-21, paper 2026-09-25 (UTC-12), EasyChair.
+%%
+%% Build  : ./build.sh   (pdflatex -> bibtex -> pdflatex x2)
+%% IEEEtran.cls / IEEEtran.bst are shipped next to this file so the paper
+%% compiles on any TeX Live without texlive-publishers.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[10pt,conference]{IEEEtran}
+
+%% --- Encoding / fonts ------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+
+%% --- Core packages ---------------------------------------------------------
+\usepackage{cite}              % IEEE-style compressed citation lists [1]-[3]
+\usepackage{amsmath,amssymb}   % \operatorname*, \text, ...
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xspace}
+\usepackage{comment}           % \begin{comment} blocks used in the sections
+\usepackage{xcolor}
+\usepackage{balance}           % balance the two columns on the last page
+\usepackage[most]{tcolorbox}   % RQ answer boxes + prompt box (loads tikz)
+\usetikzlibrary{positioning,calc}
+
+%% --- Links / cross-references (hyperref last, cleveref after hyperref) ----
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalize,nameinlink]{cleveref}
+% IEEE house style abbreviates "Figure" as "Fig." in running text.
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Fig.}{Figs.}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+\crefname{equation}{Eq.}{Eqs.}
+\Crefname{equation}{Eq.}{Eqs.}
+
+%% --- RQ answer box ---------------------------------------------------------
+\newtcolorbox{myboxi}[1][]{
+  breakable,
+  title=#1,
+  colback=yellow!15,
+  colbacktitle=white,
+  coltitle=black,
+  fonttitle=\bfseries,
+  bottomrule=0pt,
+  toprule=0pt,
+  leftrule=3pt,
+  rightrule=3pt,
+  titlerule=0pt,
+  arc=0pt,
+  outer arc=0pt,
+  colframe=black!60,
+  left=4pt,
+  right=4pt,
+  top=3pt,
+  bottom=3pt,
+}
+
+%% --- Prompt box (kept for compatibility; the prompt figure uses tikz) ------
+\definecolor{mybkcolor}{HTML}{f2f2ff}
+\newtcolorbox{promptbox}{
+  colback=mybkcolor,
+  colframe=black,
+  boxrule=0.8pt,
+  arc=4pt,
+  left=4pt,
+  right=4pt,
+  top=4pt,
+  bottom=4pt
+}
+
+%% --- Method names ----------------------------------------------------------
+\newcommand{\votag}{VOTAG\xspace}
+\newcommand{\ragtag}{RAGTAG\xspace}
+\newcommand{\bragtag}{BRAGTAG\xspace}
+\newcommand{\irc}{IRC\xspace}
+
+%% --- Editing / reference helpers -------------------------------------------
+\newcommand{\fixme}[1]{{\color{red}[#1]}}
+\newcommand{\fixed}[1]{{\color{blue}#1}}
+\newcommand{\change}[1]{{\color{green}#1}}
+\newcommand{\rev}[1]{{\color{black}#1}}
+\newcommand{\minor}[1]{{\color{red}#1}}
+\newcommand{\secref}[1]{Section~\ref{sec:#1}}
+\newcommand{\tabref}[1]{Table~\ref{tab:#1}}
+\newcommand{\secsref}[2]{Sections~\ref{sec:#1}--\ref{sec:#2}}
+\newcommand{\tabsref}[2]{Tables~\ref{tab:#1}--\ref{tab:#2}}
+\newcommand{\figsref}[2]{Figs.~\ref{fig:#1}--\ref{fig:#2}}
+\newcommand{\figref}[1]{Fig.~\ref{fig:#1}}
+\newcommand{\eqaref}[1]{Eq.~\eqref{eq:#1}}
+\newcommand{\lstref}[1]{Listing~\ref{lst:#1}}
+\newcommand{\alref}[1]{Algorithm~\ref{al:#1}}
+
+%% --- Run-in bold paragraph headings ----------------------------------------
+\makeatletter
+\newcommand{\myparagraph}[1]{%
+  \@startsection{paragraph}{4}{\z@}%
+    {0.4\baselineskip}%
+    {-1em}%
+    {\normalfont\normalsize\bfseries\raggedright}%
+    *{#1}%
+}
+\newcommand{\myitparagraph}[1]{%
+  \@startsection{paragraph}{4}{\z@}%
+    {0.4\baselineskip}%
+    {-1em}%
+    {\normalfont\normalsize\bfseries\itshape\raggedright}%
+    *{#1}%
+}
+\makeatother
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+
+\title{Can Retrieval-Augmented Few-Shot Prompting Match LoRA Fine-Tuning for Issue Report Classification? An Empirical Study}
+
+%% Double-blind submission: anonymous author block.
+\author{%
+  \IEEEauthorblockN{Anonymous Author(s)}
+  \IEEEauthorblockA{Anonymous Affiliation(s)}
+}
+
+%% Camera-ready author block (fill in after acceptance; keep commented for review).
+\begin{comment}
+\author{\IEEEauthorblockN{Author1}
+\IEEEauthorblockA{Department of Computer Science\\
+Bowling Green State University\\
+Bowling Green, Ohio, USA\\
+author1@bgsu.edu}
+\and
+\IEEEauthorblockN{Author2}
+\IEEEauthorblockA{Department of Computer Science\\
+Bowling Green State University\\
+Bowling Green, Ohio, USA\\
+author2@bgsu.edu}
+\and
+\IEEEauthorblockN{Author3}
+\IEEEauthorblockA{Department of Computer Science\\
+Bowling Green State University\\
+Bowling Green, Ohio, USA\\
+author3@bgsu.edu}
+}
+\end{comment}
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%          Sections
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{sections/00_abstract}
+\input{sections/01_intro}
+\input{sections/02_related}
+\input{sections/03_approach}
+\input{sections/04_setup}
+\input{sections/05_evaluations}
+\input{sections/06_discussion}
+\input{sections/07_threats}
+\input{sections/08_conclusion}
+\input{sections/09_data_availability}   % mandatory, directly after Conclusion
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%          References
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
