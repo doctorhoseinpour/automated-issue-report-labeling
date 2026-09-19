@@ -1,0 +1,28 @@
+\begin{table}[t]
+  \centering\color{blue}
+  \caption{Computational cost of \ragtag, \bragtag, and LoRA fine-tuning at the configurations of \Cref{tab:method-comparison-ext}. RAM is the observed peak GPU memory; Train and Infer are wall-clock runtimes on a single GPU (\ragtag/\bragtag\ have no training phase), and Total is their sum, excluding model load.}
+  \label{tab:method-cost}
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{llcccc}
+    \toprule
+    Model & Method & RAM (GB) & Train (h) & Infer (h) & Total (h) \\
+    \midrule
+    Qwen-3B & \ragtag & 2.9 & -- & 0.18 & 0.18 \\
+     & \bragtag & 2.9 & -- & 0.22 & 0.22 \\
+     & Fine-Tune & 5.5 & 0.31 & 0.11 & 0.42 \\
+    \addlinespace[2pt]
+    Qwen-7B & \ragtag & 6.8 & -- & 0.50 & 0.50 \\
+     & \bragtag & 6.8 & -- & 0.60 & 0.60 \\
+     & Fine-Tune & 9.9 & 0.48 & 0.10 & 0.58 \\
+    \addlinespace[2pt]
+    Qwen-14B & \ragtag & 12.6 & -- & 1.37 & 1.37 \\
+     & \bragtag & 12.6 & -- & 1.35 & 1.35 \\
+     & Fine-Tune & 16.7 & 1.49 & 0.22 & 1.71 \\
+    \addlinespace[2pt]
+    Qwen-32B & \ragtag & 22.3 & -- & 4.62 & 4.62 \\
+     & \bragtag & 22.3 & -- & 4.15 & 4.15 \\
+     & Fine-Tune & 31.5 & 2.28 & 0.44 & 2.71 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

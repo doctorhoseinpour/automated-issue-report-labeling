@@ -79,3 +79,22 @@ See `../docs/SANER_REVISION_PLAN.md`. In particular: integrate the encoder
 baselines (`../paper/tables/encoder_baselines.tex`,
 `../docs/ENCODER_BASELINES_RESULTS.md`), reframe title/abstract, and trim the
 main text to the 10-page limit.
+
+## Metric-triangulation rewrite (2026-09-17)
+
+Response to ESEM reviewer B ("methodological triangulation"). Precision, recall
+and the *bug share* of predictions were added to RQ1–RQ4; **accuracy is not
+reported anywhere** (author decision: on the balanced test set it equals macro
+recall). Two candidate layouts were drafted; the author chose the one that
+extends the existing floats: `tables/bragtag_results_ext.tex`,
+`tables/method_comparison_ext.tex`, and precision/recall panels in
+`figures/vtag_kcurve_pr.pdf`, `figures/ragtag_kcurve_pr.pdf`,
+`figures/finetune_comparison_pr.pdf`. All changed text is blue (`\fixed{}`)
+until the supervisor pass. Build: 14 pages, bibliography starts on page 13, so
+about 2 pages of main text must be cut (this includes the 0.7 page noted above).
+
+Regenerate with `../scripts/paper/tab_triangulation.py` and the `--pr-panel`
+option of the three figure scripts (lab machine). Every number in the blue
+prose is in `../paper/tables/triangulation_all_cells.csv`. The alternative
+layout's assets (`paper/tables/triangulation.tex`, `paper/figures/bias_plane.*`,
+`*_kcurve_single.*`) remain under `../paper/` for reference only.

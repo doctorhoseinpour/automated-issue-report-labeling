@@ -4,10 +4,10 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 MAIN=SANER2027-main-labeling
-pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex" >/dev/null
+pdflatex -synctex=1 -interaction=nonstopmode -halt-on-error "$MAIN.tex" >/dev/null
 bibtex "$MAIN" >/dev/null
-pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex" >/dev/null
-pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex" >/dev/null
+pdflatex -synctex=1 -interaction=nonstopmode -halt-on-error "$MAIN.tex" >/dev/null
+pdflatex -synctex=1 -interaction=nonstopmode -halt-on-error "$MAIN.tex" >/dev/null
 echo "== $MAIN.pdf: $(pdfinfo "$MAIN.pdf" | awk '/^Pages/{print $2}') pages"
 echo "== Overfull boxes (should be none):"
 grep -E "^Overfull" "$MAIN.log" || echo "   none"

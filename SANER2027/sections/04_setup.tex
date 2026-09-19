@@ -25,7 +25,7 @@ We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluation
 %%%%%%%%%%%%
 \myparagraph{Evaluation Metrics.}
 \label{sec:setup-metrics}
-We report the per-class $F_1$ and the macro-averaged $F_1$ over the three classes (\emph{bug}, \emph{feature}, \emph{question}). The macro $F_1$ is calculated over the total 3{,}300-issue test set in all settings. We also report the rate of outputs that fail to parse to a valid label (\textit{invalid rate}). Invalid outputs are counted as incorrect predictions in all $F_1$ computations. For statistical significance checks, we report paired bootstrap 95\% confidence intervals on the macro $F_1$ differences between methods.
+\fixed{We report the macro-averaged $F_1$ over the three classes (\emph{bug}, \emph{feature}, \emph{question}) as the headline metric and use it to select each method's best configuration. We also report macro-averaged and per-class precision and recall. All metrics are calculated over the total 3{,}300-issue test set. We also report the rate of outputs that fail to parse to a valid label (\textit{invalid rate}). Invalid outputs are counted as incorrect predictions. For statistical significance checks, we report paired bootstrap 95\% confidence intervals on the macro $F_1$ differences between methods.}
 
 %%%%%%%%%%%%
 \myparagraph{Hardware Setup.}
