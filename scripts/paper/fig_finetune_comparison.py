@@ -10,6 +10,7 @@ Convention: pooled raw, no \\votag-rescue. See paper/sections/04_setup.tex.
 from __future__ import annotations
 
 import sys
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -53,6 +54,12 @@ def _per_class(df) -> dict[str, float]:
     return dict(zip(LABELS, f1))
 
 
+def _per_class_pr(df) -> dict[str, dict[str, float]]:
+    pr, rc, _, _ = precision_recall_fscore_support(
+        df["ground_truth"], df["predicted_label"], labels=LABELS, zero_division=0)
+    return {"P": dict(zip(LABELS, pr)), "R": dict(zip(LABELS, rc))}
+
+
 def _projects() -> list[str]:
     return sorted(p.name for p in (RESULTS / "project_specific").iterdir() if p.is_dir())
 
@@ -85,6 +92,8 @@ def _build():
             "ftpa_macro": _macro(ftpa_df),
             "ftps_pc": _per_class(ftps_df),
             "ftpa_pc": _per_class(ftpa_df),
+            "ftps_pr": _per_class_pr(ftps_df),
+            "ftpa_pr": _per_class_pr(ftpa_df),
         }
     return rows
 
@@ -157,6 +166,60 @@ def _plot(rows, out_pdf, out_png):
     plt.close(fig)
 
 
+def _plot_pr(rows, out_pdf, out_png):
+    """Layout B variant: (a) unchanged; (b) split into per-class precision change
+    (top) and recall change (bottom) from Fine-Tune PS to PA."""
+    CLASS_COLORS = {"bug": "#C44E52", "feature": "#55A868", "question": "#8172B2"}
+    fig = plt.figure(figsize=(13.0, 5.2))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.0, 1.4], hspace=0.10, wspace=0.16)
+    ax_l = fig.add_subplot(gs[:, 0])
+    ax_p = fig.add_subplot(gs[0, 1])
+    ax_r = fig.add_subplot(gs[1, 1], sharex=ax_p)
+
+    n_models = len(MODELS)
+    x = np.arange(n_models)
+    width = 0.27
+    for vals, off, color, lbl in (
+        ([rows[l]["rag_macro"] for _, l in MODELS], -width, RAG_COLOR, "RAGTAG-PS (best $k$)"),
+        ([rows[l]["ftps_macro"] for _, l in MODELS], 0.0, FT_PS_COLOR, "Fine-Tune PS"),
+        ([rows[l]["ftpa_macro"] for _, l in MODELS], width, FT_PA_COLOR, "Fine-Tune PA"),
+    ):
+        bars = ax_l.bar(x + off, vals, width, color=color, edgecolor="0.3", linewidth=0.5, label=lbl)
+        ax_l.bar_label(bars, fmt="%.3f", padding=2, fontsize=7.5)
+    ax_l.set_xticks(x)
+    ax_l.set_xticklabels([l for _, l in MODELS], fontsize=9)
+    ax_l.set_ylabel("Macro $F_1$ (pooled)")
+    ax_l.set_title("(a) Macro $F_1$: RAGTAG-PS vs Fine-Tune", fontsize=10, fontweight="bold")
+    allv = [rows[l][k] for _, l in MODELS for k in ("rag_macro", "ftps_macro", "ftpa_macro")]
+    ax_l.set_ylim(min(allv) * 0.94, max(allv) * 1.06)
+    ax_l.grid(True, axis="y", alpha=0.3)
+    ax_l.legend(loc="upper left", fontsize=8.5, frameon=False)
+
+    width2 = 0.26
+    offs = {"bug": -width2, "feature": 0.0, "question": +width2}
+    for ax, metric, name in ((ax_p, "P", "precision"), (ax_r, "R", "recall")):
+        for cls in LABELS:
+            deltas = [rows[l]["ftpa_pr"][metric][cls] - rows[l]["ftps_pr"][metric][cls] for _, l in MODELS]
+            bars = ax.bar(x + offs[cls], deltas, width2, color=CLASS_COLORS[cls],
+                          edgecolor="0.3", linewidth=0.5, label=cls)
+            ax.bar_label(bars, fmt="%+.3f", padding=2, fontsize=7)
+        ax.axhline(0, color="0.3", linewidth=0.8)
+        ax.set_ylabel(f"$\\Delta$ {name} (PA $-$ PS)")
+        ax.grid(True, axis="y", alpha=0.3)
+        vals = [rows[l]["ftpa_pr"][metric][c] - rows[l]["ftps_pr"][metric][c] for _, l in MODELS for c in LABELS]
+        pad = (max(vals) - min(vals)) * 0.18
+        ax.set_ylim(min(vals) - pad, max(vals) + pad * 1.6)
+    ax_p.set_title("(b) Per-class precision / recall change from Fine-Tune PS $\\to$ PA",
+                   fontsize=10, fontweight="bold")
+    ax_p.tick_params(labelbottom=False)
+    ax_p.legend(loc="upper right", fontsize=8.5, frameon=False, ncol=3)
+    ax_r.set_xticks(x)
+    ax_r.set_xticklabels([l for _, l in MODELS], fontsize=9)
+    fig.savefig(out_pdf, bbox_inches="tight")
+    fig.savefig(out_png, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     rows = _build()
@@ -178,6 +241,15 @@ def main():
     _plot(rows, out_pdf, out_png)
     print(f"wrote {out_pdf.relative_to(REPO_ROOT)}")
     print(f"wrote {out_png.relative_to(REPO_ROOT)}")
+
+    if "--pr-panel" in sys.argv:  # layout B
+        _plot_pr(rows, FIG_DIR / "finetune_comparison_pr.pdf", FIG_DIR / "finetune_comparison_pr.png")
+        print("wrote paper/figures/finetune_comparison_pr.{pdf,png}")
+        for _, lbl in MODELS:
+            r = rows[lbl]
+            for c in LABELS:
+                print(f"  {lbl:<9} {c:<8} dP={r['ftpa_pr']['P'][c]-r['ftps_pr']['P'][c]:+.3f} "
+                      f"dR={r['ftpa_pr']['R'][c]-r['ftps_pr']['R'][c]:+.3f}")
 
 
 if __name__ == "__main__":

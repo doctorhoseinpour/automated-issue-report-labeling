@@ -18,6 +18,7 @@ Convention: pooled macro F1, see paper/sections/04_setup.tex.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -106,6 +107,96 @@ def _per_class_f1(df: pd.DataFrame) -> dict[str, float]:
         labels=LABELS, zero_division=0,
     )
     return dict(zip(LABELS, f1))
+
+
+def _per_class_pr(df: pd.DataFrame) -> dict[str, dict[str, float]]:
+    """Per-class precision and recall (metric-triangulation panel, layout B)."""
+    pr, rc, _, _ = precision_recall_fscore_support(
+        df["ground_truth"], df["predicted_label"], labels=LABELS, zero_division=0)
+    return {"P": dict(zip(LABELS, pr)), "R": dict(zip(LABELS, rc))}
+
+
+def _kcurve_axes(ax_l, curves: dict) -> None:
+    """Shared left panel (macro F1 vs k, PS solid / PA dashed, VOTAG floor)."""
+    for tag, label, color, marker in MODELS:
+        for setting, ls, lw, alpha, mfc in [("PS", "-", 1.8, 1.00, color),
+                                            ("PA", "--", 1.0, 0.55, "white")]:
+            ks, ys = [], []
+            for k in K_VALUES:
+                v = curves[setting][tag][k]
+                if v is not None:
+                    ks.append(k); ys.append(v)
+            if ks:
+                ax_l.plot(ks, ys, color=color, linestyle=ls, linewidth=lw, marker=marker,
+                          markersize=6.0, markerfacecolor=mfc, markeredgecolor=color,
+                          alpha=alpha, label=(label if setting == "PS" else None))
+    ax_l.axhline(VOTAG_BEST_F1, color="0.35", linestyle=":", linewidth=1.4,
+                 label=f"VTAG best ({VOTAG_BEST_SETTING}, $k{{=}}{VOTAG_BEST_K}$): {VOTAG_BEST_F1:.3f}")
+    ax_l.axvline(0, color="black", linestyle=":", alpha=0.35, linewidth=0.9)
+    ax_l.set_xlabel(r"$k$ (number of retrieved few-shot neighbors; $k{=}0$ is zero-shot)")
+    ax_l.set_ylabel("Macro $F_1$ (pooled)")
+    ax_l.set_xticks(K_VALUES)
+    ax_l.grid(True, alpha=0.3)
+    style_handles = [
+        Line2D([0], [0], color="black", linestyle="-", linewidth=1.8, marker="o", markersize=6,
+               markerfacecolor="black", label="PS (solid, filled)"),
+        Line2D([0], [0], color="black", linestyle="--", linewidth=1.0, marker="o", markersize=6,
+               markerfacecolor="white", markeredgecolor="black", alpha=0.7, label="PA (dashed, hollow)"),
+    ]
+    handles, labels = ax_l.get_legend_handles_labels()
+    ax_l.legend(handles + style_handles, labels + [h.get_label() for h in style_handles],
+                loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=4, fontsize=8.5,
+                frameon=False, borderaxespad=0)
+
+
+def _plot_single(curves: dict, out_pdf: Path, out_png: Path) -> None:
+    """Layout A: k-curve only, column width."""
+    fig, ax = plt.subplots(figsize=(6.2, 4.0))
+    _kcurve_axes(ax, curves)
+    fig.tight_layout(rect=(0, 0, 1, 0.90))
+    fig.savefig(out_pdf, bbox_inches="tight")
+    fig.savefig(out_png, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _plot_pr(curves: dict, pr: dict, out_pdf: Path, out_png: Path) -> None:
+    """Layout B: left k-curve; right two stacked panels with per-class precision
+    (top) and recall (bottom) at each model's best PS k. A black tick on each bar
+    marks the same model's zero-shot value."""
+    fig = plt.figure(figsize=(13.5, 5.0))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.45, 1.0], hspace=0.12, wspace=0.18)
+    ax_l = fig.add_subplot(gs[:, 0])
+    ax_p = fig.add_subplot(gs[0, 1])
+    ax_r = fig.add_subplot(gs[1, 1], sharex=ax_p)
+    _kcurve_axes(ax_l, curves)
+
+    n_models = len(MODELS)
+    x = np.arange(len(LABELS))
+    width = 0.20
+    for ax, metric, name in ((ax_p, "P", "precision"), (ax_r, "R", "recall")):
+        for i, (_, model_label, color, _) in enumerate(MODELS):
+            off = (i - (n_models - 1) / 2) * width
+            vals = [pr[model_label]["best"][metric][lab] for lab in LABELS]
+            zs = [pr[model_label]["zs"][metric][lab] for lab in LABELS]
+            bars = ax.bar(x + off, vals, width, color=color,
+                          label=f"{model_label} (k={pr[model_label]['best_k']})")
+            ax.bar_label(bars, fmt="%.2f", padding=1, fontsize=7)
+            ax.scatter(x + off, zs, marker="_", s=110, color="black", linewidths=1.6, zorder=6)
+        ax.set_ylabel(f"Per-class {name}")
+        ax.set_ylim(0.25, 1.0)
+        ax.grid(True, axis="y", alpha=0.3)
+    ax_p.tick_params(labelbottom=False)
+    ax_r.set_xticks(x)
+    ax_r.set_xticklabels([lab.capitalize() for lab in LABELS])
+    handles, labels = ax_p.get_legend_handles_labels()
+    handles.append(Line2D([0], [0], marker="_", linestyle="", color="black", markersize=10,
+                          markeredgewidth=1.6, label="zero-shot ($k{=}0$)"))
+    labels.append("zero-shot ($k{=}0$)")
+    ax_p.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=5,
+                fontsize=8, frameon=False, borderaxespad=0)
+    fig.savefig(out_pdf, bbox_inches="tight")
+    fig.savefig(out_png, dpi=160, bbox_inches="tight")
+    plt.close(fig)
 
 
 def _build_curves() -> dict:
@@ -229,6 +320,21 @@ def main() -> None:
     _plot(curves, per_class, out_pdf, out_png)
     print(f"\nwrote {out_pdf.relative_to(REPO_ROOT)}")
     print(f"wrote {out_png.relative_to(REPO_ROOT)}")
+
+    if "--single-panel" in sys.argv:  # layout A
+        _plot_single(curves, FIG_DIR / "ragtag_kcurve_single.pdf", FIG_DIR / "ragtag_kcurve_single.png")
+        print("wrote paper/figures/ragtag_kcurve_single.{pdf,png}")
+    if "--pr-panel" in sys.argv:  # layout B
+        pr: dict = {}
+        for tag, label, color, _ in MODELS:
+            best_k = per_class[label]["best_k"]
+            zs_path = RESULTS / "agnostic" / tag / "ragtag" / "predictions" / "preds_zero_shot.csv"
+            zs_df = pd.read_csv(zs_path, usecols=["ground_truth", "predicted_label"])
+            pr[label] = {"best_k": best_k,
+                         "best": _per_class_pr(_ps_pooled(tag, best_k, projects)),
+                         "zs": _per_class_pr(zs_df)}
+        _plot_pr(curves, pr, FIG_DIR / "ragtag_kcurve_pr.pdf", FIG_DIR / "ragtag_kcurve_pr.png")
+        print("wrote paper/figures/ragtag_kcurve_pr.{pdf,png}")
 
     print("\n--- per-class F1 at each model's best PS k ---")
     print(f"{'model':<10} {'k':<3}  " + "  ".join(f"{lab:<8}" for lab in LABELS))

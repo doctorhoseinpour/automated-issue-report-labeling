@@ -11,6 +11,7 @@ Outputs a single 2-panel figure used by Section 5 (RQ1):
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -40,6 +41,89 @@ def _per_class_f1(df: pd.DataFrame) -> dict[str, float]:
         labels=LABELS, zero_division=0,
     )
     return dict(zip(LABELS, f1))
+
+
+def _per_class_pr(df: pd.DataFrame) -> dict[str, dict[str, float]]:
+    """Per-class precision and recall (metric-triangulation panel, layout B)."""
+    pr, rc, _, _ = precision_recall_fscore_support(
+        df["ground_truth"], df["predicted_label"],
+        labels=LABELS, zero_division=0,
+    )
+    return {"P": dict(zip(LABELS, pr)), "R": dict(zip(LABELS, rc))}
+
+
+def _plot_single(curve: pd.DataFrame, out_pdf: Path, out_png: Path) -> None:
+    """Layout A: k-curve only, column width (per-class numbers live in the
+    triangulation table)."""
+    fig, ax = plt.subplots(figsize=(5.4, 3.3))
+    ax.plot(curve["k"], curve["pa_f1"], marker="o", markersize=4,
+            linewidth=1.6, color="C0", label="PA (project-agnostic)")
+    ax.plot(curve["k"], curve["ps_f1"], marker="s", markersize=4,
+            linewidth=1.6, color="C1", label="PS (project-specific)")
+    for k in RAGTAG_KS:
+        ax.axvline(k, color="black", linestyle="--", alpha=0.18, linewidth=0.9)
+    pa_best = curve.loc[curve["pa_f1"].idxmax()]
+    ps_best = curve.loc[curve["ps_f1"].idxmax()]
+    ax.scatter([pa_best["k"]], [pa_best["pa_f1"]], s=110, facecolors="none",
+               edgecolors="C0", linewidths=1.8, zorder=5)
+    ax.scatter([ps_best["k"]], [ps_best["ps_f1"]], s=110, facecolors="none",
+               edgecolors="C1", linewidths=1.8, zorder=5)
+    ax.set_xlabel(r"$k$ (number of retrieved neighbors)")
+    ax.set_ylabel("Macro $F_1$")
+    ax.legend(loc="lower right", fontsize=9, frameon=False)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(0.5, 30.5)
+    fig.tight_layout()
+    fig.savefig(out_pdf)
+    fig.savefig(out_png, dpi=160)
+    plt.close(fig)
+
+
+def _plot_pr(curve: pd.DataFrame, pr: dict, out_pdf: Path, out_png: Path) -> None:
+    """Layout B: left k-curve, right per-class precision (hatched) and recall
+    (filled) at each setting's best k."""
+    fig, (ax_l, ax_r) = plt.subplots(1, 2, figsize=(12.0, 4.2),
+                                      gridspec_kw={"width_ratios": [1.4, 1.0]})
+    ax_l.plot(curve["k"], curve["pa_f1"], marker="o", markersize=4,
+              linewidth=1.6, color="C0", label="PA (project-agnostic)")
+    ax_l.plot(curve["k"], curve["ps_f1"], marker="s", markersize=4,
+              linewidth=1.6, color="C1", label="PS (project-specific)")
+    for k in RAGTAG_KS:
+        ax_l.axvline(k, color="black", linestyle="--", alpha=0.18, linewidth=0.9)
+    pa_best = curve.loc[curve["pa_f1"].idxmax()]
+    ps_best = curve.loc[curve["ps_f1"].idxmax()]
+    ax_l.scatter([pa_best["k"]], [pa_best["pa_f1"]], s=110, facecolors="none",
+                 edgecolors="C0", linewidths=1.8, zorder=5)
+    ax_l.scatter([ps_best["k"]], [ps_best["ps_f1"]], s=110, facecolors="none",
+                 edgecolors="C1", linewidths=1.8, zorder=5)
+    ax_l.set_xlabel(r"$k$ (number of retrieved neighbors)")
+    ax_l.set_ylabel("Macro $F_1$")
+    ax_l.legend(loc="lower right", fontsize=9, frameon=False)
+    ax_l.grid(True, alpha=0.3)
+    ax_l.set_xlim(0.5, 30.5)
+
+    x = np.arange(len(LABELS))
+    w = 0.19
+    spec = [("pa", "P", -1.5, "C0", "//"), ("pa", "R", -0.5, "C0", None),
+            ("ps", "P", 0.5, "C1", "//"), ("ps", "R", 1.5, "C1", None)]
+    for setting, metric, off, color, hatch in spec:
+        vals = [pr[setting][metric][lab] for lab in LABELS]
+        k_best = int(pa_best["k"]) if setting == "pa" else int(ps_best["k"])
+        bars = ax_r.bar(x + off * w, vals, w, color=color if hatch is None else "white",
+                        edgecolor=color, hatch=hatch, linewidth=1.2,
+                        label=f"{setting.upper()} (k={k_best}) {'precision' if metric == 'P' else 'recall'}")
+        ax_r.bar_label(bars, fmt="%.2f", padding=2, fontsize=7.5)
+    ax_r.axhline(1 / 3, color="0.5", linestyle=":", linewidth=0.9)
+    ax_r.set_xticks(x)
+    ax_r.set_xticklabels([lab.capitalize() for lab in LABELS])
+    ax_r.set_ylabel("Per-class precision / recall")
+    ax_r.set_ylim(0.40, 0.85)
+    ax_r.legend(loc="upper right", fontsize=8, frameon=False, ncol=2)
+    ax_r.grid(True, axis="y", alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(out_pdf)
+    fig.savefig(out_png, dpi=160)
+    plt.close(fig)
 
 
 def _pa_preds(k: int) -> pd.DataFrame:
@@ -139,6 +223,18 @@ def main() -> None:
     _plot(curve, per_class, out_pdf, out_png)
     print(f"\nwrote {out_pdf.relative_to(REPO_ROOT)}")
     print(f"wrote {out_png.relative_to(REPO_ROOT)}")
+
+    if "--single-panel" in sys.argv:  # layout A
+        _plot_single(curve, FIG_DIR / "vtag_kcurve_single.pdf", FIG_DIR / "vtag_kcurve_single.png")
+        print("wrote paper/figures/vtag_kcurve_single.{pdf,png}")
+    if "--pr-panel" in sys.argv:  # layout B
+        pr = {"pa": _per_class_pr(_pa_preds(pa_best_k)),
+              "ps": _per_class_pr(_ps_preds_pooled(projects, ps_best_k))}
+        _plot_pr(curve, pr, FIG_DIR / "vtag_kcurve_pr.pdf", FIG_DIR / "vtag_kcurve_pr.png")
+        print("wrote paper/figures/vtag_kcurve_pr.{pdf,png}")
+        for s_ in ("pa", "ps"):
+            for lab in LABELS:
+                print(f"  {s_.upper()} {lab:<9} P={pr[s_]['P'][lab]:.4f} R={pr[s_]['R'][lab]:.4f}")
 
     pa_best = curve.loc[curve["pa_f1"].idxmax()]
     ps_best = curve.loc[curve["ps_f1"].idxmax()]
