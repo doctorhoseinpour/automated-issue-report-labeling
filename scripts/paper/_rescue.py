@@ -21,13 +21,15 @@ single agnostic file.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Literal
 
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RESULTS = REPO_ROOT / "results" / "issues11k"
+# RESULTS_DIR overrides the lab-machine default, e.g. for a partial copy pulled elsewhere.
+RESULTS = Path(os.environ.get("RESULTS_DIR", REPO_ROOT / "results" / "issues11k"))
 
 VTAG_BEST_K_PS = 15  # VTAG-PS pooled peak (macro F1 = 0.5951)
 VTAG_BEST_K_PA = 16  # VTAG-PA pooled peak (macro F1 = 0.6039)

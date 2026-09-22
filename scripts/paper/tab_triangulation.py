@@ -5,6 +5,8 @@ Writes
   paper/tables/triangulation.tex             layout A: one paper-wide table* (22 rows)
   paper/tables/bragtag_results_ext.tex       layout B: bragtag_results + P/R + bug share
   paper/tables/method_comparison_ext.tex     layout B: method_comparison + macro P/R + question P/R
+  paper/tables/fallback_macro_f1.csv         macro F1 with the VOTAG fallback (input of
+                                             tab_results_master.py, the SANER 2027 master table)
 and prints the numbers quoted in the prose (findings F1-F7 of the plan).
 
 Convention: pooled, raw predictions, best k on raw macro F1. No accuracy column
@@ -19,7 +21,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _triangulation import (  # noqa: E402
-    KS_RAG, LABELS, MODEL_LABELS, REPO_ROOT, all_cells, best_configs,
+    KS_RAG, LABELS, MODEL_LABELS, REPO_ROOT, _norm, all_cells, best_configs, metrics,
 )
 import tab_method_comparison as tmc  # noqa: E402  (cost columns, raw mode)
 
@@ -197,6 +199,46 @@ def emit_method_cost(cost_rows) -> str:
     return "\n".join(L)
 
 
+def _finetune_ps_rescued(model_tag: str) -> float:
+    """Pooled macro F1 of Fine-Tune-PS after substituting VOTAG-PS's vote (k=15) for
+    every invalid output, per project by test_idx: the same rule that
+    _rescue.load_rescued_preds applies to RAGTAG/BRAGTAG in PS."""
+    from _rescue import RESULTS, VTAG_BEST_K_PS, _project_list
+    parts = []
+    for proj in _project_list():
+        ft = pd.read_csv(RESULTS / "project_specific" / proj / model_tag / "finetune_fixed"
+                         / "preds_finetune_fixed.csv",
+                         usecols=["test_idx", "ground_truth", "predicted_label"])
+        vtg = pd.read_csv(RESULTS / "project_specific" / proj / "vtag" / "predictions"
+                          / f"preds_k{VTAG_BEST_K_PS}.csv",
+                          usecols=["test_idx", "predicted_label"]).set_index("test_idx")
+        inv = ~ft["predicted_label"].astype(str).str.lower().str.strip().isin(LABELS)
+        if inv.any():
+            ft.loc[inv, "predicted_label"] = ft.loc[inv, "test_idx"].map(vtg["predicted_label"])
+        parts.append(ft)
+    return metrics(_norm(pd.concat(parts, ignore_index=True)))["f1_macro"]
+
+
+def emit_fallback_csv(cost_rows) -> str:
+    """paper/tables/fallback_macro_f1.csv: macro F1 after the VOTAG fallback for the
+    RQ4 protocol rows (RAGTAG-PS / BRAGTAG-PS at best k, Fine-Tune-PA) and for
+    Fine-Tune-PS (author request, 2026-09-22). Read by scripts/paper/tab_results_master.py,
+    which can therefore run on any machine."""
+    L = [
+        "# Macro F1 after the VOTAG fallback for invalid LLM outputs (pooled over 3,300 test issues).",
+        "# RAGTAG/BRAGTAG: PS best k, fallback = VOTAG-PS at k=15 (unfiltered neighbors).",
+        "# Fine-Tune PA: fallback = VOTAG-PA at k=16.  Fine-Tune PS: fallback = VOTAG-PS at k=15.",
+        "# Written by scripts/paper/tab_triangulation.py on the lab machine.",
+        "method,setting,model,k,f1_macro_fallback",
+    ]
+    for m, method, setting, _name, c in cost_rows:
+        k = "-" if method == "finetune" else str(c["best_k"])
+        L.append(f"{method},{setting},{m},{k},{c['macro_rescued']:.5f}")
+    for tag, m in tmc.MODELS:
+        L.append(f"finetune,PS,{m},-,{_finetune_ps_rescued(tag):.5f}")
+    return "\n".join(L) + "\n"
+
+
 # ---------------------------------------------------------- prose numbers --
 def print_prose_numbers(cells: pd.DataFrame, best: pd.DataFrame) -> None:
     def b(method, setting, model):
@@ -265,9 +307,10 @@ def main() -> None:
     cost_rows = _cost_rows()
     (TABLES_DIR / "method_comparison_ext.tex").write_text(emit_method_comparison_ext(best, cost_rows))
     (TABLES_DIR / "method_cost.tex").write_text(emit_method_cost(cost_rows))
+    (TABLES_DIR / "fallback_macro_f1.csv").write_text(emit_fallback_csv(cost_rows))
     print_prose_numbers(cells, best)
     for f in ("triangulation_all_cells.csv", "triangulation.tex", "bragtag_results_ext.tex",
-              "method_comparison_ext.tex", "method_cost.tex"):
+              "method_comparison_ext.tex", "method_cost.tex", "fallback_macro_f1.csv"):
         print(f"wrote paper/tables/{f}")
 
 

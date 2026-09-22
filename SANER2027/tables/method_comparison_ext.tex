@@ -1,6 +1,6 @@
-\begin{table*}[t]
+\begin{table*}[!t]
   \centering\color{blue}
-  \caption{\ragtag, \bragtag, and LoRA fine-tuning at each method's best configuration (\ragtag/\bragtag\ at their best $k$ under the PS data scope, fine-tuning under PA; pooled, raw predictions). $P$/$R$ are per-class precision/recall, $P_{\text{mac}}$/$R_{\text{mac}}$ their macro averages. The +\votag\ column reports macro $F_1$ after using \votag\ as a fallback for invalid LLM outputs.}
+  \caption{\ragtag, \bragtag, and LoRA fine-tuning at each method's best configuration (\ragtag/\bragtag\ at their best $k$ under the PS data scope, fine-tuning under PA; pooled, raw predictions). $P$/$R$ are per-class precision/recall, $P_{\text{mac}}$/$R_{\text{mac}}$ their macro averages. The +\votag\ column reports macro $F_1$ after using \votag\ as a fallback for invalid LLM outputs\coauthor{, with unfiltered PS neighbors at $k{=}15$ for \ragtag/\bragtag\ and PA neighbors at $k{=}16$ for fine-tuning}.}
   \label{tab:method-comparison-ext}
   \footnotesize
   \setlength{\tabcolsep}{3.2pt}

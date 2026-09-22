@@ -1,0 +1,11 @@
+# Per-(project, model) macro-F1 difference: BRAGTAG (PS, best k) minus PA LoRA fine-tuning,
+# evaluated on each project's 300 test issues (raw predictions).
+# Provenance: values transcribed 2026-09-22 from the cell labels of the previously published
+# SANER2027/figures/per_project_diff.pdf (3 d.p.). Regenerate on the lab machine with
+#   venv/bin/python scripts/paper/fig_per_project_diff.py --from-results
+# which overwrites this file with full-precision values.
+model,k,ansible,bitcoin,dart-lang,roslyn,react,flutter,kubernetes,TypeScript,vscode,opencv,tensorflow
+Qwen-3B,6,0.000,-0.019,0.013,-0.058,0.008,0.064,-0.003,-0.015,0.036,0.032,-0.001
+Qwen-7B,12,-0.087,0.050,-0.043,-0.028,-0.017,-0.027,-0.044,-0.028,-0.011,0.017,-0.053
+Qwen-14B,15,-0.095,0.021,-0.042,-0.088,-0.072,-0.010,-0.011,-0.034,-0.020,0.054,-0.014
+Qwen-32B,12,-0.060,0.048,0.011,0.005,-0.048,-0.005,0.050,-0.042,0.080,0.100,-0.026

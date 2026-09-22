@@ -1,23 +1,23 @@
-\begin{table}[t]
-  \centering
-  \caption{Encoder baselines on the 11-project benchmark under both data scopes (PS pooled concat-then-evaluate). SetFit follows the literature configuration (batch 16, 1 epoch, 20 pair-generation iterations, logistic-regression head); RoBERTa-base follows Colavito et al.'s recipe (lr $2{\times}10^{-5}$, batch 16, weight decay 0.01, 15 epochs). Encoders produce no invalid outputs by construction. Times are wall-clock on a single GPU and exclude model load; PS times are summed across the 11 per-project runs.}
+% Previously recorded encoder results, now included in the evaluation.
+% Provenance: docs/ENCODER_BASELINES_RESULTS.md (single seed 42, RTX 4090).
+\begin{table*}[!t]
+  \centering\color{coauthorcolor}
+  \caption{Encoder baselines on the same 11-project benchmark (raw predictions, pooled across test issues). MPNet denotes the generic encoder and Issues the issue-adapted encoder. $P_{\mathrm{mac}}$ and $R_{\mathrm{mac}}$ are macro precision and recall. GPU memory is the observed peak; training and inference times are in minutes, measured on an RTX~4090, excluding model loading. PS times sum eleven project runs. Encoders produce no invalid outputs.}
   \label{tab:encoder-baselines}
   \footnotesize
   \setlength{\tabcolsep}{4pt}
-  \resizebox{\linewidth}{!}{%
-  \begin{tabular}{llcccccccccc}
+  \begin{tabular}{llrrrrrrrrr}
     \toprule
-    Method & Scope & Macro $F_1$ & Acc. & $P_{\text{macro}}$ & $R_{\text{macro}}$ & $F_1^{\text{bug}}$ & $F_1^{\text{feat}}$ & $F_1^{\text{q}}$ & RAM (GB) & Train (min) & Infer (min) \\
+    Method & Scope & Macro $F_1$ & $P_{\mathrm{mac}}$ & $R_{\mathrm{mac}}$ & $F_1^{\mathrm{bug}}$ & $F_1^{\mathrm{feature}}$ & $F_1^{\mathrm{question}}$ & GPU (GB) & Train (min) & Infer (min) \\
     \midrule
-    SetFit (mpnet) & PA & 0.797 & 0.798 & 0.800 & 0.798 & 0.800 & 0.840 & 0.751 & 14.1 & 43.3 & 0.2 \\
-     & PS & 0.805 & 0.805 & 0.806 & 0.805 & 0.801 & 0.848 & 0.767 & 14.1 & 43.2 & 0.2 \\
+    SetFit (MPNet) & PA & 0.797 & 0.800 & 0.798 & 0.800 & 0.840 & 0.751 & 14.1 & 43.3 & 0.2 \\
+     & PS & 0.805 & 0.806 & 0.805 & 0.801 & 0.848 & 0.767 & 14.1 & 43.2 & 0.2 \\
     \addlinespace[2pt]
-    SetFit (issues) & PA & 0.794 & 0.794 & 0.794 & 0.794 & 0.791 & 0.839 & 0.751 & 21.0 & 59.4 & 0.2 \\
-     & PS & 0.810 & 0.810 & 0.813 & 0.810 & 0.810 & 0.850 & 0.770 & 21.0 & 59.3 & 0.2 \\
+    SetFit (Issues) & PA & 0.794 & 0.794 & 0.794 & 0.791 & 0.839 & 0.751 & 21.0 & 59.4 & 0.2 \\
+     & PS & 0.810 & 0.813 & 0.810 & 0.810 & 0.850 & 0.770 & 21.0 & 59.3 & 0.2 \\
     \addlinespace[2pt]
-    RoBERTa-base & PA & 0.771 & 0.775 & 0.779 & 0.775 & 0.786 & 0.825 & 0.704 & 4.8 & 4.2 & 0.1 \\
-     & PS & 0.757 & 0.758 & 0.759 & 0.758 & 0.763 & 0.807 & 0.700 & 4.8 & 4.2 & 0.1 \\
+    RoBERTa-base & PA & 0.771 & 0.779 & 0.775 & 0.786 & 0.825 & 0.704 & 4.8 & 4.2 & 0.1 \\
+     & PS & 0.757 & 0.759 & 0.758 & 0.763 & 0.807 & 0.700 & 4.8 & 4.2 & 0.1 \\
     \bottomrule
-  \end{tabular}%
-  }
-\end{table}
+  \end{tabular}
+\end{table*}

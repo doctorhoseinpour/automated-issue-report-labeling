@@ -1,26 +1,19 @@
-\begin{table*}[t]
-  \centering\color{blue}
-  \caption{\ragtag\ vs.\ \bragtag\ at each model's best $k$ (PS, pooled, raw predictions). $P$/$R$/$F_1$ are per-class precision, recall, and $F_1$; $P_{\text{mac}}$/$R_{\text{mac}}$ are macro precision and recall.}
+% Deltas calculated before rounding from paper/tables/triangulation_all_cells.csv.
+% Full raw precision/recall values remain in the RQ4 comparison table.
+\begin{table}[t]
+  \centering\color{coauthorcolor}
+  \caption{Changes from \ragtag\ to \bragtag\ at their best observed PS configurations. $k_R$ and $k_B$ are the respective selected neighborhood sizes; all four $\Delta$ columns report $F_1$ differences (\bragtag\ minus \ragtag), calculated before rounding.}
   \label{tab:bragtag-results}
   \footnotesize
-  \setlength{\tabcolsep}{3.5pt}
-  \begin{tabular}{llccccrrrrrrrrrc}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{lrrrrrr}
     \toprule
-    Model & Method & $k^*$ & Macro $F_1$ & $P_{\text{mac}}$ & $R_{\text{mac}}$ & \multicolumn{3}{c}{Bug} & \multicolumn{3}{c}{Feature} & \multicolumn{3}{c}{Question} & Invalid \\
-    \cmidrule(lr){7-9}\cmidrule(lr){10-12}\cmidrule(lr){13-15}
-     & & & & & & $P$ & $R$ & $F_1$ & $P$ & $R$ & $F_1$ & $P$ & $R$ & $F_1$ & \\
+    Model & $k_R$ & $k_B$ & $\Delta$ Macro & $\Delta$ Bug & $\Delta$ Feature & $\Delta$ Question \\
     \midrule
-    Qwen-3B & \ragtag & 3 & 0.697 & 0.709 & 0.703 & 0.638 & 0.803 & 0.711 & 0.794 & 0.813 & 0.803 & 0.694 & 0.494 & 0.577 & 0.2\% \\
-     & \bragtag & 6 & 0.714 & 0.720 & 0.708 & 0.723 & 0.665 & 0.693 & 0.794 & 0.813 & 0.803 & 0.644 & 0.646 & 0.645 & 1.8\% \\
-    \addlinespace[2pt]
-    Qwen-7B & \ragtag & 6 & 0.718 & 0.761 & 0.715 & 0.657 & 0.824 & 0.731 & 0.787 & 0.848 & 0.816 & 0.838 & 0.474 & 0.605 & 3.5\% \\
-     & \bragtag & 12 & 0.738 & 0.766 & 0.729 & 0.713 & 0.774 & 0.742 & 0.761 & 0.855 & 0.805 & 0.825 & 0.558 & 0.666 & 3.8\% \\
-    \addlinespace[2pt]
-    Qwen-14B & \ragtag & 12 & 0.732 & 0.782 & 0.723 & 0.651 & 0.844 & 0.735 & 0.839 & 0.836 & 0.838 & 0.855 & 0.489 & 0.622 & 4.5\% \\
-     & \bragtag & 15 & 0.756 & 0.788 & 0.742 & 0.696 & 0.803 & 0.745 & 0.836 & 0.844 & 0.840 & 0.832 & 0.579 & 0.683 & 4.7\% \\
-    \addlinespace[2pt]
-    Qwen-32B & \ragtag & 12 & 0.767 & 0.799 & 0.752 & 0.701 & 0.828 & 0.759 & 0.855 & 0.828 & 0.842 & 0.840 & 0.598 & 0.699 & 4.6\% \\
-     & \bragtag & 12 & 0.781 & 0.801 & 0.767 & 0.748 & 0.804 & 0.775 & 0.847 & 0.833 & 0.840 & 0.808 & 0.664 & 0.729 & 4.0\% \\
+    Qwen-3B  & 3  & 6  & $+0.017$ & $-0.018$ & $0.000$  & $+0.068$ \\
+    Qwen-7B  & 6  & 12 & $+0.020$ & $+0.011$ & $-0.011$ & $+0.061$ \\
+    Qwen-14B & 12 & 15 & $+0.024$ & $+0.010$ & $+0.002$ & $+0.060$ \\
+    Qwen-32B & 12 & 12 & $+0.015$ & $+0.016$ & $-0.002$ & $+0.030$ \\
     \bottomrule
   \end{tabular}
-\end{table*}
+\end{table}

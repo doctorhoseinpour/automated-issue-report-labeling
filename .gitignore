@@ -52,3 +52,6 @@ archive/
 # OpenAI RAGTAG canary outputs — disposable, never archival
 canary_openai/
 venv-setfit/
+
+# Small per-cell metric CSVs that the SANER 2027 figure/table generators read (scripts/paper/*.py)
+!paper/tables/*.csv

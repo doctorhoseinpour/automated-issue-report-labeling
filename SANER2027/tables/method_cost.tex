@@ -1,3 +1,11 @@
+% Provenance (verified 2026-09-22 against scripts/paper/tab_method_comparison.py and
+% scripts/nrp/plan.yaml); kept as comments after the coauthor's 2026-09-21 pass:
+%  - Inference times for 3B@k3 RAGTAG, 3B@k6 BRAGTAG, 7B@k6 RAGTAG are recovered from
+%    prediction-file mtime deltas (cost_metrics.csv overwritten by the k=12/15 run).
+%  - Hardware is mixed: 3B/7B/14B RAGTAG/BRAGTAG inference and 3B/7B FT on the lab
+%    RTX 4090; 32B RAGTAG/BRAGTAG (k=12, NRP waves 6/7) and 14B/32B FT on NRP L40/L40S.
+%    sections/04_setup.tex "Hardware Setup" currently claims a single L40 -- fix before
+%    submission and say so in this caption.
 \begin{table}[t]
   \centering\color{blue}
   \caption{Computational cost of \ragtag, \bragtag, and LoRA fine-tuning at the configurations of \Cref{tab:method-comparison-ext}. RAM is the observed peak GPU memory; Train and Infer are wall-clock runtimes on a single GPU (\ragtag/\bragtag\ have no training phase), and Total is their sum, excluding model load.}

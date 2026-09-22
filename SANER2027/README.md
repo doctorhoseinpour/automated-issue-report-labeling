@@ -22,8 +22,8 @@ SANER2027-main-labeling.tex   preamble, anonymous author block, \input list
 sections/00_abstract.tex      abstract + IEEE keywords
 sections/01_intro ... 08_conclusion.tex
 sections/09_data_availability.tex   unnumbered section, directly after Conclusion (SANER-mandatory)
-tables/                       bragtag_results (column), method_comparison (full-width table*)
-figures/                      PDFs copied from ../paper/figures (regenerate with ../scripts/paper/*.py on the lab machine)
+tables/                       results_master (table*, generated), method_comparison_ci (column)
+figures/                      kcurves, per_project_diff (generated; see below) + approach figures
 refs.bib                      bibliography (IEEEtran style)
 ```
 
@@ -98,3 +98,57 @@ option of the three figure scripts (lab machine). Every number in the blue
 prose is in `../paper/tables/triangulation_all_cells.csv`. The alternative
 layout's assets (`paper/tables/triangulation.tex`, `paper/figures/bias_plane.*`,
 `*_kcurve_single.*`) remain under `../paper/` for reference only.
+
+## Presentation pass on Section V (2026-09-22)
+
+The eight floats of the evaluation section (five figures, three tables, two
+float-only pages, figure type scaled to ~4.5 pt) were consolidated into four
+floats drawn at their printed size:
+
+| Float | File | Generator (runs on any machine) |
+|---|---|---|
+| Fig. k-curves (a) VOTAG, (b) RAGTAG, (c) BRAGTAG vs RAGTAG; `figure*` | `figures/kcurves.pdf` | `scripts/paper/fig_kcurves.py` |
+| Table results master: VOTAG, zero-shot, RAGTAG, BRAGTAG, FT-PS, FT-PA per size, raw predictions only; `table*` | `tables/results_master.tex` | `scripts/paper/tab_results_master.py` (`--fallback-column` restores the +VOTAG column) |
+| Fig. per-project heatmap (11 projects x 4 sizes, transposed); column | `figures/per_project_diff.pdf` | `scripts/paper/fig_per_project_diff.py` |
+| Table CI: macro-F1 differences vs PA fine-tuning, one raw row and one +VOTAG row per model and for "All sizes", bold = CI excludes zero; column | `tables/method_comparison_ci.tex` | `scripts/paper/tab_method_comparison_ci.py` from `../paper/tables/method_comparison_ci.csv` (written by `significance_method_comparison.py`) |
+
+All generators read the small CSVs in `../paper/tables/` (exempted from the
+global `*.csv` ignore rule in `.gitignore`, so commit them with the figures):
+`triangulation_all_cells.csv` (every cell; written by `tab_triangulation.py`
+on the lab machine), `fallback_macro_f1.csv` (also written by
+`tab_triangulation.py`; only used with `--fallback-column`),
+`per_project_diff.csv` (written by `fig_per_project_diff.py --from-results`)
+and `method_comparison_ci.csv` (written by `significance_method_comparison.py`).
+The three small CSVs were seeded by hand from the previously published numbers
+(3 d.p.). Every CI in Table II (raw and +VOTAG rows) is carried over from the ESEM draft
+text (old concatenated bootstrap; the +VOTAG per-model CIs were recovered from
+git history). A missing CI would print as `--`. Rerun the lab-machine scripts
+once to replace all seeded values with computed, issue-level-resampled ones.
+
+Style: `scripts/paper/_figstyle.py` (shared model colours, Okabe-Ito set
+validated for colour-blind safety; Qwen-14B is now green instead of brown;
+type 6.5-8 pt at print size). The k-curve figure and the master table are
+`\input` at the top of Section V so they land on the section's first full
+page; the other floats stay next to the RQ that uses them.
+
+Superseded and no longer `\input`/included (kept on disk for now, safe to
+delete): `tables/bragtag_results*.tex`, `tables/method_comparison.tex`,
+`tables/method_comparison_ext.tex`, `tables/method_cost.tex`,
+`tables/vtag_peak.tex`; `figures/vtag_kcurve*.pdf`, `figures/ragtag_kcurve*.pdf`,
+`figures/bragtag_kcurve.pdf`, `figures/bragtag_perclass.pdf`,
+`figures/finetune_comparison*.pdf`, `figures/cost_analysis.pdf`,
+`figures/PS-PA.pdf`, `figures/app_diagram.pdf`, `figures/approach_diagram.pdf`,
+`figures/final_approach_oveview.drawio.pdf`, `figures/Overview-drawio.png`.
+`tables/encoder_baselines.tex` stays pending the encoder decision. A fifth float,
+an error-profile figure (bug/question precision-recall planes,
+`figures/error_profile.pdf`, `scripts/paper/fig_error_profile.py`), was drafted
+and dropped as redundant with the master table; the files are kept in case a
+visual for the bug-bias story is wanted later.
+
+Build after this pass: 12 pages, main text (through Data Availability) ends
+on the last line of page 10 and the references start on page 11, i.e. the
+10 + 2 limit is met with no spare room; any added prose must be paid for
+elsewhere. Moving the +VOTAG column into Table II (six extra rows) had pushed
+one line onto page 11; it was recovered with `\arraystretch{0.97}` in Table I
+(set in `tab_results_master.py`). Note that savings in the page-8 floats
+(Table II, the heatmap) do not move the final break, page-7 floats do.
