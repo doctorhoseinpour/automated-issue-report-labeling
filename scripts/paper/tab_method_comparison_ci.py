@@ -59,7 +59,7 @@ def emit(df: pd.DataFrame) -> str:
         r"\begin{table}[!t]",
         r"  \centering\color{blue}",
         r"  \caption{Macro-$F_1$ difference from PA fine-tuning without and with the \votag\ fallback "
-        r"(paired bootstrap 95\% CI, 1{,}000 resamples).}",
+        r"(paired bootstrap 95\% CI).}",
         r"  \label{tab:method-comparison-ci}",
         r"  \footnotesize",
         r"  \setlength{\tabcolsep}{3pt}",
