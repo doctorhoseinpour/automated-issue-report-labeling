@@ -1,21 +1,13 @@
 % !TEX root = ../SANER2027-main-labeling.tex
-% Author revisions: blue (\fixed). Coauthor revision, 2026-09-21: magenta (\coauthor).
-% Issue-level resampling done (2026-09-24); configuration-selection audit still pending.
+% Three RQs in build-up order: RQ1 (RAG, with zero-shot prompting and kNN voting as
+% reference points), RQ2 (filtered RAG), RQ3 (RAG vs LoRA fine-tuning; the headline).
+% Numbers: docs/reframe/NUMBERS.md.
 
 \section{Evaluation}
 \label{sec:evaluations}
 
-In this section, we present the results of our experiments and answer the four research questions posed in \Cref{sec:01_intro}, one per subsection.
-Throughout this section, a method's \emph{best} $k$ or configuration is the one with the highest macro $F_1$.
-\Cref{fig:kcurves} reports macro $F_1$ across the $k$ grid for \knn, \rag, and \frag, and \Cref{tab:results} lists every method at its best configuration, including the per-class precision and recall that RQ2--RQ4 refer to.
+\Cref{fig:kcurves} shows macro $F_1$ across the $k$ grid, and \Cref{tab:results} lists every method at its best configuration with its per-class precision and recall. RQ1 evaluates \rag\ against its two reference points, RQ2 evaluates the example filter, and RQ3 compares both RAG variants with LoRA fine-tuning.
 
-% Presentation pass (2026-09-22): the eight floats of the previous draft (five figures,
-% three tables) are consolidated into four: the k-curve figure and the master table
-% below (full width, placed at the top of the section), the per-project heatmap (RQ4,
-% now column width) and the CI table (RQ4). An error-profile figure (bug/question P-R
-% planes, figures/error_profile.pdf) was drafted and dropped as redundant with the table.
-% The +VOTAG (fallback) macro F1 column was moved out of the master table; the CI
-% table's +VOTAG rows report the fallback as differences (author decision, 2026-09-22).
 % Generators: scripts/paper/fig_kcurves.py, tab_results_master.py,
 % fig_per_project_diff.py, tab_method_comparison_ci.py; all read paper/tables/*.csv
 % and run on any machine.
@@ -27,82 +19,54 @@ Throughout this section, a method's \emph{best} $k$ or configuration is the one 
 \end{figure*}
 \input{tables/results_master.tex}
 
-\subsection{RQ1: Effectiveness of Retrieval-Only IRC}
+\subsection{RQ1: Classification with Retrieved Examples}
 \label{sec:rq1}
 
-We evaluate \knn\ in PS and PA at $k\in\{1,\ldots,20,25,30\}$ (\Cref{fig:kcurves}a). Similarity-weighted voting achieves its highest observed macro $F_1$ of 59.5\% at $k{=}15$ in PS and 60.4\% at $k{=}16$ in PA. PA has slightly higher scores at every evaluated $k$. The small performance difference is consistent with the substantial overlap between retrieved neighbors: PS and PA share 84--90\% of their top-$k$ neighbors for the evaluated values between 3 and 30. Thus, even when the retrieval index includes all 3{,}300 training issues, most retrieved neighbors belong to the query's project.
+We compare \rag\ with two reference points. Zero-shot prompting ($k{=}0$) is the LLM without examples and reaches 61.3--68.8\% macro $F_1$. The \knn\ baseline is retrieval without the LLM. We evaluate it at $k\in\{1,\ldots,20,25,30\}$ to find how many neighbors still add label information (\Cref{fig:kcurves}a). Its macro $F_1$ rises slowly with $k$ and peaks at 59.5\% with the target project's issues ($k{=}15$) and at 60.4\% with all projects' issues ($k{=}16$); no larger $k$ scores higher. These peaks set the top of \rag's $k$ grid.
 
-Question has the lowest class-specific $F_1$ at every evaluated $k$ in both settings. At the peak configurations, 32\% of question issues are predicted as bugs in both settings, compared with 18\% predicted as features in PS and 17\% in PA. Bug recall exceeds precision at every evaluated $k$, indicating that \knn\ over-predicts this class. At the peak configurations, bug recall is approximately 73\% and precision is 55--56\% (\Cref{tab:results}).
+The pooled index helps the vote only slightly. PA scores higher than PS at every $k$, but by little, because even the pooled index returns mostly neighbors from the query's own project; PS and PA share 84--90\% of their top-$k$ neighbors. The two settings therefore give the vote, and later the LLM, nearly the same neighbors. \knn\ also over-predicts bug and is weakest on questions, labeling 32\% of them as bugs.
 
-\begin{myboxi}
-Retrieval-only voting achieves peak macro $F_1$ scores of 59.5\% with project-specific data and 60.4\% with pooled data. The small difference accompanies substantial overlap between retrieved neighbors. Question is the weakest class, with misclassifications more frequently assigned to bug than feature.
-\end{myboxi}
+Without examples, the LLMs over-predict bug. Zero-shot prompting assigns the bug label to about half of all issues, although a third are bugs, and labels 46--59\% of questions as bugs but far fewer as features. These questions make up 76--84\% of its false bug predictions, so low question recall and low bug precision are two sides of the same error.
 
-\subsection{RQ2: Effectiveness of Retrieval-Augmented Few-Shot IRC}
-\label{sec:ragtag}
+All 48 configurations with $k{\ge}1$ (four sizes, six values of $k$, two settings) outperform both reference points in macro $F_1$, macro precision, and macro recall (\Cref{fig:kcurves}b). Even one example raises macro $F_1$ at every size. The best $k$ grows with model size, from 3 at Qwen-3B and 6 at Qwen-7B to 12 at Qwen-14B and Qwen-32B, giving 69.7--76.7\% macro $F_1$. With examples, macro $F_1$ grows with every step in model size, whereas zero-shot prompting does not (Qwen-14B scores below Qwen-7B). Beyond their best $k$, the two smaller models lose macro $F_1$ as examples are added, while the two larger ones stay nearly flat; no model improves from $k{=}12$ to $k{=}15$. We hypothesize that larger models make better use of long contexts with many examples. Retrieving from the target project scores slightly higher than retrieving from all projects at most sizes and values of $k$, as the neighbor overlap leads us to expect, so we use PS for \rag\ and \frag\ in the rest of the paper.
 
-We evaluate \rag\ at $k\in\{0,1,3,6,9,12,15\}$ in PS and PA, where $k{=}0$ is the zero-shot baseline~\cite{colavito2025benchmarking}. The peaks of \knn at $k{=}15$--16 (RQ1) set the upper end of this grid. \Cref{fig:kcurves}b reports macro $F_1$ across the grid in both settings.
-
-PS has slightly higher macro $F_1$ than PA at almost every (model, $k$) pair with $k{\ge}1$, using 300 in-project retrieval examples rather than a pool of 3{,}300 examples. Zero-shot predictions are identical between settings because no retrieval is performed. The small PS--PA differences are consistent with the neighbor overlap observed in RQ1. We use PS for the remaining \rag\ analysis.
-
-All 48 nonzero-$k$ configurations, spanning four model sizes and both data scopes, outperform the corresponding zero-shot baseline and the strongest \knn\ configuration in macro $F_1$, macro precision, and macro recall. Thus, LLM classification using retrieved examples outperforms similarity-weighted voting. Within the PS grid, the best $k$ is 3, 6, 12, and 12 for Qwen-3B, -7B, -14B, and -32B, respectively. These configurations achieve 69.7--76.7\% macro $F_1$, averaging a gain of 7.6 points over zero-shot. Increasing $k$ from 12 to 15 does not improve any model's PS score.
-
-Question remains the weakest class by $F_1$ at every evaluated $k$ in both settings. It has the lowest recall but never the lowest precision. At zero-shot, 46--59\% of true-question issues are predicted as bugs, compared with 5--16\% predicted as features. These question-to-bug errors account for roughly 80\% of false bug predictions, linking the question-recall deficit to low bug precision.
-
-Retrieved examples reduce this confusion. At the best PS configurations, 26--36\% of question issues are predicted as bugs and 9--15\% as features. Averaged across the four models, the share of issues predicted as bug falls from 51\% to 42\%, bug precision increases from 57.5\% to 66.2\%, and question recall from 35.0\% to 51.4\% relative to zero-shot (\Cref{tab:results}). The increase in question-class $F_1$ accounts for 56--70\% of the macro-$F_1$ improvement across model sizes.
-
-The zero-shot results show that question-to-bug confusion exists before any examples are presented. We hypothesize that bug-labeled examples retrieved for true-question queries reinforce this tendency. Based on this intuition, we propose a more balanced retrieval technique as an intervention that removes the bug-labeled neighbors whenever the query is a suspected question. We base the suspicion signal on the nearest neighbors' label distribution and calibrate it without including the test set. From each project's total 300 training issues, we assign 30 issues stratified by label as queries and 270 as the retrieval index, mirroring the PS setting. On this validation split, true-question queries retrieve almost balanced bug and question examples: averaged across $k\in[1,15]$, the mean of $N_\text{bug} - N_\text{question}$ is $-1.36$. We therefore treat a query as a suspected question when $N_\text{bug} - N_\text{question} \le m$, where $N_\text{label}$ is the count of neighbors with that label in the top-$k$ and $m$ is a small positive margin. Sweeping $m\in\{1,2,3,4,5\}$\footnote{We cap the sweep at $m{=}5$, since it is the 95th percentile of $N_\text{bug} - N_\text{question}$ on true-question queries.} on the validation split and averaging across $k\in[1,15]$, $m{=}3$ had a more favorable trade-off against the other values, firing for 89.1\% of true-question and 56.7\% of true-bug queries. We adopt $m{=}3$ and refer to the resulting variant as \frag.
+Most of \rag's gain comes from questions. At the best $k$, the examples add 5.5--8.7 points to zero-shot prompting, and the rise in question $F_1$ accounts for 56--70\% of this gain. The examples lower the share of questions labeled as bugs to 26--36\%, and with it the share of issues labeled as bugs, which raises bug precision along with question recall. Question nevertheless keeps the lowest per-class $F_1$ at every $k$, and questions labeled as bugs remain the largest source of false bug predictions (74--79\%). RQ2 targets this error.
 
 \begin{myboxi}
-Retrieved examples improve macro $F_1$, macro precision, and macro recall over zero-shot prompting and retrieval-only voting in every evaluated configuration with $k{\ge}1$. The best PS configurations achieve 69.7--76.7\% macro $F_1$, and no model improves beyond $k{=}12$. Question recall remains the principal weakness: 26--36\% of question issues are still classified as bugs, motivating the balanced retrieval intervention evaluated in RQ3.
+\rag\ outperforms both zero-shot prompting and \knn\ at every number of examples, reaching 69.7--76.7\% macro $F_1$ at its best $k$ (3 to 12). The gain comes mostly from questions, but 26--36\% of questions are still labeled as bugs.
 \end{myboxi}
 
-\subsection{RQ3: Effectiveness and Trade-offs of the Balanced Retrieval Method}
-\label{sec:bragtag}
+\subsection{RQ2: Filtering the Retrieved Examples}
+\label{sec:rq2}
 
-We compare \frag\ with \rag\ under PS at the same $k\in\{1,3,6,9,12,15\}$. At every tested $k\ge6$, \frag\ has higher macro $F_1$ for all four model sizes (\Cref{fig:kcurves}c), by at least 1.2 points. At $k{=}1$ and $k{=}3$, its scores are lower by up to 1.0 point. With the fixed margin $m{=}3$, the condition $N_{\mathrm{bug}}-N_{\mathrm{question}}\le3$ holds for every query at these two small $k$ values. Bug-example removal is therefore unconditional, leaving no demonstrations for 40\% of queries at $k{=}1$ and 18\% at $k{=}3$.
+\Cref{fig:kcurves}c compares \frag\ with \rag\ at the same $k$. \Frag\ scores higher at every $k{\ge}6$ for all four sizes and lower at $k{\le}3$. The margin explains the small values of $k$. With $m{=}3$ and at most three neighbors, $N_\text{bug}-N_\text{question}\le 3$ holds for every query, so the filter removes the bug-labeled examples unconditionally. It leaves 40\% of the prompts at $k{=}1$ and 18\% at $k{=}3$ without any example, which turns these queries into zero-shot prompts.
 
-Comparing each method's best configuration, \frag\ increases macro $F_1$ by 1.5--2.4 points (\Cref{tab:results}). The 95\% CIs of these gains exclude zero for all four models: $[+0.2, +3.0]$, $[+0.7, +3.2]$, $[+1.4, +3.4]$, and $[+0.7, +2.2]$ points\footnote{1{,}000 paired bootstrap resamples per model.}. \Frag's selected $k$ increases for the three smaller models and remains 12 for Qwen-32B. When the trigger fires, \frag\ removes all bug examples from the top-$k$, so a higher initial $k$ is needed to leave enough context for the LLM.
+At each method's best $k$, \frag\ is 1.5--2.4 points higher than \rag, and the CIs of all four differences exclude zero. Its best $k$ is larger at the three smaller sizes (6, 12, and 15 instead of 3, 6, and 12) and unchanged at Qwen-32B, and like \rag, it gains little or nothing beyond $k{=}12$. When the filter fires, it removes every bug-labeled example from the top $k$, so a larger initial $k$ is needed to leave enough examples in the prompt.
 
-The class-level results expose the trade-off. Question $F_1$ increases by 3.0--6.8 points: recall rises by 6.5--15.3 points while precision falls by 1.2--5.0 points. Bug precision increases by 4.5--8.6 points, but bug recall decreases by 2.5--13.8 points at every model size. The largest recall loss occurs for Qwen-3B, from 80.3\% to 66.5\%, the one model where the intervention over-corrects; its bug $F_1$ falls from 71.1\% to 69.3\%. Bug $F_1$ improves for the three larger models. Feature $F_1$ changes by at most 1.1 points. The full precision and recall values appear in \Cref{tab:results}.
+The gain is a targeted reduction of question-to-bug errors. The share of questions labeled as bugs falls from 26--36\% to 19--27\% at the best $k$, and it also falls when averaged over all values of $k$, so the effect does not hinge on the choice of $k$. Question recall rises by 6.5--15.3 points, while question precision falls by 1.2--5.0 points. The precision loss comes mainly from bugs. The filter also fires for many true bugs (\Cref{sec:approach-bragtag}), and the share of bugs labeled as questions rises at every size.
 
-At these configurations, question-to-bug error rates decrease from 26--36\% with \rag\ to 19--27\% with \frag. Question-to-feature error rates change by at most 1.4 points. Averaged across $k\in[1,15]$, the question-to-bug rate drops from 31--40\% to 24--36\%. The improvement is therefore a targeted reduction of question-to-bug confusion, at the cost of bug recall. Invalid outputs remain counted as incorrect; their rates at these same configurations are reported in \Cref{tab:results} and analyzed in RQ4.
+On the bug label, the filter trades recall for precision. Bug precision rises and bug recall falls at every size. The loss is largest at Qwen-3B, where bug recall drops from 80.3\% to 66.5\% and bug $F_1$ drops by 1.8 points, the only size at which the filter over-corrects; at the three larger sizes, bug $F_1$ rises. At Qwen-3B, the share of bugs labeled as questions nearly doubles, far more than at the larger sizes, which suggests that the smallest model follows the remaining examples most closely. Feature $F_1$ changes by at most 1.1 points, so the filter leaves the feature label almost untouched (\Cref{tab:results} gives all per-class values).
 
 \begin{myboxi}
-\Frag\ outperforms \rag\ at every $k{\ge}6$ for all four model sizes. The gain is a targeted reduction of question-to-bug misclassifications: question $F_1$ rises by 3.0--6.8 points and bug precision by 4.5--8.6 points, at the cost of bug recall. Bug $F_1$ improves for the three larger models and drops by 1.8 points for Qwen-3B; feature $F_1$ changes by at most 1.1 points.
+\Frag\ outperforms \rag\ at every $k{\ge}6$, by 1.5--2.4 points at each method's best $k$. It lowers the share of questions labeled as bugs to 19--27\%, at the cost of bug recall.
 \end{myboxi}
 
-%\subsection{RQ4. Can retrieval-augmented few-shot prompting match LoRA fine-tuning for IRC, and what are the costs of each approach?}
-\subsection{RQ4: Few-Shot Prompting vs. LoRA Fine-Tuning for IRC}
-\label{sec:method-comparison}
+\subsection{RQ3: RAG versus LoRA Fine-Tuning}
+\label{sec:rq3}
 
-% RQ4 rewrite (2026-09-19): five-step argument (same data -> best-vs-best ->
-% error profile -> recall/invalid outputs -> fallback). TOST removed
-% by author decision; paired bootstrap CIs only. All new text is blue (\fixed).
-%
-% Coauthor pass (2026-09-21, magenta \coauthor) reviewed 2026-09-22:
-%   kept     invalid-output paragraph, fallback-protocol paragraph, fallback
-%            results paragraph, CI table (now single-column), ext-table caption
-%            detail on the fallback k values.
-%   merged   PS/PA paragraph (0.060 rounding, PA confound, panel (b) sentence),
-%            annotation-budget caveat, class-share caveat.
-%   reverted section title, error-profile paragraph (author blue version),
-%            "best observed" -> "best" (defined once in the S5 opener).
-%   removed  encoder baselines (SetFit/RoBERTa) pending a separate decision;
-%            tables/encoder_baselines.tex stays on disk but is not input.
-%   cost     restored to the author's one-sentence version from c91bc26; the
-%            coauthor's cost table and time discussion are dropped (not input).
+\myparagraph{Same labeled issues}
+We fine-tune the four models in both settings (\Cref{tab:results}). Given the same labeled issues of the target project, both RAG variants outperform fine-tuning at every size, \rag\ by 2.1--4.0 points and \frag\ by 3.8--6.0 points. Fine-tuned on these issues, the models still improve on zero-shot prompting at every size, but less than with retrieved examples. We hypothesize that 300 issues are too few for fine-tuning to learn the task well, whereas \rag\ needs only the few that are most similar to each query. The large gain that fine-tuning draws from more training issues supports this.
 
-%%%%%%%%%%%
-\myparagraph{Classification Performance}
-
-We fine-tune all four models under both data scopes and compare them with \rag\ and \frag\ at their best $k$ (\Cref{tab:results}). When all methods use the same 300 labeled issues per project (PS), both RAG variants outperform fine-tuning at every model size: \rag\ leads by 2.1--4.0 points in macro $F_1$, and \frag\ by 3.8--6.0 points. Fine-tuning benefits from pooling the 3{,}300 labeled issues across all eleven projects (PA), which changes both the number of training examples and their project composition. Pooling raises its macro $F_1$ by 3.1--8.4 points relative to PS, consistent with prior findings~\cite{heo2025study}, although the class-level effects vary: for Qwen-32B, it increases bug recall but lowers question recall (\Cref{tab:results}).
-
-The larger pool does not provide a corresponding benefit for retrieval (\Cref{sec:ragtag}). We therefore use PS for \rag\ and \frag\ and PA for fine-tuning in the remaining comparisons, giving each method its better-performing data scope. The eleven PS indexes collectively hold the same 3{,}300 training issues as the PA training set, so the two scopes differ in the data available per target project, not in the total annotation budget.
+Pooling the labeled issues of all eleven projects raises fine-tuning's macro $F_1$ by 3.1--8.4 points, consistent with Heo and Lee~\cite{heo2025study}. Pooling changes both the number of training issues and their project mix, and its effect differs by label; at Qwen-32B, for example, it raises bug recall but lowers question recall. Pooling does not help \rag, because the pooled index returns mostly the same neighbors (\Cref{sec:rq1}). We therefore compare each method in its better setting: the RAG variants with the target project's issues (PS) and fine-tuning with the pooled issues (PA). The eleven PS indexes together hold the same 3{,}300 issues as the PA training set, so the settings differ in the labeled data available per target project, not in the total labeling effort.
 
 \input{tables/method_comparison_ci.tex}
 
-We report macro $F_1$ differences as the RAG variant minus fine-tuning, so negative values favor fine-tuning (\Cref{tab:method-comparison-ci}). Aggregated across the four model sizes, \rag\ trails fine-tuning by 2.8 points (paired bootstrap 95\% CI $[-3.9, -1.8]$) and \frag\ by 1.0 point, whose CI $[-2.0, +0.1]$ includes zero.\footnote{We use 1{,}000 paired bootstrap resamples per comparison.} \rag\ trails fine-tuning at every model size, whereas \frag\ shifts the difference in its favor at every size, to between 2.9 points behind and 1.0 point ahead. Fine-tuning is significantly ahead at Qwen-7B and Qwen-14B. At Qwen-3B and Qwen-32B, the confidence intervals include zero, and \frag\ has the higher point estimates. Results also vary by project: \frag\ matches or exceeds PA fine-tuning in 16 of the 44 (project, model) pairs, including all four sizes on \texttt{opencv} and three of four on \texttt{bitcoin} (\Cref{fig:per-project-diff}).
+\myparagraph{Pooled fine-tuning}
+Averaged over the four sizes, \frag\ trails fine-tuning by 1.0 point, and the CI includes zero; \rag\ trails by 2.8 points, and the CI excludes zero (\Cref{tab:method-comparison-ci}). The filter thus turns a significant deficit into a difference that is not significant. Per size, \rag\ trails fine-tuning everywhere, significantly at Qwen-7B and Qwen-14B. Fine-tuning is significantly ahead of \frag\ at Qwen-7B and Qwen-14B, while \frag\ is ahead at Qwen-3B and Qwen-32B, but not significantly. Fine-tuning's significant leads fall at the two sizes where pooling helps it most, by more than 8 points, against about 3 points at Qwen-3B and Qwen-32B.
+
+Each method's best $k$ is chosen on the test set, which favors the RAG variants, since fine-tuning has no $k$ to select. To check how much this matters, we fix $k{=}12$ for every size. \Frag\ then trails fine-tuning by 1.2 points on average instead of 1.0, and it remains ahead at Qwen-32B.
+
+Results also vary by project (\Cref{fig:per-project-diff}). \Frag\ matches or exceeds fine-tuning in 16 of the 44 (project, model) pairs, including all four sizes on \texttt{opencv} and three on \texttt{bitcoin}, while fine-tuning leads at all four sizes on \texttt{TypeScript}. Differences on single projects reach about 10 points in either direction, so the parity in aggregate does not hold for every project.
 
 \begin{figure}[!t]
     \centering
@@ -111,34 +75,25 @@ We report macro $F_1$ differences as the RAG variant minus fine-tuning, so negat
     \label{fig:per-project-diff}
 \end{figure}
 
-Fine-tuning detects more actual bugs at every model size, while \frag\ makes fewer false bug predictions at three of the four sizes. Like the zero-shot models (\Cref{sec:ragtag}), the PA fine-tuned models over-predict bug: they assign this label to 39--46\% of test issues, although only 33\% are bugs. Their bug recall is high (86.5--92.9\%), but precision is lower (63.7--73.0\%), and 23--36\% of question issues are classified as bugs. \Frag\ predicts bug for 31--38\% of issues, closer to the true share, and misclassifies 19--27\% of questions as bugs. Its bug recall is lower (66.5--80.4\%), while its precision is generally higher (69.6--74.8\%). The one size at which \frag\ does not make fewer false bug predictions is Qwen-14B, where fine-tuning's tendency to over-predict bug is less pronounced: it labels 39.5\% of issues as bugs and misclassifies 23\% of questions as bugs. A bug share close to the true proportion is not by itself evidence of quality; what matters is the trade-off between bug recall and bug precision, and which method is preferable depends on the relative cost of missed bugs and incorrect bug assignments in a given project.
-
-At Qwen-7B and Qwen-14B, \frag's macro recall is lower than fine-tuning's by 3.5 and 4.3 points, respectively, while its macro precision is within 1.4 points of fine-tuning's at every size. Invalid outputs contribute to this recall deficit: they count as false negatives for the true class without adding a prediction to any valid class's precision denominator. At the selected configurations, invalid rates are 0.2--4.6\% for \rag, 1.8--4.7\% for \frag, and at most 0.8\% for fine-tuning. For \frag\ at Qwen-7B and larger sizes, 6--8\% of true bugs receive invalid outputs.
-
-We therefore compare complete pipelines that assign a valid label to every issue by applying a \knn\ fallback only when the LLM output is invalid. The fallback uses PS voting at fixed $k{=}15$ for \rag/\frag\ and PA voting at fixed $k{=}16$ for fine-tuning. It uses the original, unfiltered neighbors, independently of the number of demonstrations shown to the LLM. The retrieval-based pipelines can reuse their cached neighbor pool; adding this fallback to fine-tuning introduces a retrieval step. No additional LLM calls are required.
-
-After applying the fallback to all three LLM approaches (\Cref{tab:method-comparison-ci}, + fallback rows), \frag's differences from fine-tuning range from 1.4 points behind to 2.1 points ahead. Its deficits at Qwen-7B and Qwen-14B are approximately halved, to 1.1 and 1.4 points, while its Qwen-32B advantage increases to 2.1 points. Fine-tuning's scores change by at most 0.3 points. The aggregate difference between \frag\ and fine-tuning becomes 0.1 point in \frag's favor (95\% CI $[-0.9, +1.1]$), and per model the interval excludes zero only at Qwen-32B, in \frag's favor.
-
-%%%%%%%%%%%%%%%%%%%%%
-\myparagraph{Computation and Data Cost}
-
-% \begin{figure}[t]
-%     \centering
-%     \includegraphics[width=\linewidth]{figures/cost_analysis.pdf}
-% \caption{\textbf{(a)} Peak GPU memory by model size for \rag/\frag\ inference compared with LoRA fine-tuning training plus inference. \textbf{(b)} Total GPU time by model size for \rag\ and \frag\ compared with LoRA fine-tuning.}
-%     \label{fig:cost-analysis}
-% \end{figure}
-
-% Author's shortened version (commit c91bc26), restored 2026-09-22; "per project"
-% added to match the annotation-budget caveat earlier in this subsection.
-% tables/method_cost.tex input again 2026-09-24, with the time trade-off below.
-% Savings from peak GPU memory in GB, RAG vs. LoRA incl. training: 2.9/5.5, 6.8/9.9, 12.6/16.7, 22.3/31.5.
-% VOTAG cost measured 2026-09-24 (tables/method_cost.tex header).
+% Cost values: tables/method_cost.tex (hand-written). Memory saving from the GB
+% values: 2.9/5.5, 6.8/9.9, 12.6/16.7, 22.3/31.5 -> 47/31/25/29%, mean 33%.
 \input{tables/method_cost.tex}
 
-Our RAG variants require 47\%, 31\%, 25\%, and 29\% less peak GPU memory than LoRA fine-tuning for Qwen-3B, -7B, -14B, and -32B, respectively (33\% on average), and remain competitive with it while using $11\times$ less labeled data per project (\Cref{tab:method-cost}). They have no training phase, but their longer prompts make each classification slower. Fine-tuned models label the 3{,}300 test issues in 0.10--0.44~h, whereas \frag\ takes 0.22--4.15~h. Including training, \frag\ takes less total time than fine-tuning at Qwen-3B and Qwen-14B, about the same at Qwen-7B, and more at Qwen-32B (4.15~h versus 2.71~h). Fine-tuning must, however, be repeated whenever the model is replaced or new labeled issues are added, whereas retrieval only needs to index the new issues. Without an LLM, \knn\ labels the 3{,}300 test issues in under 4~s with 0.2~GB of GPU memory, at a macro $F_1$ of 59.5\% (\Cref{sec:rq1}).
+\myparagraph{Labeled data, memory, and time}
+\Frag\ uses $11\times$ less labeled data per target project than pooled fine-tuning and has no training phase. For each target project, fine-tuning learns from 3{,}300 labeled issues, whereas the RAG variants retrieve from that project's 300. Both RAG variants need 33\% less peak GPU memory on average (\Cref{tab:method-cost}), comparing their inference with fine-tuning's training and inference of the same model. The saving ranges from a quarter at Qwen-14B to almost half at Qwen-3B, although the RAG prompts may be four times as long as fine-tuning's (\Cref{sec:finetune}).
+
+The longer prompts make inference slower. Fine-tuned models label the 3{,}300 test issues in 0.10--0.44~h, and \frag\ in 0.22--4.15~h. Including training, \frag\ takes less total time than fine-tuning at Qwen-3B and Qwen-14B, about the same at Qwen-7B, and more at Qwen-32B. These totals include a single training run. Fine-tuning must be repeated whenever new labeled issues are to be learned or the model is replaced, whereas retrieval only indexes the new issues and uses any LLM as is. Conversely, fine-tuning's faster inference pays off more, the more issues are labeled between two training runs. Without an LLM, \knn\ labels all test issues in under 4~s with 0.2~GB of GPU memory.
+
+\myparagraph{Error profiles}
+Fine-tuning over-predicts bug, as zero-shot prompting does (\Cref{sec:rq1}), although its training data are balanced across labels. It labels 39--46\% of the test issues as bugs, although 33\% are bugs. It therefore finds more of the actual bugs than \frag\ at every size, with bug recall of 86.5--92.9\% against 66.5--80.4\%, but it also makes more false bug predictions at three of the four sizes. The exception is Qwen-14B, where fine-tuning's over-prediction is weakest. Per label, fine-tuning has the higher bug $F_1$ at every size, whereas \frag\ has the higher question $F_1$ at Qwen-3B and Qwen-32B, the two sizes at which it leads in macro $F_1$.
+
+The question-to-bug confusion persists under both approaches, with 23--36\% of questions labeled as bugs after fine-tuning and 19--27\% after \frag. Our failure analysis (\Cref{sec:disc-failures}) shows that most of the sampled Qwen-32B errors of the three LLM approaches are issues filed under a bug-report template. Which error profile fits a project better depends on whether a missed bug or a false bug label costs it more.
+
+\myparagraph{Invalid outputs}
+Invalid outputs make up 1.8--4.7\% of \frag's outputs and at most 0.8\% of fine-tuning's. In a sample, most of them continue the issue body or the model's reasoning instead of giving a label (\Cref{sec:disc-failures}). An invalid output counts as a missed issue of its true label but adds no prediction to any label's precision, so it lowers macro recall but not macro precision. \Frag's macro precision is within 1.4 points of fine-tuning's at every size, while its macro recall is lower at Qwen-7B and Qwen-14B, where 6--8\% of true bugs receive invalid outputs. We hypothesize that the long prompts, filled with issue text, lead the model to continue that text rather than answer.
+
+To compare complete pipelines that give every issue a valid label, we let \knn\ label the invalid outputs of both methods. The RAG variants use PS voting at $k{=}15$ over their unfiltered neighbors, and fine-tuning uses PA voting at $k{=}16$. The fallback needs no extra LLM call; the RAG variants reuse their neighbors, and fine-tuning gains a retrieval step. With the fallback, \frag\ is 0.1 point ahead of fine-tuning on average, and the CI includes zero. Its deficits at Qwen-7B and Qwen-14B shrink to within 1.4 points and are no longer significant, and it becomes significantly ahead at Qwen-32B. Fine-tuning's scores change by at most 0.3 points, since it has few invalid outputs, and \rag\ still trails it significantly on average.
 
 \begin{myboxi}
-% \textbf{Answer to RQ4:} 
-Given the same 300 labeled issues per project, both RAG variants outperform LoRA fine-tuning at every model size (\rag\ by 2.1--4.0 points in macro $F_1$, \frag\ by 3.8--6.0 points). With 11$\times$ more labeled data per project, fine-tuning leads \rag\ by 2.8 points in aggregate, but its 1.0-point lead over \frag\ is not statistically significant. Once a \knn\ fallback handles invalid outputs, \frag\ closes this gap (0.1 point ahead) and is significantly better at Qwen-32B. The methods trade different errors: fine-tuning detects more bugs but over-predicts the bug class, whereas \frag\ makes fewer false bug predictions. Retrieval-augmented few-shot prompting also requires 33\% less peak GPU memory than fine-tuning on average, but its inference is slower, and at Qwen-32B its total runtime is higher.
+With only the target project's labeled issues, no training, and 33\% less peak GPU memory on average, \frag\ comes within 1.0 point of the macro $F_1$ of fine-tuning on the labeled issues of all eleven projects, a difference that is not statistically significant; \rag\ trails by 2.8 points. Given the same labeled issues, both RAG variants outperform fine-tuning. Their inference is slower, and fine-tuning finds more bugs but over-predicts the bug label.
 \end{myboxi}
