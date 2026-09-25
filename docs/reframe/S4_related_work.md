@@ -4,6 +4,28 @@
 (reframe) must both have logged `Status: DONE`. If not, stop and tell the user. Then read
 `docs/reframe/RW_DOSSIER.md` and `docs/reframe/refs_candidates.bib` completely.
 
+## USER DECISIONS (2026-09-25): these override the rest of this file
+
+1. **No new papers.** Related Work may cite **only references the draft already cites**, plus entries
+   already present in `SANER2027/refs.bib` that are not yet cited (for example `colavito2023few`,
+   `panichella2023summary`, `milios2023context`). Do **not** add De Vito et al., LabelMate, the NASA study,
+   or any other entry from `refs_candidates.bib` (Zhao, Mosbach, Weyssow, CEDAR, Gao, Rubin, Trad, ...).
+   Where the skeleton below names such a paper, drop it and write the contrast with the papers that remain.
+   Merge or drop paragraphs 4 and 5 if too little is left for them.
+2. **Keep the novelty sentence** in §I and the abstract exactly as it is. Do not narrow it, and do not
+   change §I.
+3. **Still do:** fix how the *already cited* papers are described, using the dossier's accuracy findings.
+   These are corrections, not additions:
+   - A1: the "state-of-the-art ... LoRA" claim;
+   - A2: `yu2023retrieval` is not about in-context examples;
+   - A3: `le2023log`, `logan2021...` and `ma2023fairness...` do not support "few-shot prompting helps";
+   - A4: "encoders need large data".
+   Where a citation does not support its sentence, reword the sentence or drop the citation. Also fix the
+   broken existing bib entries the dossier lists (`hu2022lora`, `heo2025study` pages, `assi2026llm`
+   capitalization).
+4. The expansion comes from **contrast sentences** (how each line of work differs from this study), not
+   from more papers.
+
 ## Goal
 
 Problem 2 from BRIEF, the supervisor's note: Related Work is "a good survey", but it should be used "to
