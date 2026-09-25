@@ -1,0 +1,213 @@
+% refs_candidates.bib -- written by S2 (2026-09-25) for S4.
+%
+% Verified BibTeX for references NOT yet in SANER2027/refs.bib. Every entry was fetched from the
+% source named in its "% Source:" line (never written from memory) and its title, authors, venue,
+% year and pages were checked against that source. DBLP was unreachable this session (anti-bot
+% page), so the sources are the ACL Anthology, PMLR, Crossref (DOI content negotiation), arXiv and
+% the publisher PDFs.
+%
+% Edits relative to the fetched text, applied uniformly: new key in refs.bib style; acronyms braced
+% in titles so IEEEtran keeps their case; Unicode en dashes in pages -> "--"; non-bibliographic
+% fields dropped (url, ISSN, month, abstract, pdf, editor), which IEEEtran would otherwise print or
+% warn about. No title word, author, venue, volume, year or page value was changed.
+%
+% Keys were checked for collisions with SANER2027/refs.bib: none.
+% Ranking and usage notes: docs/reframe/RW_DOSSIER.md. Corrections to EXISTING refs.bib entries are
+% in the dossier (section "refs.bib corrections"), not here, to avoid duplicate keys.
+
+% ---------------------------------------------------------------------------------------------
+% NOVELTY-RELATED (see RW_DOSSIER.md, NOVELTY RISKS). Citing De Vito et al. needs the user's approval
+% (they set it aside earlier). LabelMate is an arXiv preprint posted 2026-09-03.
+% ---------------------------------------------------------------------------------------------
+
+% Source: https://api.crossref.org/works/10.1145/3815577/transform/application/x-bibtex (Crossref; record re-checked by S2
+% via https://api.crossref.org/works/10.1145/3815577). {LLM} braced. No volume/pages assigned yet (online 2026-05-13);
+% note added from Crossref's article number.
+@article{devito2026advancing,
+  title={Advancing {LLM}-Based Issue Report Classification with Explained Few-Shot Learning, Intent Extraction, Ensemble, and Summarization},
+  author={De Vito, Gabriele and Starace, Luigi Libero Lucio and Palomba, Fabio and Di Martino, Sergio and Ferrucci, Filomena},
+  journal={ACM Transactions on Software Engineering and Methodology},
+  year={2026},
+  note={Article 3815577},
+  publisher={Association for Computing Machinery (ACM)},
+  doi={10.1145/3815577}
+}
+
+% Source: CONSTRUCTED field by field (CEUR gives no BibTeX; DBLP unreachable) from https://ceur-ws.org/Vol-3762/ (title,
+% authors, pages 48-53) and https://ceur-ws.org/Vol-3762/534.pdf (header). Author order as on the CEUR index page.
+@inproceedings{devito2024italia,
+  title={Large Language Models in Software Engineering: A Focus on Issue Report Classification and User Acceptance Test Generation},
+  author={De Vito, Gabriele and Starace, Luigi Libero Lucio and Di Martino, Sergio and Ferrucci, Filomena and Palomba, Fabio},
+  booktitle={Proceedings of the Ital-IA Intelligenza Artificiale -- Thematic Workshops co-located with the 4th CINI National Lab AIIS Conference on Artificial Intelligence (Ital-IA 2024)},
+  series={CEUR Workshop Proceedings},
+  volume={3762},
+  pages={48--53},
+  year={2024}
+}
+
+% Source: https://doi.org/10.1109/FLLM67465.2025.11391248 (Crossref BibTeX); abstract re-checked at https://arxiv.org/abs/2512.04106
+@inproceedings{trad2025retrieval,
+  title={Retrieval-Augmented Few-Shot Prompting Versus Fine-Tuning for Code Vulnerability Detection},
+  author={Trad, Fouad and Chehab, Ali},
+  booktitle={2025 3rd International Conference on Foundation and Large Language Models (FLLM)},
+  pages={615--622},
+  year={2025},
+  publisher={IEEE},
+  doi={10.1109/FLLM67465.2025.11391248}
+}
+
+% Source: https://arxiv.org/bibtex/2609.04055 (abstract re-checked at https://arxiv.org/abs/2609.04055). Preprint.
+@misc{johnston2026labelmate,
+  title={{LabelMate}: An {LLM}-Driven Framework for Refined Issue Report Labeling},
+  author={Johnston, Liam and Noei, Shayan and Assi, Maram and Zou, Ying},
+  year={2026},
+  howpublished={arXiv:2609.04055},
+  eprint={2609.04055},
+  archivePrefix={arXiv},
+  primaryClass={cs.SE}
+}
+
+% ---------------------------------------------------------------------------------------------
+% Rank 1-3: needed for the compare-and-contrast paragraphs
+% ---------------------------------------------------------------------------------------------
+
+% Source: https://doi.org/10.1145/3714461 (Crossref BibTeX via DOI content negotiation); facts read in arXiv 2308.10462v3
+@article{weyssow2025exploring,
+  title={Exploring Parameter-Efficient Fine-Tuning Techniques for Code Generation with Large Language Models},
+  author={Weyssow, Martin and Zhou, Xin and Kim, Kisub and Lo, David and Sahraoui, Houari},
+  journal={ACM Transactions on Software Engineering and Methodology},
+  volume={34},
+  number={7},
+  pages={1--25},
+  year={2025},
+  publisher={Association for Computing Machinery (ACM)},
+  doi={10.1145/3714461}
+}
+
+% Source: https://aclanthology.org/2023.findings-acl.779.bib
+@inproceedings{mosbach2023few,
+  title={Few-shot Fine-tuning vs. In-context Learning: A Fair Comparison and Evaluation},
+  author={Mosbach, Marius and Pimentel, Tiago and Ravfogel, Shauli and Klakow, Dietrich and Elazar, Yanai},
+  booktitle={Findings of the Association for Computational Linguistics: ACL 2023},
+  pages={12284--12314},
+  year={2023},
+  address={Toronto, Canada},
+  publisher={Association for Computational Linguistics},
+  doi={10.18653/v1/2023.findings-acl.779}
+}
+
+% Source: https://proceedings.mlr.press/v139/assets/bib/bibliography.bib (entry pmlr-v139-zhao21c)
+@inproceedings{zhao2021calibrate,
+  title={Calibrate Before Use: Improving Few-shot Performance of Language Models},
+  author={Zhao, Zihao and Wallace, Eric and Feng, Shi and Klein, Dan and Singh, Sameer},
+  booktitle={Proceedings of the 38th International Conference on Machine Learning},
+  series={Proceedings of Machine Learning Research},
+  volume={139},
+  pages={12697--12706},
+  year={2021},
+  publisher={PMLR}
+}
+
+% Source: https://doi.org/10.1109/ICSE48619.2023.00205 (Crossref BibTeX via DOI content negotiation)
+@inproceedings{nashid2023retrieval,
+  title={Retrieval-Based Prompt Selection for Code-Related Few-Shot Learning},
+  author={Nashid, Noor and Sintaha, Mifta and Mesbah, Ali},
+  booktitle={2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)},
+  pages={2450--2462},
+  year={2023},
+  publisher={IEEE},
+  doi={10.1109/ICSE48619.2023.00205}
+}
+
+% Source: https://api.crossref.org/works/10.1016/j.jss.2026.112851 and .../transform/application/x-bibtex; checked against the local PDF p.1
+% (docs/Issue classification with LLMs_ An empirical study of the NASA flight software systems.pdf)
+@article{colavito2026issue,
+  title={Issue classification with {LLMs}: An empirical study of the {NASA} flight software systems},
+  author={Colavito, Giuseppe and Lanubile, Filippo and Novielli, Nicole and Arreza, Christopher and Shi, Ying},
+  journal={Journal of Systems and Software},
+  volume={237},
+  pages={112851},
+  year={2026},
+  publisher={Elsevier},
+  doi={10.1016/j.jss.2026.112851}
+}
+
+% ---------------------------------------------------------------------------------------------
+% Rank 4-6: useful if the budget allows
+% ---------------------------------------------------------------------------------------------
+
+% Source: https://doi.org/10.1109/ASE56229.2023.00109 (Crossref BibTeX via DOI content negotiation); {LLMs} braced
+@inproceedings{gao2023what,
+  title={What Makes Good In-Context Demonstrations for Code Intelligence Tasks with {LLMs}?},
+  author={Gao, Shuzheng and Wen, Xin-Cheng and Gao, Cuiyun and Wang, Wenxuan and Zhang, Hongyu and Lyu, Michael R.},
+  booktitle={2023 38th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  pages={761--773},
+  year={2023},
+  publisher={IEEE},
+  doi={10.1109/ASE56229.2023.00109}
+}
+
+% Source: https://aclanthology.org/2022.emnlp-main.759.bib
+@inproceedings{min2022rethinking,
+  title={Rethinking the Role of Demonstrations: What Makes In-Context Learning Work?},
+  author={Min, Sewon and Lyu, Xinxi and Holtzman, Ari and Artetxe, Mikel and Lewis, Mike and Hajishirzi, Hannaneh and Zettlemoyer, Luke},
+  booktitle={Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing},
+  pages={11048--11064},
+  year={2022},
+  address={Abu Dhabi, United Arab Emirates},
+  publisher={Association for Computational Linguistics},
+  doi={10.18653/v1/2022.emnlp-main.759}
+}
+
+% Source: https://aclanthology.org/2022.naacl-main.191.bib
+@inproceedings{rubin2022learning,
+  title={Learning To Retrieve Prompts for In-Context Learning},
+  author={Rubin, Ohad and Herzig, Jonathan and Berant, Jonathan},
+  booktitle={Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies},
+  pages={2655--2671},
+  year={2022},
+  address={Seattle, United States},
+  publisher={Association for Computational Linguistics},
+  doi={10.18653/v1/2022.naacl-main.191}
+}
+
+% ---------------------------------------------------------------------------------------------
+% Optional: only if the corresponding text is added (see dossier)
+% ---------------------------------------------------------------------------------------------
+
+% Source: https://doi.org/10.1109/NLBSE59153.2023.00007 (Crossref BibTeX). Needed only if the text mentions NLBSE'23
+% (for example when describing colavito2023few). kallis2024nlbse covers only NLBSE'24.
+@inproceedings{kallis2023nlbse,
+  title={The {NLBSE}'23 Tool Competition},
+  author={Kallis, Rafael and Izadi, Maliheh and Pascarella, Luca and Chaparro, Oscar and Rani, Pooja},
+  booktitle={2023 IEEE/ACM 2nd International Workshop on Natural Language-Based Software Engineering (NLBSE)},
+  pages={1--8},
+  year={2023},
+  publisher={IEEE},
+  doi={10.1109/NLBSE59153.2023.00007}
+}
+
+% Source: https://doi.org/10.1016/j.scico.2020.102598 (Crossref BibTeX). The NLBSE'24 dataset README
+% (github.com/nlbse2024/issue-report-classification) asks users of the dataset to cite it.
+@article{kallis2021predicting,
+  title={Predicting issue types on {GitHub}},
+  author={Kallis, Rafael and Di Sorbo, Andrea and Canfora, Gerardo and Panichella, Sebastiano},
+  journal={Science of Computer Programming},
+  volume={205},
+  pages={102598},
+  year={2021},
+  publisher={Elsevier},
+  doi={10.1016/j.scico.2020.102598}
+}
+
+% Source: https://arxiv.org/bibtex/2209.11055. Non-archival (poster at the NeurIPS 2022 ENLSP-II workshop; no DOI).
+% Cite only if the paper again discusses encoder baselines (user decision: encoders stay out).
+@misc{tunstall2022efficient,
+  title={Efficient Few-Shot Learning Without Prompts},
+  author={Tunstall, Lewis and Reimers, Nils and Jo, Unso Eun Seo and Bates, Luke and Korat, Daniel and Wasserblat, Moshe and Pereg, Oren},
+  year={2022},
+  howpublished={arXiv:2209.11055},
+  eprint={2209.11055},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL}
+}
