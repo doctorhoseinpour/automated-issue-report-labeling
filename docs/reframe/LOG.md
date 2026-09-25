@@ -134,3 +134,17 @@ Status: DONE
     - `sclar2023quantifying` (prompt-format sensitivity, ICLR 2024) suits Threats.
   - One sub-agent put the user's email in a Crossref API `mailto=` parameter once (Crossref's "polite pool"). It was not sent anywhere else; flagged to the user.
 Status: DONE
+
+## S2 decisions (user) (2026-09-25)
+- **No new papers in Related Work.** Do not cite De Vito et al. (TOSEM 2026), LabelMate, the NASA study (`colavito2026issue`), or any other entry in `docs/reframe/refs_candidates.bib`. The file and the dossier's "NEW" entries stay for the record only. S4 must not add them to `refs.bib` or the text.
+- **Novelty sentence unchanged.** Keep the novelty sentence in §I and in the abstract as it is. Ignore the rewording options (A/B) in RW_DOSSIER.md.
+- **Still to be fixed by S4:**
+  - The accuracy findings about papers the paper already cites, A1–A4 in RW_DOSSIER.md:
+    - A1: the best results come from GPT models fine-tuned through the API, and LoRA was used only for open models.
+    - A2: `yu2023retrieval` does not support "similar examples beat random ones".
+    - A3: `le2023log`, `logan2021...` and `ma2023fairness...` do not support "few-shot prompting helps".
+    - A4: the "encoders need large training data" claim.
+  - The broken existing `refs.bib` entries listed in the dossier's "refs.bib corrections" (for example `hu2022lora`, `heo2025study` pages, `assi2026llm` title).
+  - The fixes must use only papers already in `refs.bib`.
+- **Email:** never send the user's email address anywhere (including API parameters such as Crossref's `mailto=`) without asking first.
+Status: DONE
