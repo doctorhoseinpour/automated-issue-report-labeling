@@ -148,3 +148,58 @@ Status: DONE
   - The fixes must use only papers already in `refs.bib`.
 - **Email:** never send the user's email address anywhere (including API parameters such as Crossref's `mailto=`) without asking first.
 Status: DONE
+
+## S3: headline reframe, three RQs, number diet (2026-09-25)
+- Changed:
+  - `00_abstract.tex` → rewritten on the S3 draft: context, fine-tuning's costs, gap (novelty sentence unchanged in content), study, filter, headline, plain RAG 2.8 points behind, same-data result, trade-off, closing restatement. **250 words** (counted "macro F1" as two words and "3,300" as one); one colon; no PS/PA, CIs or signed numbers.
+  - `01_intro.tex` → ¶2 lists fine-tuning's costs (training run, GPU memory, pooling, retraining); ¶4 study design in words ("We conduct an empirical study that does both", no PS/PA); ¶5 introduces RAG, both reference points ($k$NN voting framed as a test: 59.5%), and the filter hypothesis; three RQ blocks (RQ3 follows the RQ3 box); "Overall" sentence with no numbers; three contributions ($k$NN voting is not one; replication package in bullet 1); one-sentence roadmap.
+  - `03_approach.tex` → 2-sentence section intro; $k$NN voting role in one sentence; **filtered RAG calibration moved here** from old RQ2 (hypothesis → rule with a worked example → validation-split calibration → "otherwise identical"); LoRA baseline tightened (no more "faithfully reproduces" twice).
+  - `04_setup.tex` (Evaluation Metrics only) → defines "best $k$" = highest test-set macro F1; one bootstrap footnote (paired, 1,000 resamples of the 3,300 test issues); "why macro F1" clause.
+  - `05_evaluations.tex` → three RQs. Old RQ1 ($k$NN voting) and old RQ2 (RAG) merged into RQ1; old RQ3 → RQ2; old RQ4 → RQ3 with run-in paragraphs *Same labeled issues*, *Pooled fine-tuning* (per size in words, the fixed-$k$ = 12 check, heatmap), *Labeled data, memory, and time*, *Error profiles*, *Invalid outputs* (mechanism + fallback protocol and result). Stale coauthor/revision comments deleted; prose CIs removed (Table II has them). Opener: 2 sentences.
+  - `06_discussion.tex` → failure analysis with counts and whole percents (116/20/14 of 150 = 77/13/9%; invalid 44/14/2 of 60 = 73/23/3%; both sum to 99% by rounding), plus a short paragraph on why templates affect all approaches (hypothesis) and the 34 hybrid/noise cases; "Key Insights" replaced by **Implications**: *Labeled data and retraining* (headline restated), *Where fine-tuning keeps an edge*, *Error profiles*, *Question-to-bug confusion*, *Retrieval alone as a floor*, *Classification and templates*. Commented-out Future Work block deleted.
+  - `08_conclusion.tex` → three paragraphs kept (study; findings led by the headline with 4 numbers and the per-size guard; trade-offs + future work). Stale TOST comment block deleted.
+  - `02_related.tex` → only `\Cref{sec:rq1,sec:ragtag,sec:method-comparison}` → `\Cref{sec:rq1,sec:rq3}`.
+  - `scripts/paper/tab_method_comparison_ci.py` + `tables/method_comparison_ci.tex` → caption no longer says "paired bootstrap" (BRIEF 4.2): "…in percentage points, with 95% CIs, without and with the $k$NN voting fallback."
+  - Dossier fixes in my files: A2 (`yu2023retrieval` dropped from §I and §II-D; `liu2022makes` alone), A6.1 (hyperparameters attributed only where the papers report them; `dettmers2023qlora` cited for paged AdamW 8-bit).
+- New section labels: `sec:rq1` (RQ1: Classification with Retrieved Examples), `sec:rq2` (RQ2: Filtering the Retrieved Examples), `sec:rq3` (RQ3: RAG versus LoRA Fine-Tuning), `sec:disc-implications` (was `sec:disc-insights`). Removed: `sec:ragtag`, `sec:bragtag`, `sec:method-comparison`. Approach labels (`sec:approach-votag/ragtag/bragtag`) kept unchanged.
+- Page state (`pagecheck.py`): main text ends page 10, left column, y=513; **73 free lines on page 10**. References start page 11, end page 12 (about 98 body-line equivalents of room). OK within 10 + 2. Build: no overfull boxes (the `\balance` warning also disappeared in this build), no undefined references.
+  - History: the planned cuts alone freed 242 lines. The user chose to restore analysis until about 65–75 lines remain (S4 about 35–45 for Related Work, since no new papers are allowed; S5 about 25–30 for Threats and the final fill). Restored in the user's priority order: RQ3 per-size picture and the reason (fine-tuning's significant leads fall at the sizes where pooling helps it most), the full time trade-off, error profiles with per-label F1, invalid-output mechanism and fallback; RQ1 overlap, k-curve shape, zero-shot errors; RQ2 empty prompts at k ≤ 3, the Qwen-3B over-correction, best-k growth; Discussion implications; Conclusion.
+- Numbers:
+  - Every prose number is in NUMBERS.md, except setup and failure-analysis counts (300, 270, 30, 150, 60, 2,048, 8,192, 94.9%) and the whole-percent failure shares (77/13/9%, 23% = 34/150), which come from the counts.
+  - Statements made **in words only** from `paper/tables/triangulation_all_cells.csv`, with no number in the prose:
+    - bug→question share rises at every size under filtered RAG and nearly doubles at Qwen-3B;
+    - RAG k-curve shape (smaller models decline beyond their best k, larger ones flat);
+    - k = 1 beats zero-shot at every size;
+    - zero-shot Qwen-14B is below Qwen-7B;
+    - fine-tuning PS beats zero-shot at every size;
+    - per-label F1 of fine-tuning PA vs filtered RAG (fine-tuning higher bug F1 at all sizes; filtered RAG higher question F1 at 3B and 32B).
+  - "Differences on single projects reach about 10 points in either direction" comes from the hand-seeded heatmap CSV (−9.5 to +10.0).
+  - No 3-decimal numbers in the PDF text. No "PS"/"PA" in the abstract or §I. No TOST or equivalence wording.
+  - Number diet: results paragraphs carry at most 4 numbers, except the time paragraph (3,300; 0.10–0.44; 0.22–4.15; the $k$NN clause). The abstract has 7 numbers and the §I RQ3 block has 5 (the headline needs them).
+- Honesty guards placed:
+  1. Plain RAG 2.8 points behind, CI excludes zero: abstract, §I, RQ3 text and box, Discussion, Conclusion.
+  2. Per size: RQ3 *Pooled fine-tuning* and Conclusion.
+  3. k chosen on the test set, fixed k = 12 gives 1.2 points: §III-C and RQ3. **Threats still needs it (S5).**
+  4. "11× per project" everywhere; RQ3 explains 3,300 vs 300 per target project and the total-labeling-effort caveat.
+  5. RAG is not faster: abstract, §I, RQ3, Discussion (*Where fine-tuning keeps an edge*), Conclusion.
+  6. Question confusion persists and is known: §I, RQ3, Discussion, Conclusion. No favorable comparison with prior work.
+  7. Memory is per size, RAG inference vs fine-tuning's training plus inference: RQ3.
+- Sentences I was unsure about (S5/S6 please check):
+  - RQ2: "which suggests that the smallest model follows the remaining examples most closely" (a hedged interpretation).
+  - RQ1: "We hypothesize that larger models make better use of long contexts with many examples."
+  - RQ3: "We hypothesize that 300 issues are too few for fine-tuning to learn the task well …"
+  - RQ3: "We hypothesize that the long prompts, filled with issue text, lead the model to continue that text rather than answer."
+  - Discussion: "so correcting the template when an issue is filed could prevent many of them" and "a false bug label costs a triager's time, whereas a missed bug can delay a fix".
+  - RQ3 *Labeled data*: I deliberately did **not** claim that 32B RAG fits a 24 GB GPU (22.3 GB peak), because the 32B k ≥ 12 runs used an L40 per §III.
+- Open questions for the user: none new. The heatmap's 0.000 cell (lab machine) is still open.
+- Notes for the next sessions:
+  - S4:
+    - Related Work still cites `\Cref{sec:rq1,sec:rq3}` for "$k$NN voting 32%, zero-shot 46–59%, fine-tuning 23–36%". All three numbers are stated in RQ1/RQ3.
+    - "accuracy" appears once in 02_related.tex (BRIEF §6 bans accuracy discussion).
+    - The Discussion now has a *Question-to-bug confusion* paragraph that points to `sec:02_related`. Keep the closing Related Work paragraph consistent with it.
+  - S5:
+    - Threats must state guard 3 (k selected on the test set; fixed k = 12 gives 1.2 points on average).
+    - §III-A still says "Heo et al." (3×) and "data scope" (dossier A6.3). §II's "verbatim" template sentence (dossier A6.2) is still to decide: "We adopt the prompt template of these studies~\cite{heo2025study,aracena2025applying} verbatim" cites both, but the two templates differ.
+    - Temperature/determinism wording in §II left as is (for S5).
+    - The failure-analysis shares sum to 99% by rounding (counts are exact).
+Status: DONE
