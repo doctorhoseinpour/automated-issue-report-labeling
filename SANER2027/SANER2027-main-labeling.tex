@@ -90,20 +90,6 @@
 
 %% --- Editing / reference helpers -------------------------------------------
 \newcommand{\fixme}[1]{{\color{red}[#1]}}
-\newcommand{\fixed}[1]{{\color{blue}#1}}
-% Coauthor evaluation revision (2026-09-21); preserve the author's blue edits.
-\definecolor{coauthorcolor}{HTML}{A02060}
-\newcommand{\coauthor}[1]{{\color{coauthorcolor}#1}}
-\newcommand{\coauthornote}[1]{\coauthor{\textit{[Draft check: #1]}}}
-% Set the box text color explicitly so it survives tcolorbox column/page breaks.
-\newenvironment{coauthoranswer}{\tcbset{coltext=coauthorcolor}\begin{myboxi}}{\end{myboxi}}
-\pdfstringdefDisableCommands{\def\coauthor#1{#1}}
-\newcommand{\change}[1]{{\color{green}#1}}
-\newcommand{\rev}[1]{{\color{black}#1}}
-\newcommand{\minor}[1]{{\color{red}#1}}
-
-%% --- Metric-triangulation rewrite (2026-09-17): all changed text is blue (\fixed).
-
 
 \newcommand{\secref}[1]{Section~\ref{sec:#1}}
 \newcommand{\tabref}[1]{Table~\ref{tab:#1}}

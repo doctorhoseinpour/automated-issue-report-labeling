@@ -25,9 +25,9 @@ We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluation
 %%%%%%%%%%%%
 \myparagraph{Evaluation Metrics}
 \label{sec:setup-metrics}
-\fixed{We report the macro-averaged $F_1$ over the three classes (\emph{bug}, \emph{feature}, \emph{question}) as the headline metric and use it to select each method's best configuration. We also report macro-averaged and per-class precision and recall. All metrics are calculated over the total 3{,}300-issue test set. We also report the rate of outputs that fail to parse to a valid label (\textit{invalid rate}). Invalid outputs are counted as incorrect predictions. For statistical significance checks, we report paired bootstrap 95\% confidence intervals on the macro $F_1$ differences between methods.}
+We report the macro-averaged $F_1$ over the three classes (\emph{bug}, \emph{feature}, \emph{question}) as the headline metric and use it to select each method's best configuration. We also report macro-averaged and per-class precision and recall. All metrics are calculated over the total 3{,}300-issue test set. We also report the rate of outputs that fail to parse to a valid label (\textit{invalid rate}). Invalid outputs are counted as incorrect predictions. For statistical significance checks, we report paired bootstrap 95\% confidence intervals on the macro $F_1$ differences between methods.
 
 %%%%%%%%%%%%
 \myparagraph{Hardware Setup}
 \label{sec:setup-hardware}
-\fixed{Fine-tuning of Qwen-14B and Qwen-32B and the Qwen-32B runs at $k{\ge}12$ used one NVIDIA L40 or L40S GPU (48~GB VRAM). All other experiments used one NVIDIA RTX 4090 GPU (24~GB VRAM).}
+Fine-tuning of Qwen-14B and Qwen-32B and the Qwen-32B runs at $k{\ge}12$ used one NVIDIA L40 or L40S GPU (48~GB VRAM). All other experiments used one NVIDIA RTX 4090 GPU (24~GB VRAM).
