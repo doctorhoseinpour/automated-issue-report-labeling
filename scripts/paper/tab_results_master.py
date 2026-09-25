@@ -30,10 +30,10 @@ OUT = REPO / "SANER2027" / "tables" / "results_master.tex"
 
 BLOCK = [  # method, setting, label
     ("zero_shot", "PA", "Zero-shot"),
-    ("ragtag", "PS", r"\ragtag\ (PS)"),
-    ("bragtag", "PS", r"\bragtag\ (PS)"),
-    ("finetune", "PS", "Fine-Tune (PS)"),
-    ("finetune", "PA", "Fine-Tune (PA)"),
+    ("ragtag", "PS", "RAG (PS)"),
+    ("bragtag", "PS", "Filtered RAG (PS)"),
+    ("finetune", "PS", "Fine-tuning (PS)"),
+    ("finetune", "PA", "Fine-tuning (PA)"),
 ]
 FALLBACK_ROWS = {("ragtag", "PS"), ("bragtag", "PS"), ("finetune", "PA"), ("finetune", "PS")}
 
@@ -67,7 +67,7 @@ def _row(best, fb, method, setting, model, label, first_cell, bold=False, fallba
 
 
 def emit(best: pd.DataFrame, fb: pd.DataFrame, fallback_col: bool = False) -> str:
-    fb_head = r"+\votag & " if fallback_col else ""
+    fb_head = r"+ fallback & " if fallback_col else ""
     fb_sub = "& " if fallback_col else ""
     ncol = 14 if fallback_col else 13
     L = [
@@ -88,8 +88,8 @@ def emit(best: pd.DataFrame, fb: pd.DataFrame, fallback_col: bool = False) -> st
         r"    \cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}",
         r"     & & & $P$ & $R$ & $P$ & $R$ & $P$ & $R$ & & & & " + fb_sub + r"(\%) \\",
         r"    \midrule",
-        _row(best, fb, "votag", "PS", "-", r"\votag\ (PS)", "--", fallback_col=fallback_col),
-        _row(best, fb, "votag", "PA", "-", r"\votag\ (PA)", "", fallback_col=fallback_col),
+        _row(best, fb, "votag", "PS", "-", r"$k$NN voting (PS)", "--", fallback_col=fallback_col),
+        _row(best, fb, "votag", "PA", "-", r"$k$NN voting (PA)", "", fallback_col=fallback_col),
     ]
     for m in MODELS:
         L.append(r"    \midrule")
@@ -109,8 +109,8 @@ def emit(best: pd.DataFrame, fb: pd.DataFrame, fallback_col: bool = False) -> st
         r"PS: 300 labeled issues of the target project; PA: the 3{,}300 issues of all eleven projects. "
         r"$P$/$R$: precision/recall; $P_{\text{mac}}$/$R_{\text{mac}}$: their macro averages. "
         r"Invalid outputs count as incorrect. "
-        + (r"+\votag: macro $F_1$ with the \votag\ fallback for invalid outputs (\votag-PS at $k{=}15$ "
-           r"for PS rows, \votag-PA at $k{=}16$ for PA rows). " if fallback_col else "")
+        + (r"+ fallback: macro $F_1$ with the $k$NN voting fallback for invalid outputs ($k$NN voting PS at $k{=}15$ "
+           r"for PS rows, PA at $k{=}16$ for PA rows). " if fallback_col else "")
         + r"Bold: best macro $F_1$ per model size.}",
         r"\end{table*}",
         "",

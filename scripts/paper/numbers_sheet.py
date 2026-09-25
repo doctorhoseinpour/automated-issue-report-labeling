@@ -404,7 +404,8 @@ def sec_rq3():
     cost, model = {}, None
     for mdl, meth, gb, tr, inf, tot in rows:
         model = mdl or model
-        key = {"\\ragtag": "rag", "\\bragtag": "frag", "\\rag": "rag", "\\frag": "frag"}.get(meth, "ft")
+        key = {"\\ragtag": "rag", "\\bragtag": "frag", "RAG": "rag", "Filtered RAG": "frag",
+               "Fine-Tune": "ft", "Fine-tuning": "ft"}[meth.strip()]
         cost[(model, key)] = (float(gb), tr, inf, tot)
     P("Cost (`SANER2027/tables/method_cost.tex`; RAG memory is inference, fine-tuning memory is training plus "
       "inference):")

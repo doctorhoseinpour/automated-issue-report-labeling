@@ -22,7 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 CSV = REPO / "paper" / "tables" / "method_comparison_ci.csv"
 OUT = REPO / "SANER2027" / "tables" / "method_comparison_ci.tex"
 
-PROTOCOLS = [("raw", None), ("fallback", r"\quad +\votag")]
+PROTOCOLS = [("raw", None), ("fallback", r"\quad + fallback")]
 
 
 def fd(x: float, bold: bool) -> str:
@@ -58,14 +58,14 @@ def emit(df: pd.DataFrame) -> str:
         "% -- do not edit by hand. See the CSV header for the provenance of the current numbers.",
         r"\begin{table}[!t]",
         r"  \centering",
-        r"  \caption{Macro-$F_1$ difference from PA fine-tuning without and with the \votag\ fallback "
+        r"  \caption{Macro-$F_1$ difference from PA fine-tuning without and with the $k$NN voting fallback "
         r"(paired bootstrap 95\% CI).}",
         r"  \label{tab:method-comparison-ci}",
         r"  \footnotesize",
         r"  \setlength{\tabcolsep}{3pt}",
         r"  \begin{tabular}{@{}lrlrl@{}}",
         r"    \toprule",
-        r"     & \multicolumn{2}{c}{\ragtag\ $-$ Fine-Tune} & \multicolumn{2}{c}{\bragtag\ $-$ Fine-Tune} \\",
+        r"     & \multicolumn{2}{c}{RAG} & \multicolumn{2}{c}{Filtered RAG} \\",
         r"    \cmidrule(lr){2-3}\cmidrule(lr){4-5}",
         r"    Model & $\Delta F_1$ & 95\% CI & $\Delta F_1$ & 95\% CI \\",
         r"    \midrule",
@@ -82,9 +82,8 @@ def emit(df: pd.DataFrame) -> str:
         r"    \bottomrule",
         r"  \end{tabular}",
         r"  \par\vspace{2pt}",
-        r"  \parbox{\columnwidth}{\scriptsize \ragtag/\bragtag\ under PS at their best $k$, fine-tuning under PA; "
-        r"negative values favor fine-tuning. Each +\votag\ row applies the \votag\ fallback for invalid outputs "
-        r"to both methods. "
+        r"  \parbox{\columnwidth}{\scriptsize RAG and filtered RAG under PS at their best $k$, fine-tuning under PA; "
+        r"negative values favor fine-tuning. + fallback: invalid outputs of both methods labeled by $k$NN voting. "
         r"Bold: CI excludes zero. All sizes: mean of the four per-model differences.}",
         r"\end{table}",
         "",

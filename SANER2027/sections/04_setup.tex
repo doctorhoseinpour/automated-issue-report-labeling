@@ -14,7 +14,7 @@ We use the dataset introduced in Heo et al.~\cite{heo2025study} for our experime
 with an equal distribution across the labels
 (\emph{bug}, \emph{feature}, and \emph{question}). To support their LLM fine-tuning method, Heo et al. divided the dataset into 50/50 train and test
 splits, stratified by project and label. This results in 300 train
-and 300 test issue reports per project. We also adopt Heo et al.'s project-specific (PS) and project-agnostic (PA) configurations to examine how data scope affects IRC performance. In the PS setting, each project's train and test data are used in isolation, resulting in eleven different train-test pairs. In the PA setting, the train splits of all projects are merged into a single training set of 3,300 issue reports. In both configurations, \ragtag and \votag only use the training splits as their retrieval index to ensure fair comparison with the fine-tuning baseline.
+and 300 test issue reports per project. We also adopt Heo et al.'s project-specific (PS) and project-agnostic (PA) configurations to examine how data scope affects IRC performance. In the PS setting, each project's train and test data are used in isolation, resulting in eleven different train-test pairs. In the PA setting, the train splits of all projects are merged into a single training set of 3,300 issue reports. In both configurations, \rag and \knn only use the training splits as their retrieval index to ensure fair comparison with the fine-tuning baseline.
 
 %%%%%%%%%%%%
 \myparagraph{Models}
