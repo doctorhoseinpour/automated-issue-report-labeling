@@ -100,3 +100,37 @@ Status: DONE
   - `numbers_sheet.py` parses `method_cost.tex` by its row labels (RAG / Filtered RAG / Fine-tuning).
     Keep them if you edit that table.
 Status: DONE
+
+## S2: Related Work research dossier (2026-09-25, evening)
+- Changed:
+  - `docs/reframe/RW_DOSSIER.md` → new: novelty risks, De Vito et al., accuracy fixes (A1–A6), refs.bib corrections, per-paper facts with page-cited quotes and "how we differ" lines, a 6-paragraph outline with exact contrast sentences (~1,000 words vs ~690 now), open questions.
+  - `docs/reframe/refs_candidates.bib` → new: 15 verified entries not in refs.bib (sources in comment lines; test-compiled with IEEEtran, no warnings; no key collisions).
+  - No edits under `SANER2027/`, `scripts/` or `paper/`. Commit `5bf6860`.
+- Page state: S2 did not build. `pagecheck.py` on the PDF currently on disk (built from another session's uncommitted edits) reports that the main text ends on page 8 with 226 free lines before the end of page 10. That is a transient state, not S2's.
+- Numbers: none computed. The outline's contrast sentences use only BRIEF §9 anchors (1.0 point behind, CI includes zero; 46–59%); S4 re-checks them against NUMBERS.md.
+- **NOVELTY RISK (S4: read the top of the dossier before writing):**
+  - The novelty sentence in §I (and the live abstract) says RAG "has not been systematically evaluated for IRC or compared with LoRA fine-tuning".
+  - The second half survived every search. The first half is at risk from De Vito et al. (TOSEM 2026, few-shot LLM IRC with Qwen2.5-32B; full text closed, example selection unknown; their 2024 plan used vector-DB similarity selection) and from LabelMate (arXiv 2026-09, retrieved labeled issues for fine-grained labels, no fine-tuning).
+  - Recommended narrowing: "... has not been compared with LoRA fine-tuning of the same LLMs on the same labeled issues."
+- Open questions for the user:
+  1. Cite De Vito et al. (S2 recommends yes, with a cautious contrast sentence; please check its §3 if you have ACM access).
+  2. Approve the narrowed novelty sentence (§I and abstract).
+  3. Cite LabelMate (preprint) or not.
+  4. The NASA study (`colavito2026issue`): one clause recommended. Its SetFit result (fewer than 20 labeled examples beat zero-shot LLMs) could be raised against the "11× less labeled data" headline.
+- Notes for the next sessions:
+  - S4:
+    - The current Related Work misstates prior work in four places:
+      - A1 (the most serious): "state-of-the-art ... fine-tune with LoRA". The best results come from GPT models fine-tuned through OpenAI's API; LoRA was used only for open models, which scored lower.
+      - A2: `yu2023retrieval` is a trained RoBERTa classifier with a trained retriever, not in-context examples.
+      - A3: `le2023log` is prompt-tuning of RoBERTa, `logan2021` argues for fine-tuning, and `ma2023fairness` is about label bias. None supports "few-shot prompting helps".
+      - A4: "encoders need large data" is contradicted by Colavito IST 2025.
+    - Fixed wording is in the dossier.
+    - `hu2022lora` in refs.bib is garbage (journal "Iclr", wrong author); `heo2025study` pages should be 136--146; `assi2026llm` renders "Llm-cure". The corrected BibTeX is in the dossier.
+    - Most important new references: `weyssow2025exploring` (LoRA beat random and retrieved examples for code generation; frame our plain-RAG result as agreeing and filtered RAG as the difference, never "overturn"), `mosbach2023few`, `zhao2021calibrate`, `nashid2023retrieval`. `dincc2025judge` is the closest SE precedent: same MiniLM + FAISS stack, fixed k = 5, and it names a k sweep and neighbor filtering as future work.
+  - S3/S5: A1 also appears in §II's LoRA baseline subsection. A2 appears in §I l.13 and §II-D (`yu2023retrieval`). A6:
+    - §II l.208 attributes lr 2e-4, paged AdamW 8-bit and grad-accum 16 to Heo and Lee and Aracena et al., but neither paper's text states them.
+    - §II l.199 says the template is "verbatim" from both papers, but their templates differ.
+    - §III l.7 says "the dataset introduced in Heo et al."; it should be "Heo and Lee", who extended NLBSE'24 with six projects.
+    - `sclar2023quantifying` (prompt-format sensitivity, ICLR 2024) suits Threats.
+  - One sub-agent put the user's email in a Crossref API `mailto=` parameter once (Crossref's "polite pool"). It was not sent anywhere else; flagged to the user.
+Status: DONE
