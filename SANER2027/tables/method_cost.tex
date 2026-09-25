@@ -9,13 +9,13 @@
 %    scripts/paper/tab_triangulation.py): 242.2 MB peak, 3.58 s end to end, F1 0.5951.
 \begin{table}[t]
   \centering
-  \caption{Computational cost of \knn\ (PS, $k{=}15$), \rag, \frag, and LoRA fine-tuning at the configurations of \Cref{tab:method-comparison-ci}. RAM is the observed peak GPU memory; Train and Infer are wall-clock runtimes, and Total is their sum.}
+  \caption{Computational cost of \knn\ (PS, $k{=}15$), \rag, \frag, and LoRA fine-tuning at the configurations of \Cref{tab:method-comparison-ci}. Memory is the peak GPU memory; Train and Infer are wall-clock times, and Total is their sum.}
   \label{tab:method-cost}
   \footnotesize
   \setlength{\tabcolsep}{3.5pt}
   \begin{tabular}{llcccc}
     \toprule
-    Model & Method & RAM (GB) & Train (h) & Infer (h) & Total (h) \\
+    Model & Method & Mem. (GB) & Train (h) & Infer (h) & Total (h) \\
     \midrule
     -- & $k$NN voting & 0.2 & -- & $<$0.01 & $<$0.01 \\
     \addlinespace[2pt]

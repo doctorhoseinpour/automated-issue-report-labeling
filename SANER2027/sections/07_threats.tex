@@ -1,20 +1,13 @@
 % !TEX root = ../SANER2027-main-labeling.tex
 % Threats to Validity
-% Claims to support: single dataset, prompt sensitivity, deterministic splits
 
 \section{Threats to Validity}
 \label{sec:threats}
 
-\myparagraph{Internal Validity} 
-\Frag's margin uses the same empirically derived fixed value across all models and projects with no per-project or per-model tuning, and is not framed as a universally optimal constant. Furthermore, the choice of hyperparameters and prompt format can also pose an internal threat to validity as different hyperparameters and prompts can change fine-tuning performance~\cite{heo2025study,aracena2025applying}. 
+\myparagraph{Internal Validity} Each method's best $k$ is the one with the highest macro $F_1$ on the test set, which favors the RAG variants. With a single $k{=}12$ for every model size, \frag\ trails fine-tuning by 1.2 points on average instead of 1.0 (\Cref{sec:rq3}). The filter's margin was calibrated on a validation split of the labeled issues, not on the test set, and is the same for all models and projects (\Cref{sec:approach-bragtag}). Prompts and hyperparameters affect fine-tuning results~\cite{heo2025study,aracena2025applying}. Ours follow prior work where it reports them (\Cref{sec:finetune}), and other choices could change the results of either approach. Invalid outputs count as errors, which penalizes the RAG variants most; the fallback analysis shows their effect (\Cref{sec:rq3}).
 
+\myparagraph{Construct Validity} Macro $F_1$ on a balanced three-label test set weighs the labels equally, and we report per-class precision and recall so that trade-offs between labels stay visible (\Cref{tab:results}). Some ground-truth labels are wrong, accounting for 9\% of the sampled errors (\Cref{sec:disc-failures}). Since all methods are scored against the same labels, this noise lowers every method's scores. LLM outputs can vary between runs, so we ran the experiments three times and report the average.
 
+\myparagraph{Conclusion Validity} We test differences between methods with paired bootstrap CIs that resample the test issues (\Cref{sec:setup-metrics}). The per-size comparisons are not corrected for multiple comparisons, so a single per-size result should be read with care; the headline rests on the average over the four sizes.
 
-\myparagraph{External Validity}
-% Our approach classifies issues solely by their titles and descriptions, ignoring the discussion thread. In practice, an issue's label can shift through community discussion. Since this dynamic is not reflected in our dataset, this may cause false negatives. 
-Issue report text can vary substantially in writing style, vocabulary, and structure across software projects~\cite{akhavan2026linkanchorautonomousllmbasedagent}, which may threaten the generalizability of our findings.
-Another threat to external validity is generalizability across settings. We note that many configurations, including LLM architecture, prompt structure, embedding model, and retrieval technique, can each lead to different results. Assessing how far our findings generalize to other settings is itself an important question, but one that falls outside this paper's scope and warrants its own dedicated studies.
-\myparagraph{Construct Validity}
-The inherent randomness of LLM outputs can pose a potential threat to construct validity. The reported performance metrics can vary between different runs due to LLM randomness. To mitigate this variance, we ran the experiments three times and report the average. 
-
-%\myparagraph{Reliability.} \fixme{Provide the link to replication package here.} 
+\myparagraph{External Validity} We study one model family (Qwen2.5-Instruct, four sizes), one embedding model, and one benchmark of eleven GitHub projects with balanced labels. Results may differ with imbalanced labels, other issue trackers, or other model families. Issue text also varies in writing style, vocabulary, and structure across projects~\cite{akhavan2026linkanchorautonomousllmbasedagent}, and our results vary by project as well (\Cref{fig:per-project-diff}).

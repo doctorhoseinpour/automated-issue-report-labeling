@@ -4,28 +4,26 @@
 
 \myparagraph{Dataset and Settings}
 \label{sec:setup-dataset}
-We use the dataset introduced in Heo et al.~\cite{heo2025study} for our experiments. The dataset has a total of 6,600 issue reports gathered from eleven active open-source projects:
+We use the dataset of Heo and Lee~\cite{heo2025study}, which extends the five-project NLBSE'24 dataset~\cite{kallis2024nlbse} with six projects. It has 6,600 issue reports from eleven active open-source projects:
 \texttt{ansible}, \texttt{bitcoin},
 \texttt{dart-lang}, \texttt{roslyn},
 \texttt{react}, \texttt{flutter},
 \texttt{kubernetes}, \texttt{TypeScript},
 \texttt{vscode}, \texttt{opencv}, and
 \texttt{tensorflow}. Each project has 600 issue reports
-with an equal distribution across the labels
-(\emph{bug}, \emph{feature}, and \emph{question}). To support their LLM fine-tuning method, Heo et al. divided the dataset into 50/50 train and test
-splits, stratified by project and label. This results in 300 train
-and 300 test issue reports per project. We also adopt Heo et al.'s project-specific (PS) and project-agnostic (PA) configurations to examine how data scope affects IRC performance. In the PS setting, each project's train and test data are used in isolation, resulting in eleven different train-test pairs. In the PA setting, the train splits of all projects are merged into a single training set of 3,300 issue reports. In both configurations, \rag and \knn only use the training splits as their retrieval index to ensure fair comparison with the fine-tuning baseline.
+divided equally among the three labels.
+Heo and Lee split each project's issues in half, stratified by label, into 300 labeled (training) and 300 test issues. We also adopt their two settings, which differ in where the labeled issues come from. In the project-specific (PS) setting, each project's labeled issues are used alone, giving eleven training and test pairs. In the project-agnostic (PA) setting, the labeled issues of all eleven projects are pooled into one training set of 3,300 issues. In both settings, the retrieval index holds exactly the issues that fine-tuning trains on.
 
 %%%%%%%%%%%%
 \myparagraph{Models}
 \label{sec:setup-models}
-We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluations with four different parameter sizes: 3B, 7B, 14B, and 32B. Qwen2.5 is an open-source LLM with strong performance on general-purpose benchmarks. Using the same model with different parameter sizes enables analysis of the effect of model scale in LLM-based IRC approaches.
+We use the Qwen2.5-Instruct model family~\cite{yang2024qwen25} in our evaluations with four different parameter sizes: 3B, 7B, 14B, and 32B. Qwen2.5 is an open LLM family with strong results on general-purpose benchmarks, and four sizes of one family let us study the effect of model size alone.
 
 
 %%%%%%%%%%%%
 \myparagraph{Evaluation Metrics}
 \label{sec:setup-metrics}
-We report the macro-averaged $F_1$ over the three labels as the headline metric, since it weighs the three labels equally. A method's \emph{best} $k$ (its best configuration) is the one with the highest macro $F_1$ on the test set. We report scores in percent and differences between methods in percentage points (points). We also report macro-averaged and per-class precision and recall. All metrics are calculated over the total 3{,}300-issue test set. We also report the rate of invalid outputs (\textit{invalid rate}), which count as incorrect predictions. For significance, we report bootstrap 95\% confidence intervals (CIs) on the macro $F_1$ differences between methods.\footnote{We resample the 3{,}300 test issues 1{,}000 times and evaluate both methods on the same resample (paired bootstrap).}
+We report the macro-averaged $F_1$ over the three labels as the headline metric, since it weighs the three labels equally. A method's \emph{best} $k$ (its best configuration) is the one with the highest macro $F_1$ on the test set. We report scores in percent and differences between methods in percentage points (points). We also report macro-averaged and per-class precision and recall. We compute all metrics over the 3{,}300 test issues of all projects together. We also report the share of invalid outputs (\textit{invalid rate}), which count as incorrect predictions. For significance, we report bootstrap 95\% confidence intervals (CIs) on the macro $F_1$ differences between methods.\footnote{We resample the 3{,}300 test issues 1{,}000 times and evaluate both methods on the same resample (paired bootstrap).}
 
 %%%%%%%%%%%%
 \myparagraph{Hardware Setup}
