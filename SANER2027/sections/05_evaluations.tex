@@ -94,7 +94,7 @@ In this section, we present the results of our experiments and answer the four r
 %            coauthor's cost table and time discussion are dropped (not input).
 
 %%%%%%%%%%%
-\myparagraph{Classification Performance.}
+\myparagraph{Classification Performance}
 
 \fixed{We fine-tune all four models under both data scopes and compare them with \ragtag\ and \bragtag\ at their best $k$ (\Cref{tab:results}). When all methods use the same 300 labeled issues per project (PS), both retrieval-based approaches outperform fine-tuning at every model size: \ragtag\ leads by 0.021--0.040 macro $F_1$, and \bragtag\ by 0.038--0.060. Fine-tuning benefits from pooling the 3{,}300 labeled issues across all eleven projects (PA), which changes both the number of training examples and their project composition. Pooling raises its macro $F_1$ by 0.031--0.084 relative to PS, consistent with prior findings~\cite{heo2025study}, although the class-level effects vary: for Qwen-32B, it increases bug recall but lowers question recall (\Cref{tab:results}).}
 
@@ -120,7 +120,7 @@ In this section, we present the results of our experiments and answer the four r
 \coauthor{After applying the fallback to all three LLM approaches (\Cref{tab:method-comparison-ci}, +\votag\ rows), \bragtag's differences from LoRA range from $-0.014$ to $+0.021$. Its deficits at Qwen-7B and Qwen-14B are approximately halved, to $-0.011$ and $-0.014$, while its Qwen-32B advantage increases to $+0.021$. LoRA's scores change by at most 0.003.} \fixed{The aggregate difference between \bragtag\ and fine-tuning becomes $+0.001$ (95\% CI $[-0.009, +0.011]$), and per model the interval excludes zero only at Qwen-32B, in \bragtag's favor.}
 
 %%%%%%%%%%%%%%%%%%%%%
-\myparagraph{Computation and Data Cost.}
+\myparagraph{Computation and Data Cost}
 
 % \begin{figure}[t]
 %     \centering
