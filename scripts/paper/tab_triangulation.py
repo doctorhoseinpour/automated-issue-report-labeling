@@ -167,17 +167,25 @@ def emit_method_comparison_ext(best: pd.DataFrame, cost_rows) -> str:
     return "\n".join(L)
 
 
+# VOTAG PS (k=15, similarity vote), measured end to end on the lab RTX 4090 on
+# 2026-09-24: MiniLM embedding of train+test, per-project FAISS build and search, and
+# the vote, for the 3,300 test issues; median of 3 runs after a warm-up, model load
+# excluded. Reproduces pooled macro F1 0.5951. torch.cuda.max_memory_allocated.
+VOTAG_COST = {"gpu_ram_mb": 242.2, "infer_time_s": 3.58}
+
+
 def emit_method_cost(cost_rows) -> str:
     """Compact cost table (column width): peak GPU memory and runtimes."""
-    def fhrs(x): return f"{x/3600:.2f}"
+    def fhrs(x): return f"{x/3600:.2f}" if x >= 36 else "$<$0.01"
     def fgb(x): return f"{x/1024:.1f}"
     L = [
         r"\begin{table}[t]",
         r"  \centering\color{blue}",
-        r"  \caption{Computational cost of \ragtag, \bragtag, and LoRA fine-tuning at the "
-        r"configurations of \Cref{tab:method-comparison-ext}. RAM is the observed peak GPU memory; "
-        r"Train and Infer are wall-clock runtimes on a single GPU (\ragtag/\bragtag\ have no "
-        r"training phase), and Total is their sum, excluding model load.}",
+        r"  \caption{Computational cost of \votag\ (PS, $k{=}15$), \ragtag, \bragtag, and LoRA "
+        r"fine-tuning at the configurations of \Cref{tab:method-comparison-ci}. RAM is the observed "
+        r"peak GPU memory; Train and Infer are wall-clock runtimes on a single GPU "
+        r"(\Cref{sec:setup-hardware}; only fine-tuning has a training phase), and Total is their sum, "
+        r"excluding model load. \votag's time includes retrieval (3.5~s).}",
         r"  \label{tab:method-cost}",
         r"  \footnotesize",
         r"  \setlength{\tabcolsep}{3.5pt}",
@@ -185,6 +193,9 @@ def emit_method_cost(cost_rows) -> str:
         r"    \toprule",
         r"    Model & Method & RAM (GB) & Train (h) & Infer (h) & Total (h) \\",
         r"    \midrule",
+        f"    -- & \\votag & {fgb(VOTAG_COST['gpu_ram_mb'])} & -- & "
+        f"{fhrs(VOTAG_COST['infer_time_s'])} & {fhrs(VOTAG_COST['infer_time_s'])} \\\\",
+        r"    \addlinespace[2pt]",
     ]
     prev = None
     for m, method, setting, name, c in cost_rows:

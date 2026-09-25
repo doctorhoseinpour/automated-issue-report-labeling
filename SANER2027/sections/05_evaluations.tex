@@ -131,11 +131,14 @@ In this section, we present the results of our experiments and answer the four r
 
 % Author's shortened version (commit c91bc26), restored 2026-09-22; "per project"
 % added to match the annotation-budget caveat earlier in this subsection.
-% tables/method_cost.tex is kept on disk but not input.
+% tables/method_cost.tex input again 2026-09-24, with the time trade-off below.
 % Savings from peak GPU memory in GB, RAG vs. LoRA incl. training: 2.9/5.5, 6.8/9.9, 12.6/16.7, 22.3/31.5.
-\fixed{Our RAG-based methods require 47\%, 31\%, 25\%, and 29\% less peak GPU memory than LoRA fine-tuning for Qwen-3B, -7B, -14B, and -32B, respectively, and remain competitive with it while using $11\times$ less labeled data per project.}
+% VOTAG cost measured 2026-09-24 (tables/method_cost.tex header).
+\input{tables/method_cost.tex}
+
+\fixed{Our RAG-based methods require 47\%, 31\%, 25\%, and 29\% less peak GPU memory than LoRA fine-tuning for Qwen-3B, -7B, -14B, and -32B, respectively, and remain competitive with it while using $11\times$ less labeled data per project (\Cref{tab:method-cost}). They have no training phase, but their longer prompts make each classification slower. Fine-tuned models label the 3{,}300 test issues in 0.10--0.44~h, whereas \bragtag\ takes 0.22--4.15~h. Including training, \bragtag\ takes less total time than fine-tuning at Qwen-3B and Qwen-14B, about the same at Qwen-7B, and more at Qwen-32B (4.15~h versus 2.71~h). Fine-tuning must, however, be repeated whenever the model is replaced or new labeled issues are added, whereas retrieval only needs to index the new issues. Without an LLM, \votag\ labels the 3{,}300 test issues in under 4~s with 0.2~GB of GPU memory, at a macro $F_1$ of 0.595 (\Cref{sec:rq1}).}
 
 \begin{myboxi}
 % \textbf{Answer to RQ4:} 
-\fixed{Given the same 300 labeled issues per project, both retrieval-based methods outperform LoRA fine-tuning at every model size (\ragtag\ by 0.021--0.040 macro $F_1$, \bragtag\ by 0.038--0.060). With 11$\times$ more labeled data per project, fine-tuning leads \ragtag\ by 0.028 in aggregate, but its 0.010 lead over \bragtag\ is not statistically significant. Once a \votag\ fallback handles invalid outputs, \bragtag\ closes this gap ($+0.001$) and is significantly better at Qwen-32B. The methods trade different errors: fine-tuning detects more bugs but over-predicts the bug class, whereas \bragtag\ makes fewer false bug predictions. Retrieval-augmented few-shot prompting also requires 25--47\% less peak GPU memory than fine-tuning.}
+\fixed{Given the same 300 labeled issues per project, both retrieval-based methods outperform LoRA fine-tuning at every model size (\ragtag\ by 0.021--0.040 macro $F_1$, \bragtag\ by 0.038--0.060). With 11$\times$ more labeled data per project, fine-tuning leads \ragtag\ by 0.028 in aggregate, but its 0.010 lead over \bragtag\ is not statistically significant. Once a \votag\ fallback handles invalid outputs, \bragtag\ closes this gap ($+0.001$) and is significantly better at Qwen-32B. The methods trade different errors: fine-tuning detects more bugs but over-predicts the bug class, whereas \bragtag\ makes fewer false bug predictions. Retrieval-augmented few-shot prompting also requires 25--47\% less peak GPU memory than fine-tuning, but its inference is slower, and at Qwen-32B its total runtime is higher.}
 \end{myboxi}
