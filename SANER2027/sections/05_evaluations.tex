@@ -22,7 +22,7 @@ In this section, we present the results of our experiments and answer the four r
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=\textwidth]{figures/kcurves.pdf}
-    \caption{\fixed{Macro $F_1$ across the $k$ grid. \textbf{(a)}~\votag\ in PS (solid) and PA (dashed). \textbf{(b)}~\ragtag\ for the four Qwen sizes in PS (solid, filled) and PA (dashed, hollow). \textbf{(c)}~\bragtag\ (markers) against \ragtag. (b) and (c) share one $y$-axis and Rings mark each method's best $k$.}}
+    \caption{\fixed{Macro $F_1$ across the $k$ grid. \textbf{(a)}~\votag\ in PS (solid) and PA (dashed). \textbf{(b)}~\ragtag\ for the four Qwen sizes in PS (solid, filled) and PA (dashed, hollow). \textbf{(c)}~\bragtag\ (markers) against \ragtag. (b) and (c) share one $y$-axis and \fixed{rings} mark each method's best $k$.}}
     \label{fig:kcurves}
 \end{figure*}
 \input{tables/results_master.tex}
@@ -43,7 +43,7 @@ In this section, we present the results of our experiments and answer the four r
 
 \coauthor{We evaluate \ragtag\ at $k\in\{0,1,3,6,9,12,15\}$ in PS and PA, where $k{=}0$ is the zero-shot baseline~\cite{colavito2025benchmarking}. \votag's peaks at $k{=}15$--16 (RQ1) set the upper end of this grid. \Cref{fig:kcurves}b reports macro $F_1$ across the grid in both settings.}
 
-\coauthor{PS has slightly higher macro $F_1$ than PA at almost every (model, $k$) pairs with $k{\ge}1$, using 300 in-project retrieval examples rather than a pool of 3{,}300 examples. Zero-shot predictions are identical between settings because no retrieval is performed. The small PS--PA differences are consistent with the neighbor overlap observed in RQ1. We use PS for the remaining \ragtag\ analysis.}
+\coauthor{PS has slightly higher macro $F_1$ than PA at almost every (model, $k$) \fixed{pair} with $k{\ge}1$, using 300 in-project retrieval examples rather than a pool of 3{,}300 examples. Zero-shot predictions are identical between settings because no retrieval is performed. The small PS--PA differences are consistent with the neighbor overlap observed in RQ1. We use PS for the remaining \ragtag\ analysis.}
 
 \coauthor{All 48 nonzero-$k$ configurations, spanning four model sizes and both data scopes, outperform the corresponding zero-shot baseline and the strongest \votag\ configuration in macro $F_1$, macro precision, and macro recall. Thus, LLM classification using retrieved examples outperforms similarity-weighted voting. Within the PS grid, the \fixed{best $k$ is 3, 6, 12, and 12} for Qwen-3B, -7B, -14B, and -32B, respectively. These configurations achieve 0.697--0.767 macro $F_1$, averaging a gain of 0.076 over zero-shot. Increasing $k$ from 12 to 15 does not improve any model's PS score.}
 
