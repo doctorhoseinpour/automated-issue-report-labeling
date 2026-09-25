@@ -89,7 +89,7 @@ def emit_triangulation(best: pd.DataFrame) -> str:
 def emit_bragtag_ext(best: pd.DataFrame) -> str:
     L = [
         r"\begin{table*}[t]",
-        r"  \centering\color{blue}",
+        r"  \centering",
         r"  \caption{\ragtag\ vs.\ \bragtag\ at each model's best $k$ (PS, pooled, raw "
         r"predictions). $P$/$R$/$F_1$ are per-class precision, recall, and $F_1$; $P_{\text{mac}}$/$R_{\text{mac}}$ "
         r"are macro precision and recall.}",
@@ -135,7 +135,7 @@ def emit_method_comparison_ext(best: pd.DataFrame, cost_rows) -> str:
     emit_method_cost()."""
     L = [
         r"\begin{table*}[t]",
-        r"  \centering\color{blue}",
+        r"  \centering",
         r"  \caption{\ragtag, \bragtag, and LoRA fine-tuning at each method's best configuration "
         r"(\ragtag/\bragtag\ at their best $k$ under the PS data scope, fine-tuning under PA; "
         r"pooled, raw predictions). $P$/$R$ are per-class precision/recall, $P_{\text{mac}}$/$R_{\text{mac}}$ "
@@ -180,7 +180,7 @@ def emit_method_cost(cost_rows) -> str:
     def fgb(x): return f"{x/1024:.1f}"
     L = [
         r"\begin{table}[t]",
-        r"  \centering\color{blue}",
+        r"  \centering",
         r"  \caption{Computational cost of \votag\ (PS, $k{=}15$), \ragtag, \bragtag, and LoRA "
         r"fine-tuning at the configurations of \Cref{tab:method-comparison-ci}. RAM is the observed "
         r"peak GPU memory; Train and Infer are wall-clock runtimes on a single GPU "

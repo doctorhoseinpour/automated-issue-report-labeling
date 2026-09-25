@@ -104,6 +104,15 @@
 
 %% --- Metric-triangulation rewrite (2026-09-17): all changed text is blue (\fixed).
 
+%% Submission build: all draft colors off. Set \draftcolorstrue to see the edits again.
+\newif\ifdraftcolors
+\draftcolorsfalse
+\ifdraftcolors\else
+  \renewcommand{\fixed}[1]{#1}
+  \renewcommand{\coauthor}[1]{#1}
+  \colorlet{coauthorcolor}{black}
+\fi
+
 
 \newcommand{\secref}[1]{Section~\ref{sec:#1}}
 \newcommand{\tabref}[1]{Table~\ref{tab:#1}}
@@ -116,18 +125,20 @@
 \newcommand{\alref}[1]{Algorithm~\ref{al:#1}}
 
 %% --- Run-in bold paragraph headings ----------------------------------------
+% After-skip is zero: IEEEtran already appends ":\ \," to run-in headings
+% (\@IEEEsectpunct), so any extra skip here widens the gap after the colon.
 \makeatletter
 \newcommand{\myparagraph}[1]{%
   \@startsection{paragraph}{4}{\z@}%
     {0.4\baselineskip}%
-    {-1em}%
+    {\z@}%
     {\normalfont\normalsize\bfseries\raggedright}%
     *{#1}%
 }
 \newcommand{\myitparagraph}[1]{%
   \@startsection{paragraph}{4}{\z@}%
     {0.4\baselineskip}%
-    {-1em}%
+    {\z@}%
     {\normalfont\normalsize\bfseries\itshape\raggedright}%
     *{#1}%
 }
@@ -187,6 +198,8 @@ author3@bgsu.edu}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%          References
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Main text fills pages 1-10; references start on page 11.
+\clearpage
 \balance
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
