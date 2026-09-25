@@ -1,0 +1,4 @@
+# <run>|<tag>|<nshards>|<cluster>|<partition>|<time>|<run_llm.py args>   (consumed by launch_nm.sh)
+test_k15|mi3_8b|6|ascend|preemptible-nextgen|01:30:00|--mode gen --roles test --ks 15 --neighbors /users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_test.npz
+test_k9|qw35_9b|8|ascend|preemptible-nextgen|01:30:00|--mode gen --roles test --ks 9 --neighbors /users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_test.npz
+test_k12|gm4_12b|12|ascend|preemptible-nextgen|01:30:00|--mode gen --roles test --ks 12 --neighbors /users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_test.npz

@@ -1,0 +1,22 @@
+# newllms venv (OSC /fs/ess/PCS0289/rag_next/venv-nm): plain transformers + bitsandbytes NF4 for
+# Qwen3.5 / Gemma 4 unified / Ministral 3, which need transformers >= 5.10 (the lab stack is 5.5.0).
+# torch 2.10.0 from PyPI ships the CUDA 12.8 runtime (worked on Cardinal H100, driver 580).
+torch==2.10.0
+torchvision==0.25.0
+transformers==5.17.0
+bitsandbytes==0.50.2
+accelerate==1.15.0
+flash-linear-attention==0.5.2
+fla-core==0.5.2
+einops
+huggingface_hub>=1.5,<2
+hf-xet
+safetensors>=0.8
+tokenizers>=0.23.1,<0.24
+sentencepiece
+protobuf
+numpy
+pandas
+pyarrow
+tqdm
+psutil
