@@ -26,14 +26,14 @@ PROTOCOLS = [("raw", None), ("fallback", r"\quad + fallback")]
 
 
 def fd(x: float, bold: bool) -> str:
-    v = f"{x:+.3f}"
+    v = f"{100 * x:+.1f}"  # percentage points, one decimal
     return rf"$\mathbf{{{v}}}$" if bold else f"${v}$"
 
 
 def fci(lo, hi) -> str:
     if pd.isna(lo) or pd.isna(hi):
         return "--"
-    return f"$[{lo:+.3f}, {hi:+.3f}]$"
+    return f"$[{100 * lo:+.1f}, {100 * hi:+.1f}]$"
 
 
 def _row(df, method, protocol, model):
@@ -58,8 +58,8 @@ def emit(df: pd.DataFrame) -> str:
         "% -- do not edit by hand. See the CSV header for the provenance of the current numbers.",
         r"\begin{table}[!t]",
         r"  \centering",
-        r"  \caption{Macro-$F_1$ difference from PA fine-tuning without and with the $k$NN voting fallback "
-        r"(paired bootstrap 95\% CI).}",
+        r"  \caption{Macro-$F_1$ difference from PA fine-tuning in percentage points, without and with the "
+        r"$k$NN voting fallback (paired bootstrap 95\% CI).}",
         r"  \label{tab:method-comparison-ci}",
         r"  \footnotesize",
         r"  \setlength{\tabcolsep}{3pt}",

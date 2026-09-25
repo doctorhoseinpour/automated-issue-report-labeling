@@ -1,14 +1,14 @@
 """SANER2027/figures/kcurves.pdf -- macro F1 across the k grid; one figure for RQ1-RQ3.
 
-  (a) VOTAG, PS (solid) and PA (dashed), k = 1..20, 25, 30; the two peaks are ringed.
-  (b) RAGTAG, four Qwen sizes, PS (solid, filled markers) and PA (dashed, hollow),
-      k = 0..15; k = 0 is zero-shot, which is identical in both scopes. The dotted line
-      is VOTAG's best (PA, k = 16). Each model's best PS k is ringed.
-  (c) BRAGTAG (PS, markers) against RAGTAG-PS (thin lines, the same curves as in b).
-      Each model's best BRAGTAG k is ringed.
+  (a) kNN voting, PS (solid) and PA (dashed), k = 1..20, 25, 30; the two peaks are ringed.
+  (b) RAG, four Qwen sizes, PS (solid, filled markers) and PA (dashed, hollow),
+      k = 0..15; k = 0 is zero-shot, which is identical in both settings. The dotted line
+      is kNN voting's best (PA, k = 16). Each model's best PS k is ringed.
+  (c) Filtered RAG (PS, markers) against RAG-PS (thin lines, the same curves as in b).
+      Each model's best filtered-RAG k is ringed.
 
-Panels (b) and (c) share one y-range; (a) has its own because VOTAG lives in a
-narrower band. Reads paper/tables/triangulation_all_cells.csv (written by
+Panels (b) and (c) share one y-range; (a) has its own because kNN voting lives in a
+narrower band. Macro F1 is plotted in percent. Reads paper/tables/triangulation_all_cells.csv (written by
 tab_triangulation.py on the lab machine), so it runs on any machine.
 Convention: pooled over the 3,300 test issues, raw predictions.
 """
@@ -36,13 +36,13 @@ VOTAG_FLOOR = ("PA", 16)  # VOTAG's best configuration
 
 def _series(cells: pd.DataFrame, method: str, setting: str, model: str) -> pd.DataFrame:
     s = cells[(cells.method == method) & (cells.setting == setting) & (cells.model == model)]
-    s = s.assign(k=s.k.astype(int)).sort_values("k")
+    s = s.assign(k=s.k.astype(int), f1_macro=100 * s.f1_macro).sort_values("k")
     return s[["k", "f1_macro"]]
 
 
 def _with_zero_shot(cells: pd.DataFrame, s: pd.DataFrame, model: str) -> pd.DataFrame:
     z = cells[(cells.method == "zero_shot") & (cells.model == model)].iloc[0]
-    return pd.concat([pd.DataFrame({"k": [0], "f1_macro": [z.f1_macro]}), s], ignore_index=True)
+    return pd.concat([pd.DataFrame({"k": [0], "f1_macro": [100 * z.f1_macro]}), s], ignore_index=True)
 
 
 def _panel_votag(ax, cells):
@@ -54,8 +54,8 @@ def _panel_votag(ax, cells):
         ring(ax, peak.k, peak.f1_macro, "#333333")
     ax.set_xticks([1, 5, 10, 15, 20, 25, 30])
     ax.set_xlabel("$k$ (retrieved neighbors)")
-    ax.set_ylabel("Macro $F_1$")
-    ax.set_title("(a) VOTAG", loc="left")
+    ax.set_ylabel("Macro $F_1$ (%)")
+    ax.set_title("(a) $k$NN voting", loc="left")
 
 
 def _panel_ragtag(ax, cells):
@@ -68,14 +68,14 @@ def _panel_ragtag(ax, cells):
         best = ps[ps.k > 0].loc[lambda d: d.f1_macro.idxmax()]
         ring(ax, best.k, best.f1_macro, COLORS[m])
     floor = cells[(cells.method == "votag") & (cells.setting == VOTAG_FLOOR[0])
-                  & (cells.k.astype(str) == str(VOTAG_FLOOR[1]))].iloc[0].f1_macro
+                  & (cells.k.astype(str) == str(VOTAG_FLOOR[1]))].iloc[0].f1_macro * 100
     ax.axhline(floor, ls=":", lw=0.8, color="#555555", zorder=1)
-    ax.text(15, floor + 0.004, f"VOTAG best ({floor:.3f})", ha="right", va="bottom",
+    ax.text(15, floor + 0.4, f"$k$NN voting best ({floor:.1f})", ha="right", va="bottom",
             fontsize=6.3, color="#555555")
-    ax.set_ylabel("Macro $F_1$")
+    ax.set_ylabel("Macro $F_1$ (%)")
     ax.set_xticks(KS_RAG)
     ax.set_xlabel("$k$ (few-shot neighbors; $k{=}0$ is zero-shot)")
-    ax.set_title("(b) RAGTAG", loc="left")
+    ax.set_title("(b) RAG", loc="left")
 
 
 def _panel_bragtag(ax, cells):
@@ -88,9 +88,9 @@ def _panel_bragtag(ax, cells):
         ring(ax, best.k, best.f1_macro, COLORS[m])
     ax.set_xticks([1, 3, 6, 9, 12, 15])
     ax.set_xlabel("$k$ (few-shot neighbors)")
-    ax.set_title("(c) BRAGTAG vs. RAGTAG (PS)", loc="left")
-    handles = [Line2D([], [], color="#333333", marker="o", label="BRAGTAG"),
-               Line2D([], [], color="#333333", lw=0.7, alpha=0.45, label="RAGTAG (as in b)")]
+    ax.set_title("(c) Filtered RAG vs. RAG (PS)", loc="left")
+    handles = [Line2D([], [], color="#333333", marker="o", label="Filtered RAG"),
+               Line2D([], [], color="#333333", lw=0.7, alpha=0.45, label="RAG (as in b)")]
     ax.legend(handles=handles, loc="lower right", frameon=False, handlelength=1.8)
 
 
@@ -109,7 +109,7 @@ def main() -> None:
     for ax in axes:
         ax.grid(True, axis="y", zorder=0)
         ax.set_axisbelow(True)
-    lo, hi = 0.60, 0.795
+    lo, hi = 60.0, 79.5
     for ax in axes[1:]:
         ax.set_ylim(lo, hi)
     axes[2].set_yticklabels([])

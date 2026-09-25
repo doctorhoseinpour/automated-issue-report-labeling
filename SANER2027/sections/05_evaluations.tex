@@ -22,7 +22,7 @@ Throughout this section, a method's \emph{best} $k$ or configuration is the one 
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=\textwidth]{figures/kcurves.pdf}
-    \caption{Macro $F_1$ across the $k$ grid. \textbf{(a)}~\knn\ in PS (solid) and PA (dashed). \textbf{(b)}~\rag\ for the four Qwen sizes in PS (solid, filled) and PA (dashed, hollow). \textbf{(c)}~\frag\ (markers) against \rag. (b) and (c) share one $y$-axis and rings mark each method's best $k$.}
+    \caption{Macro $F_1$ (\%) across the $k$ grid. \textbf{(a)}~\knn\ in PS (solid) and PA (dashed). \textbf{(b)}~\rag\ for the four Qwen sizes in PS (solid, filled) and PA (dashed, hollow). \textbf{(c)}~\Frag\ (markers) against \rag. (b) and (c) share one $y$-axis and rings mark each method's best $k$.}
     \label{fig:kcurves}
 \end{figure*}
 \input{tables/results_master.tex}
@@ -107,7 +107,7 @@ We report macro $F_1$ differences as the RAG variant minus fine-tuning, so negat
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\columnwidth]{figures/per_project_diff.pdf}
-    \caption{Macro $F_1$ difference between \frag\ (PS, best $k$) and PA LoRA fine-tuning on each project's 300 test issues, for the four model sizes. Blue favors \frag, red favors fine-tuning.}
+    \caption{Macro $F_1$ difference in points between \frag\ (PS, best $k$) and PA LoRA fine-tuning on each project's 300 test issues, for the four model sizes. Blue favors \frag, red favors fine-tuning.}
     \label{fig:per-project-diff}
 \end{figure}
 
