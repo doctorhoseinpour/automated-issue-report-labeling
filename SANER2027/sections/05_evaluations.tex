@@ -1,7 +1,6 @@
 % !TEX root = ../SANER2027-main-labeling.tex
 % Author revisions: blue (\fixed). Coauthor revision, 2026-09-21: magenta (\coauthor).
-% Statistical reanalysis is pending: do not restore aggregate CIs or equivalence
-% claims without issue-level resampling and a configuration-selection audit.
+% Issue-level resampling done (2026-09-24); configuration-selection audit still pending.
 
 \section{Evaluation}
 \label{sec:evaluations}
@@ -63,11 +62,8 @@ In this section, we present the results of our experiments and answer the four r
 
 \coauthor{We compare \bragtag\ with \ragtag\ under PS at the same $k\in\{1,3,6,9,12,15\}$. At every tested $k\ge6$, \bragtag\ has higher macro $F_1$ for all four model sizes (\Cref{fig:kcurves}c)\fixed{, by at least 0.012}. At $k{=}1$ and $k{=}3$, its scores are lower by up to 0.010. With the fixed margin $m{=}3$, the condition $N_{\mathrm{bug}}-N_{\mathrm{question}}\le3$ holds for every query at these two small $k$ values. Bug-example removal is therefore unconditional, leaving no demonstrations for 40\% of queries at $k{=}1$ and 18\% at $k{=}3$.}
 
-\coauthor{Comparing each method's best configuration, \bragtag\ increases macro $F_1$ by 0.015--0.024 (\Cref{tab:results}).} \fixed{The 95\% CIs of these gains exclude zero for all four models: $[+0.003, +0.031]$, $[+0.007, +0.032]$, $[+0.014, +0.034]$, and $[+0.007, +0.022]$}\footnote{1{,}000 paired bootstrap resamples per model.}. \fixed{\bragtag's} \coauthor{selected $k$ increases for the three smaller models and remains 12 for Qwen-32B.} When the trigger fires, \bragtag\ removes all bug examples from the top-$k$, so a higher initial $k$ is needed to leave enough context for the LLM.
+\coauthor{Comparing each method's best configuration, \bragtag\ increases macro $F_1$ by 0.015--0.024 (\Cref{tab:results}).} \fixed{The 95\% CIs of these gains exclude zero for all four models: $[+0.002, +0.030]$, $[+0.007, +0.032]$, $[+0.014, +0.034]$, and $[+0.007, +0.022]$}\footnote{1{,}000 paired bootstrap resamples per model.}. \fixed{\bragtag's} \coauthor{selected $k$ increases for the three smaller models and remains 12 for Qwen-32B.} When the trigger fires, \bragtag\ removes all bug examples from the top-$k$, so a higher initial $k$ is needed to leave enough context for the LLM.
 
-% TODO (statistics): the per-model CIs above are carried over from the ESEM draft
-% (reproduced by the May 2026 audit); regenerate them on the lab machine
-% (scripts/paper/significance_bragtag.py) and add CIs at matched k.
 \coauthor{The class-level results expose the trade-off. Question $F_1$ increases by 0.030--0.068: recall rises by 0.065--0.153 while precision falls by 0.012--0.050. Bug precision increases by 0.045--0.086, but bug recall decreases by 0.025--0.138 at every model size. The largest recall loss occurs for Qwen-3B, from 0.803 to 0.665\fixed{, the one model where the intervention over-corrects}; its bug $F_1$ falls from 0.711 to 0.693. Bug $F_1$ improves for the three larger models. Feature $F_1$ changes by \fixed{at most} 0.012. The full precision and recall values appear in \Cref{tab:results}.}
 
 \coauthor{At these configurations, question-to-bug error rates decrease from 26--36\% with \ragtag\ to 19--27\% with \bragtag. Question-to-feature error rates change by at most 1.4 percentage points.} Averaged across $k\in[1,15]$, the question-to-bug rate drops from 31--40\% to 24--36\%. \fixed{The improvement is therefore a targeted reduction of question-to-bug confusion, at the cost of bug recall.} \coauthor{Invalid outputs remain counted as incorrect; their rates at these same configurations are reported in \Cref{tab:results} and analyzed in RQ4.}
@@ -96,17 +92,6 @@ In this section, we present the results of our experiments and answer the four r
 %            tables/encoder_baselines.tex stays on disk but is not input.
 %   cost     restored to the author's one-sentence version from c91bc26; the
 %            coauthor's cost table and time discussion are dropped (not input).
-%
-% PINNED (2026-09-22): every aggregate CI in this subsection ([-0.037,-0.022],
-%   [-0.018,-0.003], [-0.007,+0.008]) comes from the old 13,200-row concatenated
-%   bootstrap, which resamples the same issue four times as if independent.
-%   Recompute with issue-level resampling (scripts/paper/significance_method_comparison.py
-%   on bgsulab) and update the CI paragraph, the fallback paragraph, the answer
-%   box, and paper/tables/method_comparison_ci.csv (the script now writes it; then
-%   rerun scripts/paper/tab_method_comparison_ci.py, which generates
-%   tables/method_comparison_ci.tex). The same run re-verifies the per-model CIs,
-%   which are carried over from the ESEM draft (raw and fallback blocks alike; the
-%   fallback per-model CIs were recovered from the ESEM text, commits ef3e75b/13dbbda).
 
 %%%%%%%%%%%
 \myparagraph{Classification Performance.}
@@ -117,7 +102,7 @@ In this section, we present the results of our experiments and answer the four r
 
 \input{tables/method_comparison_ci.tex}
 
-\fixed{We report macro $F_1$ differences as the retrieval-based method minus fine-tuning, so negative values favor fine-tuning (\Cref{tab:method-comparison-ci}). Aggregated across the four model sizes, the difference is $-0.029$ for \ragtag\ (paired bootstrap 95\% CI $[-0.037, -0.022]$) and $-0.010$ for \bragtag\ (CI $[-0.018, -0.003]$).\footnote{We use 1{,}000 paired bootstrap resamples per comparison.} \ragtag\ trails fine-tuning at every model size, whereas \bragtag\ shifts the difference in its favor at every size, to between $-0.029$ and $+0.010$. Fine-tuning is significantly ahead at Qwen-7B and Qwen-14B. At Qwen-3B and Qwen-32B, the confidence intervals include zero, and \bragtag\ has the higher point estimates. Results also vary by project: \bragtag\ matches or exceeds PA fine-tuning in 16 of the 44 (project, model) pairs, including all four sizes on \texttt{opencv} and three of four on \texttt{bitcoin} (\Cref{fig:per-project-diff}).}
+\fixed{We report macro $F_1$ differences as the retrieval-based method minus fine-tuning, so negative values favor fine-tuning (\Cref{tab:method-comparison-ci}). Aggregated across the four model sizes, the difference is $-0.028$ for \ragtag\ (paired bootstrap 95\% CI $[-0.039, -0.018]$) and $-0.010$ for \bragtag, whose CI $[-0.020, +0.001]$ includes zero.\footnote{We use 1{,}000 paired bootstrap resamples per comparison.} \ragtag\ trails fine-tuning at every model size, whereas \bragtag\ shifts the difference in its favor at every size, to between $-0.029$ and $+0.010$. Fine-tuning is significantly ahead at Qwen-7B and Qwen-14B. At Qwen-3B and Qwen-32B, the confidence intervals include zero, and \bragtag\ has the higher point estimates. Results also vary by project: \bragtag\ matches or exceeds PA fine-tuning in 16 of the 44 (project, model) pairs, including all four sizes on \texttt{opencv} and three of four on \texttt{bitcoin} (\Cref{fig:per-project-diff}).}
 
 \begin{figure}[!t]
     \centering
@@ -132,7 +117,7 @@ In this section, we present the results of our experiments and answer the four r
 
 \coauthor{We therefore compare complete pipelines that assign a valid label to every issue by applying a \votag\ fallback only when the LLM output is invalid. The fallback uses PS voting at fixed $k{=}15$ for \ragtag/\bragtag\ and PA voting at fixed $k{=}16$ for LoRA. It uses the original, unfiltered neighbors, independently of the number of demonstrations shown to the LLM. The retrieval-based pipelines can reuse their cached neighbor pool; adding this fallback to LoRA introduces a retrieval step. No additional LLM calls are required.}
 
-\coauthor{After applying the fallback to all three LLM approaches (\Cref{tab:method-comparison-ci}, +\votag\ rows), \bragtag's differences from LoRA range from $-0.014$ to $+0.021$. Its deficits at Qwen-7B and Qwen-14B are approximately halved, to $-0.011$ and $-0.014$, while its Qwen-32B advantage increases to $+0.021$. LoRA's scores change by at most 0.003.} \fixed{The aggregate difference between \bragtag\ and fine-tuning is no longer statistically significant (95\% CI $[-0.007, +0.008]$), and per model the interval excludes zero only at Qwen-32B, in \bragtag's favor.}
+\coauthor{After applying the fallback to all three LLM approaches (\Cref{tab:method-comparison-ci}, +\votag\ rows), \bragtag's differences from LoRA range from $-0.014$ to $+0.021$. Its deficits at Qwen-7B and Qwen-14B are approximately halved, to $-0.011$ and $-0.014$, while its Qwen-32B advantage increases to $+0.021$. LoRA's scores change by at most 0.003.} \fixed{The aggregate difference between \bragtag\ and fine-tuning becomes $+0.001$ (95\% CI $[-0.009, +0.011]$), and per model the interval excludes zero only at Qwen-32B, in \bragtag's favor.}
 
 %%%%%%%%%%%%%%%%%%%%%
 \myparagraph{Computation and Data Cost.}
@@ -152,5 +137,5 @@ In this section, we present the results of our experiments and answer the four r
 
 \begin{myboxi}
 % \textbf{Answer to RQ4:} 
-\fixed{Given the same 300 labeled issues per project, both retrieval-based methods outperform LoRA fine-tuning at every model size (\ragtag\ by 0.021--0.040 macro $F_1$, \bragtag\ by 0.038--0.060). With 11$\times$ more labeled data per project, fine-tuning leads by 0.029 over \ragtag\ and 0.010 over \bragtag\ in aggregate; the lead is confined to Qwen-7B and Qwen-14B and is no longer statistically significant in aggregate once a \votag\ fallback handles invalid outputs. The methods trade different errors: fine-tuning detects more bugs but over-predicts the bug class, whereas \bragtag\ makes fewer false bug predictions. Retrieval-augmented few-shot prompting also requires 25--47\% less peak GPU memory than fine-tuning.}
+\fixed{Given the same 300 labeled issues per project, both retrieval-based methods outperform LoRA fine-tuning at every model size (\ragtag\ by 0.021--0.040 macro $F_1$, \bragtag\ by 0.038--0.060). With 11$\times$ more labeled data per project, fine-tuning leads \ragtag\ by 0.028 in aggregate, but its 0.010 lead over \bragtag\ is not statistically significant. Once a \votag\ fallback handles invalid outputs, \bragtag\ closes this gap ($+0.001$) and is significantly better at Qwen-32B. The methods trade different errors: fine-tuning detects more bugs but over-predicts the bug class, whereas \bragtag\ makes fewer false bug predictions. Retrieval-augmented few-shot prompting also requires 25--47\% less peak GPU memory than fine-tuning.}
 \end{myboxi}

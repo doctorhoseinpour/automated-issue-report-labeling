@@ -119,11 +119,10 @@ on the lab machine), `fallback_macro_f1.csv` (also written by
 `tab_triangulation.py`; only used with `--fallback-column`),
 `per_project_diff.csv` (written by `fig_per_project_diff.py --from-results`)
 and `method_comparison_ci.csv` (written by `significance_method_comparison.py`).
-The three small CSVs were seeded by hand from the previously published numbers
-(3 d.p.). Every CI in Table II (raw and +VOTAG rows) is carried over from the ESEM draft
-text (old concatenated bootstrap; the +VOTAG per-model CIs were recovered from
-git history). A missing CI would print as `--`. Rerun the lab-machine scripts
-once to replace all seeded values with computed, issue-level-resampled ones.
+`method_comparison_ci.csv` is computed (issue-level resampling, 2026-09-24).
+`fallback_macro_f1.csv` and `per_project_diff.csv` are still seeded by hand from
+the previously published numbers (3 d.p.); rerun their lab-machine scripts to
+replace them. A missing CI would print as `--`.
 
 Style: `scripts/paper/_figstyle.py` (shared model colours, Okabe-Ito set
 validated for colour-blind safety; Qwen-14B is now green instead of brown;

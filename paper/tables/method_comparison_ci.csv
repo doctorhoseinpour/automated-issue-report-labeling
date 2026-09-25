@@ -1,31 +1,26 @@
-# Paired bootstrap 95% CIs on macro-F1 differences (retrieval method minus PA fine-tuning).
+# Paired bootstrap 95% CIs on macro-F1 differences (retrieval method minus PA fine-tuning),
+# 1000 issue-level resamples shared across model sizes (seed 42).
 # protocol raw: invalid outputs count as incorrect; fallback: VOTAG's vote replaces them
 # (VOTAG-PS k=15 for RAGTAG/BRAGTAG, VOTAG-PA k=16 for fine-tuning). All = mean of the four
-# per-model differences.
-# Provenance (seeded by hand, 2026-09-22): every CI is carried over from the ESEM draft text of
-# paper/sections/05_evaluations.tex (raw and fallback per-model CIs; fallback block from commits 13dbbda and ef3e75b),
-# i.e. the old 13,200-row concatenated bootstrap that resamples each issue four times. Point
-# estimates match the +VOTAG macro F1 values of method_comparison_ext.tex. Regenerate on the lab
-# machine with venv/bin/python scripts/paper/significance_method_comparison.py, which rewrites
-# this file with issue-level resampling for all four comparisons.
+# per-model differences. Written by scripts/paper/significance_method_comparison.py.
 method,protocol,model,k,delta,ci_lo,ci_hi
-ragtag,raw,Qwen-3B,3,-0.011,-0.028,0.007
-ragtag,raw,Qwen-7B,6,-0.044,-0.059,-0.029
-ragtag,raw,Qwen-14B,12,-0.054,-0.068,-0.039
-ragtag,raw,Qwen-32B,12,-0.005,-0.020,0.009
-ragtag,raw,All,-,-0.029,-0.037,-0.022
-bragtag,raw,Qwen-3B,6,0.005,-0.012,0.024
-bragtag,raw,Qwen-7B,12,-0.024,-0.039,-0.009
-bragtag,raw,Qwen-14B,15,-0.029,-0.044,-0.013
-bragtag,raw,Qwen-32B,12,0.010,-0.005,0.024
-bragtag,raw,All,-,-0.010,-0.018,-0.003
-ragtag,fallback,Qwen-3B,3,-0.015,-0.032,0.002
-ragtag,fallback,Qwen-7B,6,-0.033,-0.047,-0.017
-ragtag,fallback,Qwen-14B,12,-0.039,-0.054,-0.025
-ragtag,fallback,Qwen-32B,12,0.008,-0.008,0.022
-ragtag,fallback,All,-,-0.020,-0.028,-0.013
-bragtag,fallback,Qwen-3B,6,0.009,-0.008,0.028
-bragtag,fallback,Qwen-7B,12,-0.011,-0.026,0.004
-bragtag,fallback,Qwen-14B,15,-0.014,-0.030,0.001
-bragtag,fallback,Qwen-32B,12,0.021,0.006,0.035
-bragtag,fallback,All,-,0.001,-0.007,0.008
+ragtag,raw,Qwen-3B,3,-0.01145,-0.02828,0.00656
+ragtag,raw,Qwen-7B,6,-0.04415,-0.05860,-0.02861
+ragtag,raw,Qwen-14B,12,-0.05357,-0.06839,-0.03865
+ragtag,raw,Qwen-32B,12,-0.00458,-0.01982,0.00933
+ragtag,raw,All,-,-0.02844,-0.03876,-0.01799
+bragtag,raw,Qwen-3B,6,0.00523,-0.01205,0.02357
+bragtag,raw,Qwen-7B,12,-0.02413,-0.03920,-0.00937
+bragtag,raw,Qwen-14B,15,-0.02931,-0.04431,-0.01332
+bragtag,raw,Qwen-32B,12,0.00996,-0.00509,0.02381
+bragtag,raw,All,-,-0.00956,-0.02007,0.00074
+ragtag,fallback,Qwen-3B,3,-0.01486,-0.03181,0.00219
+ragtag,fallback,Qwen-7B,6,-0.03325,-0.04703,-0.01718
+ragtag,fallback,Qwen-14B,12,-0.03961,-0.05406,-0.02501
+ragtag,fallback,Qwen-32B,12,0.00782,-0.00753,0.02175
+ragtag,fallback,All,-,-0.01998,-0.02991,-0.00967
+bragtag,fallback,Qwen-3B,6,0.00926,-0.00780,0.02756
+bragtag,fallback,Qwen-7B,12,-0.01128,-0.02578,0.00374
+bragtag,fallback,Qwen-14B,15,-0.01413,-0.02964,0.00097
+bragtag,fallback,Qwen-32B,12,0.02119,0.00644,0.03542
+bragtag,fallback,All,-,0.00126,-0.00887,0.01138
