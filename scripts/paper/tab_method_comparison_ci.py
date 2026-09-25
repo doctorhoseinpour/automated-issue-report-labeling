@@ -58,8 +58,8 @@ def emit(df: pd.DataFrame) -> str:
         "% -- do not edit by hand. See the CSV header for the provenance of the current numbers.",
         r"\begin{table}[!t]",
         r"  \centering",
-        r"  \caption{Macro-$F_1$ difference from PA fine-tuning in percentage points, without and with the "
-        r"$k$NN voting fallback (paired bootstrap 95\% CI).}",
+        r"  \caption{Macro-$F_1$ difference from PA fine-tuning in percentage points, with 95\% CIs, "
+        r"without and with the $k$NN voting fallback.}",
         r"  \label{tab:method-comparison-ci}",
         r"  \footnotesize",
         r"  \setlength{\tabcolsep}{3pt}",
