@@ -259,3 +259,21 @@ Status: DONE
   - New or changed claims to verify: the Related Work pooling sentence (RQ1/RQ3); the "both steps" sentence about Dinç and Tüzün; the Heo and Lee averaging sentence (dossier A6.4); Threats "at Qwen-14B, fine-tuning and the RAG variants ran on different GPUs" (from §III-D); Discussion "Choosing $k$" (the best k *differs* by size for both variants; only RAG is said to lose beyond its best k).
   - Slack is 2 lines. Any addition must be paid for by a cut.
 Status: DONE
+
+## S6: verification, reviewer panel, change view (2026-09-25)
+- Changed:
+  - `SANER2027/refs.bib` → acronym casing braced in 10 titles (QLoRA/LLMs, GPT-like LLMs, API, GitHub ×2, RoBERTa/BERT, seBERT, LLM-Assisted, GPT-3, AssertFlip/LLM, replication package LoRA); rendered as "Qlora", "gpt-like llms", "sebert", etc. before.
+  - `05_evaluations.tex` → macro recall "lower at every size, most at Qwen-7B and Qwen-14B" (Table I: lower at all four); per-project sentence adds `tensorflow` (FT leads at all four sizes there too); RQ3 box "the same 300 labeled issues".
+  - `08_conclusion.tex` → "fine-tuning finds more bugs and filtered RAG more questions" (false at 7B/14B for question recall) → "the two approaches make different errors … may combine their strengths"; "the same 300 labeled issues".
+  - `04_setup.tex` → points "computed from unrounded scores" (all three reviewers hit 0.1-point mismatches with Table I arithmetic).
+  - `00_abstract.tex`, `01_intro.tex` (contribution 2) → "the same 300 labeled issues" (the claim is false in PA without it; §I RQ3 already said 300).
+  - `docs/reframe/REVIEW_REPORT.md` (new) → verdicts, mechanics, headline table, guards, numbers and Related Work audits, reviewer panel, prioritized fixes with wording.
+  - `docs/reframe/changes_vs_draft.pdf` (new) → latexdiff (CTAN latexdiff-so, `--flatten --append-textcmd=fixed,coauthor,change,rev,minor`, old draft macros provided so deleted text shows), tag `saner-draft-2026-09-25` → HEAD, 19 pages, compiles without errors (4 undefined `sec:ragtag` refs inside deleted text).
+- Page state (`pagecheck.py --final`, exit 0): main text ends page 10, right column, y=696 of 719, **2 free lines**; references page 11 (top) to page 12, about 86 body-line equivalents of room. Build: 12 pages, only the known `\balance` overfull vbox, no undefined references. Pages 10–11 viewed: no gap, no stranded heading. Abstract 248 words.
+- Verdicts: P1 names PASS; P2 Related Work PASS; P3 framing and numbers PASS (open risk: "matches/preserves" wording); P4 tone PARTIAL (repetition of the headline and of the confusion statement; ~20 vague phrases listed).
+- Reviewer panel: A (skeptical PC member) weak reject; B (methods/stats) weak reject; C (outsider, clarity) borderline. Main shared points: equivalence wording from a non-significant CI, test-set selection of k/setting, untuned FT baseline, memory vs FT's training peak, unstated 4-bit quantization, "three runs" only in Threats, repetition.
+- User answers applied: (1) "three runs, averaged" sentence KEPT unchanged; keeping it frees no line, so nothing was filled (2 free lines remain, within target); a candidate one-line Threats fill is in REVIEW_REPORT item 4. (2) "Mem. (GB)" kept. (3) Memory across sizes unchanged; no reviewer raised the cross-size point (FT 78.5% at 14B / 16.7 GB vs filtered RAG 78.1% at 32B / 22.3 GB); A and B raised the related "FT inference-only memory is not reported".
+- Numbers: no three-decimal, signed or bracketed numbers in prose; all prose numbers in NUMBERS.md/tables or verified setup/prior-work counts. Fig. 4 column k labels are correct (6/12/15/12); reviewers' mismatch was a pdftotext artifact.
+- Open questions for the user: see REVIEW_REPORT "Open questions" (headline verb, 4-bit statement, which Threats item, placement of the three-runs sentence, failure-analysis counts).
+- Notes: latexdiff is not installed system-wide; the CTAN copy lived in the S6 scratchpad. To regenerate, remove the `.bbl` from the new copy before `--flatten` (otherwise the bibliography is inlined and breaks).
+Status: DONE
