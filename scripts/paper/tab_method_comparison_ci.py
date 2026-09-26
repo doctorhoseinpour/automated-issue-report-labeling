@@ -26,14 +26,14 @@ PROTOCOLS = [("raw", None), ("fallback", r"\quad +\votag")]
 
 
 def fd(x: float, bold: bool) -> str:
-    v = f"{x:+.3f}"
+    v = f"{100 * x:+.1f}"
     return rf"$\mathbf{{{v}}}$" if bold else f"${v}$"
 
 
 def fci(lo, hi) -> str:
     if pd.isna(lo) or pd.isna(hi):
         return "--"
-    return f"$[{lo:+.3f}, {hi:+.3f}]$"
+    return f"$[{100 * lo:+.1f}, {100 * hi:+.1f}]$"
 
 
 def _row(df, method, protocol, model):
@@ -58,7 +58,7 @@ def emit(df: pd.DataFrame) -> str:
         "% -- do not edit by hand. See the CSV header for the provenance of the current numbers.",
         r"\begin{table}[!t]",
         r"  \centering",
-        r"  \caption{Macro-$F_1$ difference from PA fine-tuning without and with the \votag\ fallback "
+        r"  \caption{Macro-$F_1$ difference from PA fine-tuning in percentage points, without and with the \votag\ fallback "
         r"(paired bootstrap 95\% CI).}",
         r"  \label{tab:method-comparison-ci}",
         r"  \footnotesize",
@@ -84,7 +84,7 @@ def emit(df: pd.DataFrame) -> str:
         r"  \par\vspace{2pt}",
         r"  \parbox{\columnwidth}{\scriptsize \ragtag/\bragtag\ under PS at their best $k$, fine-tuning under PA; "
         r"negative values favor fine-tuning. Each +\votag\ row applies the \votag\ fallback for invalid outputs "
-        r"to both methods (\votag-PS at $k{=}15$ for \ragtag/\bragtag, \votag-PA at $k{=}16$ for fine-tuning). "
+        r"to both methods. "
         r"Bold: CI excludes zero. All sizes: mean of the four per-model differences.}",
         r"\end{table}",
         "",

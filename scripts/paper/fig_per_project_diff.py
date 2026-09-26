@@ -82,11 +82,11 @@ def main() -> None:
     ks = df["k"].astype(int).tolist()
     mat = df.drop(columns="k").T  # projects x models
     projects = list(mat.index)
-    values = mat.values.astype(float)
+    values = 100 * mat.values.astype(float)  # percentage points, as in the paper
 
     apply_style()
     fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    vmax = 0.10
+    vmax = 10.0
     im = ax.imshow(values, cmap="RdBu", vmin=-vmax, vmax=vmax, aspect="auto")
     ax.set_xticks(range(len(MODELS)))
     ax.set_xticklabels([f"{m}\n$k{{=}}{k}$" for m, k in zip(MODELS, ks)])
@@ -103,12 +103,12 @@ def main() -> None:
     for i in range(len(projects)):
         for j in range(len(MODELS)):
             v = values[i, j]
-            ax.text(j, i, f"{v:+.3f}", ha="center", va="center", fontsize=6.4,
-                    color="white" if abs(v) > 0.065 else "#222222")
+            ax.text(j, i, "0.0" if round(v, 1) == 0 else f"{v:+.1f}", ha="center", va="center", fontsize=6.4,
+                    color="white" if abs(v) > 6.5 else "#222222")
     cb = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.03)
     cb.ax.tick_params(labelsize=6.3, length=2, width=0.5)
     cb.outline.set_linewidth(0.5)
-    cb.set_label("BRAGTAG $-$ Fine-Tune (macro $F_1$)", fontsize=6.8)
+    cb.set_label("BRAGTAG $-$ Fine-Tune (macro $F_1$, points)", fontsize=6.8)
     fig.subplots_adjust(left=0.20, right=0.88, top=0.99, bottom=0.10)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)

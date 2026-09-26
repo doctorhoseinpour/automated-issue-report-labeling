@@ -54,7 +54,7 @@ def _panel_votag(ax, cells):
         ring(ax, peak.k, peak.f1_macro, "#333333")
     ax.set_xticks([1, 5, 10, 15, 20, 25, 30])
     ax.set_xlabel("$k$ (retrieved neighbors)")
-    ax.set_ylabel("Macro $F_1$")
+    ax.set_ylabel("Macro $F_1$ (%)")
     ax.set_title("(a) VOTAG", loc="left")
 
 
@@ -70,9 +70,9 @@ def _panel_ragtag(ax, cells):
     floor = cells[(cells.method == "votag") & (cells.setting == VOTAG_FLOOR[0])
                   & (cells.k.astype(str) == str(VOTAG_FLOOR[1]))].iloc[0].f1_macro
     ax.axhline(floor, ls=":", lw=0.8, color="#555555", zorder=1)
-    ax.text(15, floor + 0.004, f"VOTAG best ({floor:.3f})", ha="right", va="bottom",
+    ax.text(15, floor + 0.4, f"VOTAG best ({floor:.1f})", ha="right", va="bottom",
             fontsize=6.3, color="#555555")
-    ax.set_ylabel("Macro $F_1$")
+    ax.set_ylabel("Macro $F_1$ (%)")
     ax.set_xticks(KS_RAG)
     ax.set_xlabel("$k$ (few-shot neighbors; $k{=}0$ is zero-shot)")
     ax.set_title("(b) RAGTAG", loc="left")
@@ -102,6 +102,7 @@ def main() -> None:
 
     apply_style()
     cells = pd.read_csv(args.cells)
+    cells["f1_macro"] = 100 * cells["f1_macro"]  # percent, as in the paper
     fig, axes = plt.subplots(1, 3, figsize=(7.16, 2.2), gridspec_kw={"wspace": 0.24})
     _panel_votag(axes[0], cells)
     _panel_ragtag(axes[1], cells)
@@ -109,7 +110,7 @@ def main() -> None:
     for ax in axes:
         ax.grid(True, axis="y", zorder=0)
         ax.set_axisbelow(True)
-    lo, hi = 0.60, 0.795
+    lo, hi = 60.0, 79.5
     for ax in axes[1:]:
         ax.set_ylim(lo, hi)
     axes[2].set_yticklabels([])

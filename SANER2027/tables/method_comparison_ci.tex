@@ -2,7 +2,7 @@
 % -- do not edit by hand. See the CSV header for the provenance of the current numbers.
 \begin{table}[!t]
   \centering
-  \caption{Macro-$F_1$ difference from PA fine-tuning without and with the \votag\ fallback (paired bootstrap 95\% CI).}
+  \caption{Macro-$F_1$ difference from PA fine-tuning in percentage points, without and with the \votag\ fallback (paired bootstrap 95\% CI).}
   \label{tab:method-comparison-ci}
   \footnotesize
   \setlength{\tabcolsep}{3pt}
@@ -12,20 +12,20 @@
     \cmidrule(lr){2-3}\cmidrule(lr){4-5}
     Model & $\Delta F_1$ & 95\% CI & $\Delta F_1$ & 95\% CI \\
     \midrule
-    Qwen-3B & $-0.011$ & $[-0.028, +0.007]$ & $+0.005$ & $[-0.012, +0.024]$ \\
-    \quad +\votag & $-0.015$ & $[-0.032, +0.002]$ & $+0.009$ & $[-0.008, +0.028]$ \\
+    Qwen-3B & $-1.1$ & $[-2.8, +0.7]$ & $+0.5$ & $[-1.2, +2.4]$ \\
+    \quad +\votag & $-1.5$ & $[-3.2, +0.2]$ & $+0.9$ & $[-0.8, +2.8]$ \\
     \addlinespace[1.5pt]
-    Qwen-7B & $\mathbf{-0.044}$ & $[-0.059, -0.029]$ & $\mathbf{-0.024}$ & $[-0.039, -0.009]$ \\
-    \quad +\votag & $\mathbf{-0.033}$ & $[-0.047, -0.017]$ & $-0.011$ & $[-0.026, +0.004]$ \\
+    Qwen-7B & $\mathbf{-4.4}$ & $[-5.9, -2.9]$ & $\mathbf{-2.4}$ & $[-3.9, -0.9]$ \\
+    \quad +\votag & $\mathbf{-3.3}$ & $[-4.7, -1.7]$ & $-1.1$ & $[-2.6, +0.4]$ \\
     \addlinespace[1.5pt]
-    Qwen-14B & $\mathbf{-0.054}$ & $[-0.068, -0.039]$ & $\mathbf{-0.029}$ & $[-0.044, -0.013]$ \\
-    \quad +\votag & $\mathbf{-0.040}$ & $[-0.054, -0.025]$ & $-0.014$ & $[-0.030, +0.001]$ \\
+    Qwen-14B & $\mathbf{-5.4}$ & $[-6.8, -3.9]$ & $\mathbf{-2.9}$ & $[-4.4, -1.3]$ \\
+    \quad +\votag & $\mathbf{-4.0}$ & $[-5.4, -2.5]$ & $-1.4$ & $[-3.0, +0.1]$ \\
     \addlinespace[1.5pt]
-    Qwen-32B & $-0.005$ & $[-0.020, +0.009]$ & $+0.010$ & $[-0.005, +0.024]$ \\
-    \quad +\votag & $+0.008$ & $[-0.008, +0.022]$ & $\mathbf{+0.021}$ & $[+0.006, +0.035]$ \\
+    Qwen-32B & $-0.5$ & $[-2.0, +0.9]$ & $+1.0$ & $[-0.5, +2.4]$ \\
+    \quad +\votag & $+0.8$ & $[-0.8, +2.2]$ & $\mathbf{+2.1}$ & $[+0.6, +3.5]$ \\
     \midrule
-    All sizes & $\mathbf{-0.028}$ & $[-0.039, -0.018]$ & $-0.010$ & $[-0.020, +0.001]$ \\
-    \quad +\votag & $\mathbf{-0.020}$ & $[-0.030, -0.010]$ & $+0.001$ & $[-0.009, +0.011]$ \\
+    All sizes & $\mathbf{-2.8}$ & $[-3.9, -1.8]$ & $-1.0$ & $[-2.0, +0.1]$ \\
+    \quad +\votag & $\mathbf{-2.0}$ & $[-3.0, -1.0]$ & $+0.1$ & $[-0.9, +1.1]$ \\
     \bottomrule
   \end{tabular}
   \par\vspace{2pt}
