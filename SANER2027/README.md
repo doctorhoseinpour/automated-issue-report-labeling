@@ -23,7 +23,7 @@ sections/00_abstract.tex      abstract + IEEE keywords
 sections/01_intro ... 08_conclusion.tex
 sections/09_data_availability.tex   unnumbered section, directly after Conclusion (SANER-mandatory)
 tables/                       results_master (table*, generated), method_comparison_ci (column)
-figures/                      kcurves, per_project_diff (generated; see below) + approach figures
+figures/                      kcurves, per_project_diff (generated; see below) + fao.pdf (approach overview)
 refs.bib                      bibliography (IEEEtran style)
 ```
 
@@ -130,19 +130,11 @@ type 6.5-8 pt at print size). The k-curve figure and the master table are
 `\input` at the top of Section V so they land on the section's first full
 page; the other floats stay next to the RQ that uses them.
 
-Superseded and no longer `\input`/included (kept on disk for now, safe to
-delete): `tables/bragtag_results*.tex`, `tables/method_comparison.tex`,
-`tables/method_comparison_ext.tex`, `tables/method_cost.tex`,
-`tables/vtag_peak.tex`; `figures/vtag_kcurve*.pdf`, `figures/ragtag_kcurve*.pdf`,
-`figures/bragtag_kcurve.pdf`, `figures/bragtag_perclass.pdf`,
-`figures/finetune_comparison*.pdf`, `figures/cost_analysis.pdf`,
-`figures/PS-PA.pdf`, `figures/app_diagram.pdf`, `figures/approach_diagram.pdf`,
-`figures/final_approach_oveview.drawio.pdf`, `figures/Overview-drawio.png`.
-`tables/encoder_baselines.tex` stays pending the encoder decision. A fifth float,
-an error-profile figure (bug/question precision-recall planes,
-`figures/error_profile.pdf`, `scripts/paper/fig_error_profile.py`), was drafted
-and dropped as redundant with the master table; the files are kept in case a
-visual for the bug-bias story is wanted later.
+Superseded floats and drafts that are no longer `\input`/included (old k-curve,
+per-class and cost figures, approach-diagram variants, the error-profile figure,
+the encoder-baselines table, and the old comparison/BRAGTAG tables) were removed
+on 2026-09-25 so the folder uploads cleanly to Overleaf; recover them from git
+history (commit 501e9d8 or earlier) if needed.
 
 Build after this pass: 12 pages, main text (through Data Availability) ends
 on the last line of page 10 and the references start on page 11, i.e. the
