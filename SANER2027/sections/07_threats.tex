@@ -6,7 +6,7 @@
 \label{sec:threats}
 
 \myparagraph{Internal Validity} 
-\bragtag's margin uses the same empirically derived fixed value across all models and projects with no per-project or per-model tuning, and is not framed as a universally optimal constant. Furthermore, the choice of hyperparameters and prompt format can also pose an internal threat to validity as different hyperparameters and prompts can change fine-tuning performance~\cite{heo2025study,aracena2025applying}. Finally, the failure categories in \Cref{sec:disc-failures} come from manual inspection, which is subjective. To reduce this threat, two authors analyzed each case independently and resolved disagreements through discussion.
+\bragtag's margin uses the same empirically derived fixed value across all models and projects with no per-project or per-model tuning, and is not framed as a universally optimal constant. It was calibrated on a validation split drawn from the training issues only, so the test issues did not influence its value. Furthermore, the choice of hyperparameters and prompt format can also pose an internal threat to validity as different hyperparameters and prompts can change fine-tuning performance~\cite{heo2025study,aracena2025applying}. Finally, the failure categories in \Cref{sec:disc-failures} come from manual inspection, which is subjective. To reduce this threat, two authors analyzed each case independently and resolved disagreements through discussion.
 
 
 
