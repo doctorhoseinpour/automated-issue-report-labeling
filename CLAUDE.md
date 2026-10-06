@@ -1,6 +1,6 @@
 # CLAUDE.md — RAGTAG vs Fine-Tuning Project
 
-This file gives Claude persistent context about this research project. Read it at the start of every session, then read [docs/SANER_REVISION_PLAN.md](docs/SANER_REVISION_PLAN.md) (post-rejection revision plan), [paper/TODO.md](paper/TODO.md), and [docs/MACHINES.md](docs/MACHINES.md) (which machine holds what). `paper/SESSION_HANDOFF.md` no longer exists; older references to it are stale.
+This file gives Claude persistent context about this research project. Read it at the start of every session, then read [docs/SANER_REVISION_PLAN.md](docs/SANER_REVISION_PLAN.md) (post-rejection revision plan), [paper/TODO.md](paper/TODO.md), and [docs/COMPUTE_RESOURCES.md](docs/COMPUTE_RESOURCES.md) (machines, clusters, access, gotchas). **Run that file's §0 probes first: on a new machine the VPN, ssh keys, OSC and NRP access may not be set up yet, and Claude's auto-memory does not travel with git.** `paper/SESSION_HANDOFF.md` no longer exists; older references to it are stale.
 
 ---
 
@@ -76,11 +76,11 @@ An exploratory DeBERTa-v3-large encoder fine-tune (PA only) was run as a candida
 
 ## Infrastructure
 
-- **Two machines share this repo** (full details in [docs/MACHINES.md](docs/MACHINES.md)):
-  - **Local PC** (this clone, `~/Desktop/my_projects/automated-issue-report-labeling`): GTX 1650 4GB — no LLM inference or fine-tuning possible. Used for paper writing, docs, and small offline analyses. No `results/` here.
+- **Full details, setup steps for a new machine, and every known gotcha: [docs/COMPUTE_RESOURCES.md](docs/COMPUTE_RESOURCES.md).** bgsulab and OSC cannot reach each other; relay files through the laptop.
+  - **Local PC / laptop** (this clone): no usable GPU for LLMs. Used for paper writing, docs, git, small offline analyses, and driving OSC/NRP. No `results/` here.
   - **BGSU lab machine:** `ssh bgsulab` (needs the BGSU VPN on). Host `heydarnoori`, RTX 4090 24GB, Ubuntu 24.04. Project lives at **`~/llm-labler`** (directory name is spelled without the second "e"). Holds the only copy of `results/` (81 GB, gitignored), `venv/`, `venv-setfit/`, and the NRP `kubectl` config. All GPU experiments run here; original RAGTAG / zero-shot / VOTAG inference and Qwen-3B / Qwen-7B fine-tuning were done on this 4090.
-- **NRP (Nautilus Research Platform):** Shared Kubernetes cluster, namespace `bgsu-cs-heydarnoori`. Pipeline lives in `scripts/nrp/`. Strategy: a single mega-runner Job ([scripts/nrp/runners/run_remaining_cells.py](scripts/nrp/runners/run_remaining_cells.py)) holds one GPU and processes all cells sequentially via subprocess, with idempotent skip on existing `preds_*.csv`. Image is SHA-pinned in [scripts/nrp/plan.yaml](scripts/nrp/plan.yaml). Two CephFS RWX PVCs back the run: `hf-cache-pvc` (model weights) and `results-pvc` (outputs + `_outbox/` for `sync.sh` pickup). Live status in [paper/SESSION_HANDOFF.md](paper/SESSION_HANDOFF.md).
-- **OSC Ascend:** Available as a fine-tuning backup via `run_server_11k.sh` (Slurm, A100 partition).
+- **NRP (Nautilus Research Platform):** Shared Kubernetes cluster, namespace `bgsu-cs-heydarnoori`. Pipeline lives in `scripts/nrp/`. Strategy: a single mega-runner Job ([scripts/nrp/runners/run_remaining_cells.py](scripts/nrp/runners/run_remaining_cells.py)) holds one GPU and processes all cells sequentially via subprocess, with idempotent skip on existing `preds_*.csv`. Image is SHA-pinned in [scripts/nrp/plan.yaml](scripts/nrp/plan.yaml). Two CephFS RWX PVCs back the run: `hf-cache-pvc` (model weights) and `results-pvc` (outputs + `_outbox/` for `sync.sh` pickup). Idle since the 2026-05 FT campaign.
+- **OSC (Cardinal H100 + Ascend A100), project `PCS0289`:** used for the 32B decision-state extraction and the new-LLM study (`scripts/experiments/{rag_next,newllms}/osc/`). Ascend `preemptible-nextgen` gives many parallel GPUs immediately. Budget is shared with the lab (`OSCusage`).
 
 ---
 

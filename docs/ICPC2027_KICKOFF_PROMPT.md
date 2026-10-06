@@ -21,7 +21,7 @@ You are a senior researcher in software engineering and applied NLP. Your job is
 
 ## What exists (read in this order before writing anything)
 
-1. `CLAUDE.md` and `docs/MACHINES.md`: the project, the two machines, and the pipeline. Your auto-memory (`MEMORY.md`) loads with the project; read the memories it links to.
+1. `CLAUDE.md` and `docs/COMPUTE_RESOURCES.md`: the project, the machines and clusters, and the pipeline. Your auto-memory (`MEMORY.md`) loads with the project; read the memories it links to.
 2. **`docs/RAG_NEXT_STUDY.md`**, the core study on Qwen2.5-Instruct 3B–32B (4-bit):
    - headroom analysis of 151 archival configurations;
    - the dev protocol and the benchmark's label-time-window trap;
