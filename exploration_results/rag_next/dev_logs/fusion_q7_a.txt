@@ -1,0 +1,16 @@
+== fusion on dev (n=990), stacker CV 5x5 inside dev
+  single probe                                   F1=0.8267  bug=0.828 feat=0.852 q=0.800  q->bug=0.097 predbug=0.318
+  single tfidf                                   F1=0.7806  bug=0.808 feat=0.775 q=0.758  q->bug=0.085 predbug=0.304
+  single knn                                     F1=0.6125  bug=0.624 feat=0.657 q=0.556  q->bug=0.288 predbug=0.389
+  single zs                                      F1=0.6881  bug=0.706 feat=0.811 q=0.547  q->bug=0.491 predbug=0.491
+  stack probe+tfidf                                          CV F1=0.8335±0.0025 | PoE F1=0.8319
+  stack probe+knn                                            CV F1=0.8296±0.0020 | PoE F1=0.8108
+  stack probe+zs                                             CV F1=0.8310±0.0035 | PoE F1=0.7252
+  stack tfidf+knn                                            CV F1=0.7746±0.0022 | PoE F1=0.7699
+  stack tfidf+zs                                             CV F1=0.8123±0.0013 | PoE F1=0.6999
+  stack knn+zs                                               CV F1=0.7177±0.0038 | PoE F1=0.6847
+  stack probe+tfidf+knn                                      CV F1=0.8378±0.0038 | PoE F1=0.8148
+  stack probe+tfidf+zs                                       CV F1=0.8356±0.0029 | PoE F1=0.7377
+  stack probe+knn+zs                                         CV F1=0.8271±0.0040 | PoE F1=0.7319
+  stack tfidf+knn+zs                                         CV F1=0.8078±0.0014 | PoE F1=0.7140
+  stack probe+tfidf+knn+zs                                   CV F1=0.8367±0.0053 | PoE F1=0.7488

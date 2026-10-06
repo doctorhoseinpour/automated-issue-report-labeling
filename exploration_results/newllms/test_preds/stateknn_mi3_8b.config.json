@@ -1,0 +1,12 @@
+{
+ "name": "stateknn_mi3_8b",
+ "components": [
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "mi3_8bL34",
+   "k": 9
+  }
+ ],
+ "fit_predict_s": 0.0
+}

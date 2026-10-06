@@ -1,0 +1,25 @@
+{
+ "name": "readout_14B_n10_s1",
+ "components": [
+  {
+   "type": "probe",
+   "feat": "q14_k0",
+   "layers": [
+    30,
+    36,
+    42,
+    48
+   ],
+   "C": 0.003,
+   "scope": "AUG",
+   "budget": 10,
+   "seed": 1
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"probe\", \"feat\": \"q14_k0\", \"layers\": [30, 36, 42, 48], \"C\": 0.003, \"scope\": \"AUG\", \"budget\": 10, \"seed\": 1}",
+   "fit_predict_s": 7.47
+  }
+ ]
+}

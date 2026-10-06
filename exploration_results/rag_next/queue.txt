@@ -1,0 +1,11 @@
+check3b|venv/bin/python scripts/experiments/rag_next/check_features.py unsloth/Qwen2.5-3B-Instruct-bnb-4bit
+check3b_v2|venv/bin/python scripts/experiments/rag_next/check_features.py unsloth/Qwen2.5-3B-Instruct-bnb-4bit
+gate1|while [ ! -f results/issues11k/exploration/rag_next/release_gate1 ]; do sleep 10; done
+q7_k0|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-7B-Instruct-bnb-4bit --k 0 --roles inner,dev,test --max_seq_length 8192 --out results/issues11k/exploration/rag_next/features/q7_k0
+q7_k12_dev|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-7B-Instruct-bnb-4bit --k 12 --neighbors results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz --roles dev --max_seq_length 8192 --layers 1.0 --out results/issues11k/exploration/rag_next/features/q7_k12_dev
+q7_k12b3_dev|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-7B-Instruct-bnb-4bit --k 12 --debias_margin 3 --neighbors results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz --roles dev --max_seq_length 8192 --layers 1.0 --out results/issues11k/exploration/rag_next/features/q7_k12b3_dev
+q7_k12_state_dev|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-7B-Instruct-bnb-4bit --k 12 --neighbors results/issues11k/exploration/rag_next/features/nb_PS_q7L28_dev.npz --roles dev --max_seq_length 8192 --layers 1.0 --out results/issues11k/exploration/rag_next/features/q7_k12_state_dev
+q14_k0|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-14B-Instruct-bnb-4bit --k 0 --roles inner,dev,test --max_seq_length 8192 --out results/issues11k/exploration/rag_next/features/q14_k0
+q3_k0|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-3B-Instruct-bnb-4bit --k 0 --roles inner,dev,test --max_seq_length 8192 --out results/issues11k/exploration/rag_next/features/q3_k0
+setfit_dev_issues|bash scripts/experiments/rag_next/run_setfit_dev.sh Collab-uniba/github-issues-mpnet-st-e10
+#HOLD-OSC#q32_k0|venv/bin/python scripts/experiments/rag_next/llm_features.py --model unsloth/Qwen2.5-32B-Instruct-bnb-4bit --k 0 --roles inner,dev,test --max_seq_length 8192 --out results/issues11k/exploration/rag_next/features/q32_k0

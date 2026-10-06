@@ -1,0 +1,33 @@
+{
+ "model": "rag_gm4_12b",
+ "top_k": 0,
+ "total_issues": 3300,
+ "invalid_count": 41,
+ "invalid_rate": 0.0124,
+ "accuracy": 0.7718,
+ "precision_bug": 0.7123,
+ "recall_bug": 0.8709,
+ "f1_bug": 0.7836,
+ "support_bug": 1100,
+ "precision_feature": 0.8424,
+ "recall_feature": 0.8164,
+ "f1_feature": 0.8292,
+ "support_feature": 1100,
+ "precision_question": 0.8149,
+ "recall_question": 0.6282,
+ "f1_question": 0.7094,
+ "support_question": 1100,
+ "precision_macro": 0.7898,
+ "recall_macro": 0.7718,
+ "f1_macro": 0.7741,
+ "precision_weighted": 0.7898,
+ "recall_weighted": 0.7718,
+ "f1_weighted": 0.7741,
+ "per_class_f1": [
+  0.783640081799591,
+  0.8291782086795937,
+  0.7094455852156057
+ ],
+ "q_to_bug": 0.2590909090909091,
+ "projects_ge_setfit": 3
+}

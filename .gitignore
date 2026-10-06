@@ -55,3 +55,8 @@ venv-setfit/
 
 # Small per-cell metric CSVs that the SANER 2027 figure/table generators read (scripts/paper/*.py)
 !paper/tables/*.csv
+
+# Exception: small outputs of the post-deadline studies (rag_next, newllms), copied from
+# bgsulab results/issues11k/exploration/ so they travel with the repo. Kept LAST so it
+# overrides the *.log, *.json and *.csv rules above.
+!exploration_results/**

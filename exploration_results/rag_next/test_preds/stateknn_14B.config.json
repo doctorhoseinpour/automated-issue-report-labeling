@@ -1,0 +1,17 @@
+{
+ "name": "stateknn_14B",
+ "components": [
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "q14L48",
+   "k": 9
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"knn\", \"setting\": \"PS\", \"variant\": \"q14L48\", \"k\": 9}",
+   "fit_predict_s": 0.14
+  }
+ ]
+}

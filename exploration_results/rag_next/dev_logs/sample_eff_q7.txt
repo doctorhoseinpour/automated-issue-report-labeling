@@ -1,0 +1,5 @@
+q7_k0 budget=  5/label/project (n=165): readout_AUG=0.784±0.011  readout_PA_last=0.771±0.004  state_kNN=0.722±0.011  tfidf=0.618±0.022
+q7_k0 budget= 10/label/project (n=330): readout_AUG=0.802±0.002  readout_PA_last=0.790±0.004  state_kNN=0.742±0.004  tfidf=0.670±0.008
+q7_k0 budget= 20/label/project (n=660): readout_AUG=0.816±0.007  readout_PA_last=0.801±0.004  state_kNN=0.753±0.007  tfidf=0.718±0.002
+q7_k0 budget= 40/label/project (n=1320): readout_AUG=0.820±0.004  readout_PA_last=0.810±0.006  state_kNN=0.762±0.006  tfidf=0.752±0.005
+q7_k0 budget= 70/label/project (n=2310): readout_AUG=0.827±0.000  readout_PA_last=0.820±0.000  state_kNN=0.784±0.000  tfidf=0.781±0.000

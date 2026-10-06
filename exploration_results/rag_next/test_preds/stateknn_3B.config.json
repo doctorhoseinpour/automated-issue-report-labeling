@@ -1,0 +1,17 @@
+{
+ "name": "stateknn_3B",
+ "components": [
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "q3L36",
+   "k": 9
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"knn\", \"setting\": \"PS\", \"variant\": \"q3L36\", \"k\": 9}",
+   "fit_predict_s": 0.13
+  }
+ ]
+}

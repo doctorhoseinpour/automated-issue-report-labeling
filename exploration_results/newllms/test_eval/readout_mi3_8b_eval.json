@@ -1,0 +1,33 @@
+{
+ "model": "readout_mi3_8b",
+ "top_k": 0,
+ "total_issues": 3300,
+ "invalid_count": 0,
+ "invalid_rate": 0.0,
+ "accuracy": 0.8273,
+ "precision_bug": 0.7838,
+ "recall_bug": 0.8964,
+ "f1_bug": 0.8363,
+ "support_bug": 1100,
+ "precision_feature": 0.8731,
+ "recall_feature": 0.8382,
+ "f1_feature": 0.8553,
+ "support_feature": 1100,
+ "precision_question": 0.8337,
+ "recall_question": 0.7473,
+ "f1_question": 0.7881,
+ "support_question": 1100,
+ "precision_macro": 0.8302,
+ "recall_macro": 0.8273,
+ "f1_macro": 0.8266,
+ "precision_weighted": 0.8302,
+ "recall_weighted": 0.8273,
+ "f1_weighted": 0.8266,
+ "per_class_f1": [
+  0.8363019508057676,
+  0.8552875695732839,
+  0.788111217641419
+ ],
+ "q_to_bug": 0.1690909090909091,
+ "projects_ge_setfit": 9
+}

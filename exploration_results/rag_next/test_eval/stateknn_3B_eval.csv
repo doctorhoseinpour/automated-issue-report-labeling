@@ -1,0 +1,2 @@
+model,top_k,total_issues,invalid_count,invalid_rate,accuracy,precision_bug,recall_bug,f1_bug,support_bug,precision_feature,recall_feature,f1_feature,support_feature,precision_question,recall_question,f1_question,support_question,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
+stateknn_3B,0,3300,0,0.0,0.773,0.7274,0.8127,0.7677,1100,0.854,0.8136,0.8333,1100,0.7449,0.6927,0.7179,1100,0.7754,0.773,0.773,0.7754,0.773,0.773

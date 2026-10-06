@@ -1,0 +1,23 @@
+{
+ "name": "readout_7B",
+ "components": [
+  {
+   "type": "probe",
+   "feat": "q7_k0",
+   "layers": [
+    18,
+    21,
+    24,
+    28
+   ],
+   "C": 0.003,
+   "scope": "AUG"
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"probe\", \"feat\": \"q7_k0\", \"layers\": [18, 21, 24, 28], \"C\": 0.003, \"scope\": \"AUG\"}",
+   "fit_predict_s": 38.47
+  }
+ ]
+}

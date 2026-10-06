@@ -1,0 +1,12 @@
+{
+ "name": "stateknn_qw35_9b",
+ "components": [
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "qw35_9bL32",
+   "k": 9
+  }
+ ],
+ "fit_predict_s": 0.0
+}

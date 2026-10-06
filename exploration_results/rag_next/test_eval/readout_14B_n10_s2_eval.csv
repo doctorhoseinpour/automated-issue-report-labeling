@@ -1,0 +1,2 @@
+model,top_k,total_issues,invalid_count,invalid_rate,accuracy,precision_bug,recall_bug,f1_bug,support_bug,precision_feature,recall_feature,f1_feature,support_feature,precision_question,recall_question,f1_question,support_question,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
+readout_14B_n10_s2,0,3300,0,0.0,0.7927,0.7742,0.7918,0.7829,1100,0.8178,0.8527,0.8349,1100,0.785,0.7336,0.7585,1100,0.7923,0.7927,0.7921,0.7923,0.7927,0.7921

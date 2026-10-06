@@ -1,0 +1,33 @@
+{
+ "model": "stateknn_mi3_8b",
+ "top_k": 0,
+ "total_issues": 3300,
+ "invalid_count": 0,
+ "invalid_rate": 0.0,
+ "accuracy": 0.7842,
+ "precision_bug": 0.7432,
+ "recall_bug": 0.8391,
+ "f1_bug": 0.7882,
+ "support_bug": 1100,
+ "precision_feature": 0.8516,
+ "recall_feature": 0.8191,
+ "f1_feature": 0.835,
+ "support_feature": 1100,
+ "precision_question": 0.764,
+ "recall_question": 0.6945,
+ "f1_question": 0.7276,
+ "support_question": 1100,
+ "precision_macro": 0.7863,
+ "recall_macro": 0.7842,
+ "f1_macro": 0.7836,
+ "precision_weighted": 0.7863,
+ "recall_weighted": 0.7842,
+ "f1_weighted": 0.7836,
+ "per_class_f1": [
+  0.7882152006831767,
+  0.835032437442076,
+  0.7276190476190476
+ ],
+ "q_to_bug": 0.21272727272727274,
+ "projects_ge_setfit": 5
+}

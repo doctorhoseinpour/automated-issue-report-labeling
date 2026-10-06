@@ -74,8 +74,9 @@ laptop, never inside the repo.
 | `issues11k.csv` (source pool) | Repo | Yes (a `.gitignore` exception) |
 | Train/test splits, FAISS indices | Regenerated deterministically on first run | No |
 | `results/issues11k/{agnostic,project_specific}/` (paper archival) | `bgsulab:~/llm-labler/results/` | No (gitignored, 81 GB) |
-| RAG-next study outputs (features, preds, `test_eval_log.csv`) | `bgsulab:~/llm-labler/results/issues11k/exploration/rag_next/` | No |
-| New-LLM study raw outputs | OSC `~/nm/repo/results/issues11k/exploration/newllms/` (5.7 GB) and relayed to `bgsulab:~/llm-labler/results/issues11k/exploration/newllms/` | No |
+| RAG-next and new-LLM study outputs: test preds, evals, `test_eval_log.csv`, splits, logs (65 MB, big CSVs gzipped) | `exploration_results/` in the repo (copied 2026-10-06, SHA-256 verified; see its README) and the originals on bgsulab | **Yes** |
+| RAG-next hidden-state features (2.5 GB), SetFit dev models (14 GB) | `bgsulab:~/llm-labler/results/issues11k/exploration/rag_next/{features,setfit_dev}/` | No |
+| New-LLM study features (6.2 GB) and raw shard outputs (5.6 GB) | Both on `bgsulab:~/llm-labler/results/issues11k/exploration/newllms/{features,raw}/`; the raw shards also on OSC `~/nm/repo/results/issues11k/exploration/newllms/raw/` | No |
 | Centered-retrieval probe preds | `bgsulab:~/center_probe_20260924/preds_centered/` | No |
 | 32B decision-state features | Extracted on OSC under `/fs/ess/PCS0289/rag_next/repo/results/...`, copied to bgsulab | No |
 | Qwen2.5-14B/32B bnb, Qwen3.5-9B, Gemma-4-12B-it, Ministral-3-8B weights | OSC `/fs/ess/PCS0289/rag_next/hf_cache` | No |

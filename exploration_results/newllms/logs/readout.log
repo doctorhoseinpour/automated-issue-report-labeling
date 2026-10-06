@@ -1,0 +1,33 @@
+regression check: rag_next R-7B dev through this path = 0.8267 (notebook 0.827)
+
+=== qw35_9b (Qwen3.5-9B): read-out layers [20, 24, 28, 32] of 32
+  own label, constrained (zero-shot)           F1=0.7208  bug/feat/q=0.746/0.863/0.553  q->bug=0.497
+  R: read-out (frozen recipe)                  F1=0.8489  bug/feat/q=0.851/0.872/0.824  q->bug=0.076
+  K: decision-state kNN@9 PS (training-free)   F1=0.8154  bug/feat/q=0.808/0.846/0.792  q->bug=0.082
+  wrote readout_qw35_9b.csv; predicted shares {'bug': 0.379, 'feature': 0.33, 'question': 0.291}
+  wrote stateknn_qw35_9b.csv; predicted shares {'bug': 0.358, 'feature': 0.332, 'question': 0.31}
+  test-phase fit+predict: read-out 150s, kNN 0.00s (CPU)
+
+=== gm4_12b (Gemma-4-12B-it): read-out layers [30, 36, 42, 48] of 48
+wrote nb_PS_gm4_12bL48_dev.npz (990, 50)
+wrote nb_PA_gm4_12bL48_dev.npz (990, 50)
+wrote nb_PS_gm4_12bL48_test.npz (3300, 50)
+wrote nb_PA_gm4_12bL48_test.npz (3300, 50)
+  own label, constrained (zero-shot)           F1=0.7471  bug/feat/q=0.758/0.845/0.639  q->bug=0.394
+  R: read-out (frozen recipe)                  F1=0.8317  bug/feat/q=0.824/0.862/0.809  q->bug=0.094
+  K: decision-state kNN@9 PS (training-free)   F1=0.7851  bug/feat/q=0.767/0.838/0.750  q->bug=0.127
+  wrote readout_gm4_12b.csv; predicted shares {'bug': 0.374, 'feature': 0.321, 'question': 0.305}
+  wrote stateknn_gm4_12b.csv; predicted shares {'bug': 0.361, 'feature': 0.326, 'question': 0.313}
+  test-phase fit+predict: read-out 220s, kNN 0.00s (CPU)
+
+=== mi3_8b (Ministral-3-8B-Instruct-2512): read-out layers [21, 26, 30, 34] of 34
+wrote nb_PS_mi3_8bL34_dev.npz (990, 50)
+wrote nb_PA_mi3_8bL34_dev.npz (990, 50)
+wrote nb_PS_mi3_8bL34_test.npz (3300, 50)
+wrote nb_PA_mi3_8bL34_test.npz (3300, 50)
+  own label, constrained (zero-shot)           F1=0.6634  bug/feat/q=0.712/0.839/0.439  q->bug=0.600
+  R: read-out (frozen recipe)                  F1=0.8338  bug/feat/q=0.836/0.860/0.806  q->bug=0.091
+  K: decision-state kNN@9 PS (training-free)   F1=0.8003  bug/feat/q=0.798/0.845/0.758  q->bug=0.133
+  wrote readout_mi3_8b.csv; predicted shares {'bug': 0.381, 'feature': 0.32, 'question': 0.299}
+  wrote stateknn_mi3_8b.csv; predicted shares {'bug': 0.376, 'feature': 0.321, 'question': 0.303}
+  test-phase fit+predict: read-out 227s, kNN 0.00s (CPU)

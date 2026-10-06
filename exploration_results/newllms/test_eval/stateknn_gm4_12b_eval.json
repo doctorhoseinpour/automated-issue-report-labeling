@@ -1,0 +1,33 @@
+{
+ "model": "stateknn_gm4_12b",
+ "top_k": 0,
+ "total_issues": 3300,
+ "invalid_count": 0,
+ "invalid_rate": 0.0,
+ "accuracy": 0.7858,
+ "precision_bug": 0.7475,
+ "recall_bug": 0.81,
+ "f1_bug": 0.7775,
+ "support_bug": 1100,
+ "precision_feature": 0.8493,
+ "recall_feature": 0.83,
+ "f1_feature": 0.8395,
+ "support_feature": 1100,
+ "precision_question": 0.7638,
+ "recall_question": 0.7173,
+ "f1_question": 0.7398,
+ "support_question": 1100,
+ "precision_macro": 0.7869,
+ "recall_macro": 0.7858,
+ "f1_macro": 0.7856,
+ "precision_weighted": 0.7869,
+ "recall_weighted": 0.7858,
+ "f1_weighted": 0.7856,
+ "per_class_f1": [
+  0.7774869109947644,
+  0.8395402298850575,
+  0.739803094233474
+ ],
+ "q_to_bug": 0.2,
+ "projects_ge_setfit": 3
+}

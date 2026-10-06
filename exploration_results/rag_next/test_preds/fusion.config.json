@@ -1,0 +1,49 @@
+{
+ "name": "fusion",
+ "rule": "pre-registered section 5",
+ "s_star": "14B",
+ "setfit_included": false,
+ "dev_cv": {
+  "base": 0.8563361931368725,
+  "with_setfit": 0.8587309346327034
+ },
+ "components": [
+  {
+   "type": "probe",
+   "feat": "q14_k0",
+   "layers": [
+    30,
+    36,
+    42,
+    48
+   ],
+   "C": 0.003,
+   "scope": "AUG"
+  },
+  {
+   "type": "tfidf",
+   "C": 16.0
+  },
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "raw",
+   "k": 15
+  }
+ ],
+ "stacker_C": 1.0,
+ "timing": [
+  {
+   "component": "{\"type\": \"probe\", \"feat\": \"q14_k0\", \"layers\": [30, 36, 42, 48], \"C\": 0.003, \"scope\": \"AUG\"}",
+   "fit_predict_s": 61.55
+  },
+  {
+   "component": "{\"type\": \"tfidf\", \"C\": 16.0}",
+   "fit_predict_s": 11.27
+  },
+  {
+   "component": "{\"type\": \"knn\", \"setting\": \"PS\", \"variant\": \"raw\", \"k\": 15}",
+   "fit_predict_s": 0.01
+  }
+ ]
+}

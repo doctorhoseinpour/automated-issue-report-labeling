@@ -1,0 +1,185 @@
+{
+ "model": "Qwen/Qwen3.5-9B",
+ "tag": "qw35_9b",
+ "arch": "Qwen3_5ForConditionalGeneration",
+ "cls": "Qwen3_5ForConditionalGeneration",
+ "decoder": "Qwen3_5TextModel",
+ "n_layers": 32,
+ "hidden": 4096,
+ "softcap": null,
+ "eos": [
+  248044,
+  248046
+ ],
+ "pad": 248044,
+ "gpu": "NVIDIA A100-PCIE-40GB",
+ "torch": "2.10.0+cu128",
+ "transformers": "5.17.0",
+ "bitsandbytes": "0.50.2",
+ "quant": "bnb nf4, double quant, bf16 compute",
+ "attn": "sdpa",
+ "max_seq": 8192,
+ "max_new_tokens": 50,
+ "cudnn": 91002,
+ "tokenizer": "TokenizersBackend",
+ "cluster": "ascend",
+ "qwen_kernels": {
+  "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+  "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+  "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+  "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+ },
+ "label_ids": [
+  2238,
+  12388,
+  7593
+ ],
+ "label_tokens": [
+  "bug",
+  "feature",
+  "question"
+ ],
+ "run": "test_k0",
+ "mode": "gen",
+ "nshards": 2,
+ "roles": "test",
+ "uids_csv": null,
+ "ks": "0",
+ "neighbors": null,
+ "n_shards": 2,
+ "gpus": [
+  "NVIDIA A100-PCIE-40GB"
+ ],
+ "gpu_peak_mb": 8929.5,
+ "load_s_per_shard": [
+  62.4,
+  62.3
+ ],
+ "shards": [
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 62.4,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0197.ten.osc.edu",
+   "slurm_job": "7542236",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "test_k0",
+   "mode": "gen",
+   "shard": 0,
+   "nshards": 2,
+   "n_items": 1650,
+   "n_parts": 17,
+   "roles": "test",
+   "uids_csv": null,
+   "ks": "0",
+   "neighbors": null,
+   "gpu_peak_mb": 8929.5,
+   "finished": "2026-09-24T20:04:41"
+  },
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 62.3,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0197.ten.osc.edu",
+   "slurm_job": "7542237",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "test_k0",
+   "mode": "gen",
+   "shard": 1,
+   "nshards": 2,
+   "n_items": 1650,
+   "n_parts": 17,
+   "roles": "test",
+   "uids_csv": null,
+   "ks": "0",
+   "neighbors": null,
+   "gpu_peak_mb": 8929.5,
+   "finished": "2026-09-24T20:04:41"
+  }
+ ],
+ "n": 3300,
+ "compute_s": 921.132390250219,
+ "per_k": {
+  "0": {
+   "n": 3300,
+   "compute_s": 921.132390250219,
+   "mean_prompt_tokens": 759.4372727272727,
+   "invalid_rate": 0.00030303030303030303,
+   "truncated": 0.01090909090909091
+  }
+ }
+}

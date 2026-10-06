@@ -1,0 +1,33 @@
+{
+ "model": "stateknn_qw35_9b",
+ "top_k": 0,
+ "total_issues": 3300,
+ "invalid_count": 0,
+ "invalid_rate": 0.0,
+ "accuracy": 0.8006,
+ "precision_bug": 0.7675,
+ "recall_bug": 0.8255,
+ "f1_bug": 0.7954,
+ "support_bug": 1100,
+ "precision_feature": 0.8493,
+ "recall_feature": 0.8455,
+ "f1_feature": 0.8474,
+ "support_feature": 1100,
+ "precision_question": 0.7867,
+ "recall_question": 0.7309,
+ "f1_question": 0.7578,
+ "support_question": 1100,
+ "precision_macro": 0.8012,
+ "recall_macro": 0.8006,
+ "f1_macro": 0.8002,
+ "precision_weighted": 0.8012,
+ "recall_weighted": 0.8006,
+ "f1_weighted": 0.8002,
+ "per_class_f1": [
+  0.7954445904511608,
+  0.8473804100227791,
+  0.7577756833176249
+ ],
+ "q_to_bug": 0.18,
+ "projects_ge_setfit": 5
+}

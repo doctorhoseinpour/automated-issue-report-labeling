@@ -1,0 +1,322 @@
+{
+ "model": "mistralai/Ministral-3-8B-Instruct-2512-BF16",
+ "tag": "mi3_8b",
+ "arch": "Mistral3ForConditionalGeneration",
+ "cls": "Mistral3ForConditionalGeneration",
+ "decoder": "Ministral3Model",
+ "n_layers": 34,
+ "hidden": 4096,
+ "softcap": null,
+ "eos": [
+  2
+ ],
+ "pad": 11,
+ "gpu": "NVIDIA A100-PCIE-40GB",
+ "torch": "2.10.0+cu128",
+ "transformers": "5.17.0",
+ "bitsandbytes": "0.50.2",
+ "quant": "bnb nf4, double quant, bf16 compute",
+ "attn": "sdpa",
+ "max_seq": 8192,
+ "max_new_tokens": 50,
+ "cudnn": 91002,
+ "tokenizer": "TokenizersBackend",
+ "cluster": "ascend",
+ "label_ids": [
+  13813,
+  22808,
+  23653
+ ],
+ "label_tokens": [
+  "bug",
+  "feature",
+  "question"
+ ],
+ "run": "val_sweep",
+ "mode": "gen",
+ "nshards": 4,
+ "roles": "inner,dev,test",
+ "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+ "ks": "0,1,3,5,7,9,10,12,15",
+ "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+ "n_shards": 4,
+ "gpus": [
+  "NVIDIA A100-PCIE-40GB"
+ ],
+ "gpu_peak_mb": 7946.5,
+ "load_s_per_shard": [
+  15.9,
+  16.0,
+  61.9,
+  61.9
+ ],
+ "shards": [
+  {
+   "model": "mistralai/Ministral-3-8B-Instruct-2512-BF16",
+   "tag": "mi3_8b",
+   "arch": "Mistral3ForConditionalGeneration",
+   "cls": "Mistral3ForConditionalGeneration",
+   "decoder": "Ministral3Model",
+   "n_layers": 34,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    2
+   ],
+   "pad": 11,
+   "load_s": 15.9,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0253.ten.osc.edu",
+   "slurm_job": "7542205",
+   "cluster": "ascend",
+   "label_ids": [
+    13813,
+    22808,
+    23653
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 0,
+   "nshards": 4,
+   "n_items": 1114,
+   "n_parts": 12,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 7945.5,
+   "finished": "2026-09-24T20:07:08"
+  },
+  {
+   "model": "mistralai/Ministral-3-8B-Instruct-2512-BF16",
+   "tag": "mi3_8b",
+   "arch": "Mistral3ForConditionalGeneration",
+   "cls": "Mistral3ForConditionalGeneration",
+   "decoder": "Ministral3Model",
+   "n_layers": 34,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    2
+   ],
+   "pad": 11,
+   "load_s": 16.0,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0253.ten.osc.edu",
+   "slurm_job": "7542206",
+   "cluster": "ascend",
+   "label_ids": [
+    13813,
+    22808,
+    23653
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 1,
+   "nshards": 4,
+   "n_items": 1114,
+   "n_parts": 12,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 7945.5,
+   "finished": "2026-09-24T20:06:46"
+  },
+  {
+   "model": "mistralai/Ministral-3-8B-Instruct-2512-BF16",
+   "tag": "mi3_8b",
+   "arch": "Mistral3ForConditionalGeneration",
+   "cls": "Mistral3ForConditionalGeneration",
+   "decoder": "Ministral3Model",
+   "n_layers": 34,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    2
+   ],
+   "pad": 11,
+   "load_s": 61.9,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0283.ten.osc.edu",
+   "slurm_job": "7542207",
+   "cluster": "ascend",
+   "label_ids": [
+    13813,
+    22808,
+    23653
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 2,
+   "nshards": 4,
+   "n_items": 1114,
+   "n_parts": 12,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 7945.5,
+   "finished": "2026-09-24T20:07:54"
+  },
+  {
+   "model": "mistralai/Ministral-3-8B-Instruct-2512-BF16",
+   "tag": "mi3_8b",
+   "arch": "Mistral3ForConditionalGeneration",
+   "cls": "Mistral3ForConditionalGeneration",
+   "decoder": "Ministral3Model",
+   "n_layers": 34,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    2
+   ],
+   "pad": 11,
+   "load_s": 61.9,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0283.ten.osc.edu",
+   "slurm_job": "7542208",
+   "cluster": "ascend",
+   "label_ids": [
+    13813,
+    22808,
+    23653
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 3,
+   "nshards": 4,
+   "n_items": 1113,
+   "n_parts": 12,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 7946.5,
+   "finished": "2026-09-24T20:07:45"
+  }
+ ],
+ "n": 4455,
+ "compute_s": 2668.8587737035123,
+ "per_k": {
+  "0": {
+   "n": 495,
+   "compute_s": 118.75200694461819,
+   "mean_prompt_tokens": 851.0484848484848,
+   "invalid_rate": 0.0,
+   "truncated": 0.010101010101010102
+  },
+  "1": {
+   "n": 495,
+   "compute_s": 162.7061773807509,
+   "mean_prompt_tokens": 1761.4666666666667,
+   "invalid_rate": 0.0,
+   "truncated": 0.030303030303030304
+  },
+  "3": {
+   "n": 495,
+   "compute_s": 233.44571767555317,
+   "mean_prompt_tokens": 3155.5171717171715,
+   "invalid_rate": 0.0,
+   "truncated": 0.09090909090909091
+  },
+  "5": {
+   "n": 495,
+   "compute_s": 290.89139388891635,
+   "mean_prompt_tokens": 4272.684848484849,
+   "invalid_rate": 0.0,
+   "truncated": 0.20202020202020202
+  },
+  "7": {
+   "n": 495,
+   "compute_s": 332.58723236311926,
+   "mean_prompt_tokens": 5072.973737373737,
+   "invalid_rate": 0.0,
+   "truncated": 0.301010101010101
+  },
+  "9": {
+   "n": 495,
+   "compute_s": 363.71707637177315,
+   "mean_prompt_tokens": 5655.527272727273,
+   "invalid_rate": 0.0,
+   "truncated": 0.4444444444444444
+  },
+  "10": {
+   "n": 495,
+   "compute_s": 373.6263372199028,
+   "mean_prompt_tokens": 5853.79393939394,
+   "invalid_rate": 0.0,
+   "truncated": 0.49696969696969695
+  },
+  "12": {
+   "n": 495,
+   "compute_s": 390.823626960977,
+   "mean_prompt_tokens": 6166.105050505051,
+   "invalid_rate": 0.0,
+   "truncated": 0.5878787878787879
+  },
+  "15": {
+   "n": 495,
+   "compute_s": 402.3092048979015,
+   "mean_prompt_tokens": 6386.355555555556,
+   "invalid_rate": 0.0,
+   "truncated": 0.7292929292929293
+  }
+ }
+}

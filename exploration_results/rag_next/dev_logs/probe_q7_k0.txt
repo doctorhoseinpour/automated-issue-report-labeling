@@ -1,0 +1,56 @@
+== q7_k0: label-scoring and probes (fit inner -> dev, n=990)
+  label argmax (constrained decoding)            F1=0.6881  bug=0.706 feat=0.811 q=0.547  q->bug=0.491 predbug=0.491
+  label LR-calibrated PA                         F1=0.7327  bug=0.720 feat=0.813 q=0.666  q->bug=0.309 predbug=0.402
+  label LR-calibrated PS                         F1=0.7434  bug=0.738 feat=0.812 q=0.680  q->bug=0.264 predbug=0.381
+  probe h L14 PA C=0.001                         F1=0.7983  bug=0.804 feat=0.809 q=0.781  q->bug=0.106 predbug=0.322
+  probe h L14 PA C=0.003                         F1=0.8003  bug=0.810 feat=0.809 q=0.782  q->bug=0.103 predbug=0.320
+  probe h L14 PA C=0.01                          F1=0.7972  bug=0.806 feat=0.807 q=0.779  q->bug=0.106 predbug=0.323
+  probe h L14 PA C=0.03                          F1=0.7933  bug=0.803 feat=0.806 q=0.771  q->bug=0.106 predbug=0.318
+  probe h L18 PA C=0.001                         F1=0.8167  bug=0.826 feat=0.837 q=0.788  q->bug=0.097 predbug=0.327
+  probe h L18 PA C=0.003                         F1=0.8216  bug=0.822 feat=0.847 q=0.796  q->bug=0.103 predbug=0.330
+  probe h L18 PA C=0.01                          F1=0.8165  bug=0.819 feat=0.846 q=0.785  q->bug=0.115 predbug=0.330
+  probe h L18 PA C=0.03                          F1=0.8072  bug=0.813 feat=0.831 q=0.777  q->bug=0.121 predbug=0.337
+  probe h L21 PA C=0.001                         F1=0.8106  bug=0.812 feat=0.842 q=0.778  q->bug=0.121 predbug=0.333
+  probe h L21 PA C=0.003                         F1=0.8146  bug=0.816 feat=0.842 q=0.786  q->bug=0.112 predbug=0.330
+  probe h L21 PA C=0.01                          F1=0.8117  bug=0.824 feat=0.830 q=0.781  q->bug=0.109 predbug=0.328
+  probe h L21 PA C=0.03                          F1=0.8116  bug=0.822 feat=0.828 q=0.785  q->bug=0.100 predbug=0.323
+  probe h L24 PA C=0.001                         F1=0.8025  bug=0.789 feat=0.840 q=0.778  q->bug=0.118 predbug=0.319
+  probe h L24 PA C=0.003                         F1=0.8150  bug=0.812 feat=0.850 q=0.783  q->bug=0.106 predbug=0.316
+  probe h L24 PA C=0.01                          F1=0.8130  bug=0.819 feat=0.838 q=0.782  q->bug=0.100 predbug=0.313
+  probe h L24 PA C=0.03                          F1=0.8097  bug=0.823 feat=0.826 q=0.780  q->bug=0.106 predbug=0.324
+  probe h L28 PA C=0.001                         F1=0.8165  bug=0.817 feat=0.852 q=0.780  q->bug=0.127 predbug=0.334
+  probe h L28 PA C=0.003                         F1=0.8198  bug=0.820 feat=0.853 q=0.786  q->bug=0.109 predbug=0.324
+  probe h L28 PA C=0.01                          F1=0.8159  bug=0.819 feat=0.850 q=0.779  q->bug=0.106 predbug=0.320
+  probe h L28 PA C=0.03                          F1=0.8075  bug=0.810 feat=0.836 q=0.776  q->bug=0.109 predbug=0.322
+  probe m L14 PA C=0.001                         F1=0.7742  bug=0.781 feat=0.792 q=0.749  q->bug=0.136 predbug=0.336
+  probe m L14 PA C=0.003                         F1=0.7731  bug=0.780 feat=0.789 q=0.750  q->bug=0.130 predbug=0.332
+  probe m L14 PA C=0.01                          F1=0.7750  bug=0.787 feat=0.791 q=0.748  q->bug=0.127 predbug=0.329
+  probe m L14 PA C=0.03                          F1=0.7760  bug=0.794 feat=0.785 q=0.750  q->bug=0.115 predbug=0.328
+  probe m L18 PA C=0.001                         F1=0.7954  bug=0.799 feat=0.816 q=0.772  q->bug=0.118 predbug=0.329
+  probe m L18 PA C=0.003                         F1=0.7886  bug=0.799 feat=0.809 q=0.758  q->bug=0.118 predbug=0.324
+  probe m L18 PA C=0.01                          F1=0.7915  bug=0.797 feat=0.812 q=0.765  q->bug=0.109 predbug=0.313
+  probe m L18 PA C=0.03                          F1=0.7946  bug=0.806 feat=0.812 q=0.766  q->bug=0.097 predbug=0.308
+  probe m L21 PA C=0.001                         F1=0.7922  bug=0.786 feat=0.814 q=0.777  q->bug=0.112 predbug=0.319
+  probe m L21 PA C=0.003                         F1=0.7870  bug=0.780 feat=0.807 q=0.774  q->bug=0.115 predbug=0.314
+  probe m L21 PA C=0.01                          F1=0.7831  bug=0.780 feat=0.804 q=0.765  q->bug=0.124 predbug=0.319
+  probe m L21 PA C=0.03                          F1=0.7802  bug=0.779 feat=0.802 q=0.759  q->bug=0.115 predbug=0.312
+  probe m L24 PA C=0.001                         F1=0.7838  bug=0.772 feat=0.802 q=0.777  q->bug=0.109 predbug=0.310
+  probe m L24 PA C=0.003                         F1=0.7780  bug=0.771 feat=0.801 q=0.762  q->bug=0.115 predbug=0.316
+  probe m L24 PA C=0.01                          F1=0.7851  bug=0.786 feat=0.806 q=0.763  q->bug=0.115 predbug=0.319
+  probe m L24 PA C=0.03                          F1=0.7811  bug=0.780 feat=0.810 q=0.753  q->bug=0.136 predbug=0.329
+  probe h L18 PS C=0.001                         F1=0.7953  bug=0.783 feat=0.822 q=0.781  q->bug=0.112 predbug=0.319
+  probe h L18 PS C=0.003                         F1=0.8033  bug=0.793 feat=0.829 q=0.788  q->bug=0.109 predbug=0.324
+  probe h L18 PS C=0.01                          F1=0.8053  bug=0.799 feat=0.829 q=0.788  q->bug=0.112 predbug=0.329
+  probe h L18 PS C=0.03                          F1=0.8063  bug=0.804 feat=0.829 q=0.785  q->bug=0.115 predbug=0.332
+  probe h L18 AUG C=0.001                        F1=0.8265  bug=0.831 feat=0.844 q=0.805  q->bug=0.097 predbug=0.328
+  probe h L18 AUG C=0.003                        F1=0.8285  bug=0.830 feat=0.846 q=0.810  q->bug=0.100 predbug=0.331
+  probe h L18 AUG C=0.01                         F1=0.8264  bug=0.827 feat=0.842 q=0.811  q->bug=0.100 predbug=0.331
+  probe h L18 AUG C=0.03                         F1=0.8203  bug=0.822 feat=0.838 q=0.801  q->bug=0.106 predbug=0.330
+  probe h L28 PS C=0.001                         F1=0.8105  bug=0.808 feat=0.836 q=0.787  q->bug=0.088 predbug=0.304
+  probe h L28 PS C=0.003                         F1=0.8178  bug=0.824 feat=0.837 q=0.793  q->bug=0.076 predbug=0.302
+  probe h L28 PS C=0.01                          F1=0.8208  bug=0.827 feat=0.839 q=0.797  q->bug=0.076 predbug=0.302
+  probe h L28 PS C=0.03                          F1=0.8157  bug=0.820 feat=0.833 q=0.794  q->bug=0.082 predbug=0.305
+  probe h L28 AUG C=0.001                        F1=0.8206  bug=0.819 feat=0.849 q=0.793  q->bug=0.094 predbug=0.310
+  probe h L28 AUG C=0.003                        F1=0.8257  bug=0.829 feat=0.849 q=0.799  q->bug=0.085 predbug=0.310
+  probe h L28 AUG C=0.01                         F1=0.8217  bug=0.820 feat=0.851 q=0.794  q->bug=0.088 predbug=0.307
+  probe h L28 AUG C=0.03                         F1=0.8207  bug=0.819 feat=0.848 q=0.794  q->bug=0.091 predbug=0.310

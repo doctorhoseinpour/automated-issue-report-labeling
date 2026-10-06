@@ -1,0 +1,450 @@
+
+=== readout_qw35_9b: macro F1 0.8292 (evaluate.py) | recomputed 0.8292 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.834 / 0.860 / 0.793; q->bug 0.173; pred bug share 0.379
+    vs SetFit-PS (issues)                 base=0.8100  diff=+0.0192  95% CI [+0.0064, +0.0317]
+    vs FT-PA-14B                          base=0.7853  diff=+0.0439  95% CI [+0.0301, +0.0568]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=+0.0481  95% CI [+0.0356, +0.0608]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0626  95% CI [+0.0501, +0.0758]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0153  95% CI [-0.0238, -0.0062]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=+0.0299  95% CI [+0.0182, +0.0412]
+    vs RAG@K* qw35_9b                     base=0.7516  diff=+0.0776  95% CI [+0.0651, +0.0905]
+    vs ZS qw35_9b                         base=0.6841  diff=+0.1451  95% CI [+0.1304, +0.1600]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.856      0.954 -0.098
+      bitcoin/bitcoin 0.775      0.764  0.011
+        dart-lang/sdk 0.880      0.834  0.046
+        dotnet/roslyn 0.753      0.720  0.033
+       facebook/react 0.892      0.830  0.062
+      flutter/flutter 0.835      0.855 -0.020
+kubernetes/kubernetes 0.917      0.898  0.019
+ microsoft/TypeScript 0.777      0.693  0.084
+     microsoft/vscode 0.854      0.807  0.046
+        opencv/opencv 0.742      0.716  0.026
+tensorflow/tensorflow 0.824      0.821  0.003
+    projects >= SetFit-PS: 9/11
+    logged test evaluation #1 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== stateknn_qw35_9b: macro F1 0.8002 (evaluate.py) | recomputed 0.8002 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.795 / 0.847 / 0.758; q->bug 0.180; pred bug share 0.358
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0098  95% CI [-0.0228, +0.0038]
+    vs FT-PA-14B                          base=0.7853  diff=+0.0149  95% CI [+0.0009, +0.0285]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=+0.0191  95% CI [+0.0076, +0.0309]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0337  95% CI [+0.0219, +0.0460]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0443  95% CI [-0.0547, -0.0330]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=+0.0009  95% CI [-0.0088, +0.0117]
+    vs RAG@K* qw35_9b                     base=0.7516  diff=+0.0486  95% CI [+0.0360, +0.0613]
+    vs ZS qw35_9b                         base=0.6841  diff=+0.1161  95% CI [+0.1022, +0.1310]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.835      0.954 -0.119
+      bitcoin/bitcoin 0.725      0.764 -0.039
+        dart-lang/sdk 0.874      0.834  0.040
+        dotnet/roslyn 0.690      0.720 -0.030
+       facebook/react 0.869      0.830  0.039
+      flutter/flutter 0.816      0.855 -0.039
+kubernetes/kubernetes 0.897      0.898 -0.000
+ microsoft/TypeScript 0.690      0.693 -0.003
+     microsoft/vscode 0.810      0.807  0.003
+        opencv/opencv 0.744      0.716  0.027
+tensorflow/tensorflow 0.833      0.821  0.011
+    projects >= SetFit-PS: 5/11
+    logged test evaluation #2 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== rag_qw35_9b: macro F1 0.7516 (evaluate.py) | recomputed 0.7516 | invalid 0.0003
+    per-class F1 bug/feat/q: 0.765 / 0.830 / 0.659; q->bug 0.364; pred bug share 0.456
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0584  95% CI [-0.0735, -0.0447]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0338  95% CI [-0.0483, -0.0197]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0295  95% CI [-0.0415, -0.0175]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0150  95% CI [-0.0253, -0.0039]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0929  95% CI [-0.1063, -0.0798]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0477  95% CI [-0.0604, -0.0348]
+    vs RAG@K* qw35_9b                     base=0.7516  diff=+0.0000  95% CI [+0.0000, +0.0000]
+    vs ZS qw35_9b                         base=0.6841  diff=+0.0675  95% CI [+0.0558, +0.0794]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.750      0.954 -0.204
+      bitcoin/bitcoin 0.713      0.764 -0.050
+        dart-lang/sdk 0.841      0.834  0.007
+        dotnet/roslyn 0.666      0.720 -0.054
+       facebook/react 0.833      0.830  0.002
+      flutter/flutter 0.787      0.855 -0.068
+kubernetes/kubernetes 0.858      0.898 -0.040
+ microsoft/TypeScript 0.656      0.693 -0.037
+     microsoft/vscode 0.713      0.807 -0.095
+        opencv/opencv 0.698      0.716 -0.019
+tensorflow/tensorflow 0.716      0.821 -0.105
+    projects >= SetFit-PS: 2/11
+    logged test evaluation #3 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== zs_qw35_9b: macro F1 0.6841 (evaluate.py) | recomputed 0.6841 | invalid 0.0003
+    per-class F1 bug/feat/q: 0.721 / 0.826 / 0.505; q->bug 0.524; pred bug share 0.521
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.1259  95% CI [-0.1423, -0.1104]
+    vs FT-PA-14B                          base=0.7853  diff=-0.1013  95% CI [-0.1166, -0.0848]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0970  95% CI [-0.1111, -0.0830]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0825  95% CI [-0.0953, -0.0688]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.1604  95% CI [-0.1760, -0.1449]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.1152  95% CI [-0.1294, -0.1006]
+    vs RAG@K* qw35_9b                     base=0.7516  diff=-0.0675  95% CI [-0.0794, -0.0558]
+    vs ZS qw35_9b                         base=0.6841  diff=+0.0000  95% CI [+0.0000, +0.0000]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.605      0.954 -0.349
+      bitcoin/bitcoin 0.682      0.764 -0.082
+        dart-lang/sdk 0.824      0.834 -0.010
+        dotnet/roslyn 0.619      0.720 -0.101
+       facebook/react 0.805      0.830 -0.025
+      flutter/flutter 0.757      0.855 -0.098
+kubernetes/kubernetes 0.739      0.898 -0.159
+ microsoft/TypeScript 0.589      0.693 -0.103
+     microsoft/vscode 0.510      0.807 -0.297
+        opencv/opencv 0.631      0.716 -0.085
+tensorflow/tensorflow 0.664      0.821 -0.158
+    projects >= SetFit-PS: 0/11
+    logged test evaluation #4 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== ragc_qw35_9b: macro F1 0.7506 (evaluate.py) | recomputed 0.7506 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.765 / 0.829 / 0.657; q->bug 0.364; pred bug share 0.456
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0594  95% CI [-0.0744, -0.0453]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0347  95% CI [-0.0490, -0.0204]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0305  95% CI [-0.0426, -0.0183]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0159  95% CI [-0.0265, -0.0049]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0939  95% CI [-0.1071, -0.0806]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0487  95% CI [-0.0614, -0.0355]
+    vs RAG@K* qw35_9b                     base=0.7516  diff=-0.0009  95% CI [-0.0024, +0.0004]
+    vs ZS qw35_9b                         base=0.6841  diff=+0.0666  95% CI [+0.0550, +0.0784]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.745      0.954 -0.209
+      bitcoin/bitcoin 0.713      0.764 -0.050
+        dart-lang/sdk 0.841      0.834  0.007
+        dotnet/roslyn 0.666      0.720 -0.054
+       facebook/react 0.833      0.830  0.002
+      flutter/flutter 0.787      0.855 -0.068
+kubernetes/kubernetes 0.856      0.898 -0.041
+ microsoft/TypeScript 0.659      0.693 -0.033
+     microsoft/vscode 0.704      0.807 -0.103
+        opencv/opencv 0.698      0.716 -0.019
+tensorflow/tensorflow 0.716      0.821 -0.105
+    projects >= SetFit-PS: 2/11
+    logged test evaluation #5 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== zsc_qw35_9b: macro F1 0.6839 (evaluate.py) | recomputed 0.6839 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.721 / 0.826 / 0.505; q->bug 0.524; pred bug share 0.521
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.1260  95% CI [-0.1424, -0.1105]
+    vs FT-PA-14B                          base=0.7853  diff=-0.1014  95% CI [-0.1167, -0.0850]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0972  95% CI [-0.1112, -0.0830]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0826  95% CI [-0.0954, -0.0689]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.1605  95% CI [-0.1760, -0.1451]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.1154  95% CI [-0.1296, -0.1007]
+    vs RAG@K* qw35_9b                     base=0.7516  diff=-0.0676  95% CI [-0.0794, -0.0560]
+    vs ZS qw35_9b                         base=0.6841  diff=-0.0001  95% CI [-0.0004, +0.0000]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.605      0.954 -0.349
+      bitcoin/bitcoin 0.682      0.764 -0.082
+        dart-lang/sdk 0.824      0.834 -0.010
+        dotnet/roslyn 0.619      0.720 -0.101
+       facebook/react 0.805      0.830 -0.025
+      flutter/flutter 0.757      0.855 -0.098
+kubernetes/kubernetes 0.737      0.898 -0.160
+ microsoft/TypeScript 0.589      0.693 -0.103
+     microsoft/vscode 0.510      0.807 -0.297
+        opencv/opencv 0.631      0.716 -0.085
+tensorflow/tensorflow 0.664      0.821 -0.158
+    projects >= SetFit-PS: 0/11
+    logged test evaluation #6 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== readout_gm4_12b: macro F1 0.8270 (evaluate.py) | recomputed 0.8270 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.827 / 0.854 / 0.800; q->bug 0.161; pred bug share 0.374
+    vs SetFit-PS (issues)                 base=0.8100  diff=+0.0171  95% CI [+0.0043, +0.0297]
+    vs FT-PA-14B                          base=0.7853  diff=+0.0417  95% CI [+0.0281, +0.0554]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=+0.0460  95% CI [+0.0343, +0.0583]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0605  95% CI [+0.0475, +0.0729]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0174  95% CI [-0.0267, -0.0076]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=+0.0277  95% CI [+0.0170, +0.0387]
+    vs RAG@K* gm4_12b                     base=0.7741  diff=+0.0529  95% CI [+0.0412, +0.0643]
+    vs ZS gm4_12b                         base=0.6963  diff=+0.1308  95% CI [+0.1163, +0.1451]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.845      0.954 -0.109
+      bitcoin/bitcoin 0.781      0.764  0.017
+        dart-lang/sdk 0.884      0.834  0.050
+        dotnet/roslyn 0.756      0.720  0.035
+       facebook/react 0.883      0.830  0.052
+      flutter/flutter 0.827      0.855 -0.027
+kubernetes/kubernetes 0.920      0.898  0.023
+ microsoft/TypeScript 0.783      0.693  0.090
+     microsoft/vscode 0.830      0.807  0.023
+        opencv/opencv 0.787      0.716  0.071
+tensorflow/tensorflow 0.791      0.821 -0.031
+    projects >= SetFit-PS: 8/11
+    logged test evaluation #7 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== stateknn_gm4_12b: macro F1 0.7856 (evaluate.py) | recomputed 0.7856 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.777 / 0.840 / 0.740; q->bug 0.200; pred bug share 0.361
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0244  95% CI [-0.0371, -0.0104]
+    vs FT-PA-14B                          base=0.7853  diff=+0.0003  95% CI [-0.0138, +0.0154]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=+0.0045  95% CI [-0.0082, +0.0172]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0191  95% CI [+0.0061, +0.0325]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0589  95% CI [-0.0707, -0.0468]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0137  95% CI [-0.0241, -0.0023]
+    vs RAG@K* gm4_12b                     base=0.7741  diff=+0.0115  95% CI [-0.0005, +0.0233]
+    vs ZS gm4_12b                         base=0.6963  diff=+0.0894  95% CI [+0.0752, +0.1044]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.807      0.954 -0.147
+      bitcoin/bitcoin 0.749      0.764 -0.015
+        dart-lang/sdk 0.857      0.834  0.023
+        dotnet/roslyn 0.678      0.720 -0.042
+       facebook/react 0.846      0.830  0.016
+      flutter/flutter 0.810      0.855 -0.045
+kubernetes/kubernetes 0.869      0.898 -0.029
+ microsoft/TypeScript 0.656      0.693 -0.037
+     microsoft/vscode 0.803      0.807 -0.004
+        opencv/opencv 0.767      0.716  0.051
+tensorflow/tensorflow 0.777      0.821 -0.045
+    projects >= SetFit-PS: 3/11
+    logged test evaluation #8 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== rag_gm4_12b: macro F1 0.7741 (evaluate.py) | recomputed 0.7741 | invalid 0.0124
+    per-class F1 bug/feat/q: 0.784 / 0.829 / 0.709; q->bug 0.259; pred bug share 0.408
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0359  95% CI [-0.0498, -0.0225]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0112  95% CI [-0.0250, +0.0038]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0070  95% CI [-0.0174, +0.0042]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0075  95% CI [-0.0028, +0.0187]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0704  95% CI [-0.0824, -0.0574]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0252  95% CI [-0.0369, -0.0125]
+    vs RAG@K* gm4_12b                     base=0.7741  diff=+0.0000  95% CI [+0.0000, +0.0000]
+    vs ZS gm4_12b                         base=0.6963  diff=+0.0778  95% CI [+0.0663, +0.0912]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.709      0.954 -0.245
+      bitcoin/bitcoin 0.730      0.764 -0.033
+        dart-lang/sdk 0.878      0.834  0.045
+        dotnet/roslyn 0.678      0.720 -0.043
+       facebook/react 0.824      0.830 -0.006
+      flutter/flutter 0.790      0.855 -0.065
+kubernetes/kubernetes 0.885      0.898 -0.012
+ microsoft/TypeScript 0.712      0.693  0.019
+     microsoft/vscode 0.790      0.807 -0.017
+        opencv/opencv 0.742      0.716  0.025
+tensorflow/tensorflow 0.735      0.821 -0.087
+    projects >= SetFit-PS: 3/11
+    logged test evaluation #9 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== zs_gm4_12b: macro F1 0.6963 (evaluate.py) | recomputed 0.6963 | invalid 0.0070
+    per-class F1 bug/feat/q: 0.721 / 0.813 / 0.554; q->bug 0.455; pred bug share 0.481
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.1137  95% CI [-0.1307, -0.0976]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0891  95% CI [-0.1051, -0.0729]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0848  95% CI [-0.0982, -0.0709]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0703  95% CI [-0.0835, -0.0573]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.1482  95% CI [-0.1638, -0.1331]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.1030  95% CI [-0.1178, -0.0886]
+    vs RAG@K* gm4_12b                     base=0.7741  diff=-0.0778  95% CI [-0.0912, -0.0663]
+    vs ZS gm4_12b                         base=0.6963  diff=+0.0000  95% CI [+0.0000, +0.0000]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.619      0.954 -0.334
+      bitcoin/bitcoin 0.697      0.764 -0.066
+        dart-lang/sdk 0.836      0.834  0.003
+        dotnet/roslyn 0.627      0.720 -0.093
+       facebook/react 0.803      0.830 -0.027
+      flutter/flutter 0.731      0.855 -0.123
+kubernetes/kubernetes 0.717      0.898 -0.181
+ microsoft/TypeScript 0.592      0.693 -0.101
+     microsoft/vscode 0.603      0.807 -0.204
+        opencv/opencv 0.698      0.716 -0.019
+tensorflow/tensorflow 0.665      0.821 -0.156
+    projects >= SetFit-PS: 1/11
+    logged test evaluation #10 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== ragc_gm4_12b: macro F1 0.7799 (evaluate.py) | recomputed 0.7799 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.791 / 0.831 / 0.717; q->bug 0.264; pred bug share 0.415
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0301  95% CI [-0.0438, -0.0167]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0055  95% CI [-0.0188, +0.0096]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0012  95% CI [-0.0115, +0.0098]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0133  95% CI [+0.0027, +0.0241]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0646  95% CI [-0.0765, -0.0518]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0194  95% CI [-0.0311, -0.0069]
+    vs RAG@K* gm4_12b                     base=0.7741  diff=+0.0058  95% CI [+0.0037, +0.0082]
+    vs ZS gm4_12b                         base=0.6963  diff=+0.0836  95% CI [+0.0722, +0.0967]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.713      0.954 -0.241
+      bitcoin/bitcoin 0.741      0.764 -0.023
+        dart-lang/sdk 0.884      0.834  0.050
+        dotnet/roslyn 0.677      0.720 -0.043
+       facebook/react 0.829      0.830 -0.001
+      flutter/flutter 0.797      0.855 -0.058
+kubernetes/kubernetes 0.890      0.898 -0.008
+ microsoft/TypeScript 0.719      0.693  0.027
+     microsoft/vscode 0.794      0.807 -0.014
+        opencv/opencv 0.748      0.716  0.032
+tensorflow/tensorflow 0.747      0.821 -0.075
+    projects >= SetFit-PS: 3/11
+    logged test evaluation #11 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== zsc_gm4_12b: macro F1 0.6988 (evaluate.py) | recomputed 0.6988 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.725 / 0.814 / 0.557; q->bug 0.458; pred bug share 0.486
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.1112  95% CI [-0.1278, -0.0955]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0865  95% CI [-0.1028, -0.0704]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0823  95% CI [-0.0958, -0.0685]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0677  95% CI [-0.0810, -0.0550]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.1457  95% CI [-0.1608, -0.1305]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.1005  95% CI [-0.1152, -0.0859]
+    vs RAG@K* gm4_12b                     base=0.7741  diff=-0.0753  95% CI [-0.0886, -0.0640]
+    vs ZS gm4_12b                         base=0.6963  diff=+0.0025  95% CI [+0.0009, +0.0043]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.623      0.954 -0.331
+      bitcoin/bitcoin 0.703      0.764 -0.061
+        dart-lang/sdk 0.836      0.834  0.003
+        dotnet/roslyn 0.627      0.720 -0.093
+       facebook/react 0.805      0.830 -0.025
+      flutter/flutter 0.737      0.855 -0.118
+kubernetes/kubernetes 0.718      0.898 -0.180
+ microsoft/TypeScript 0.594      0.693 -0.099
+     microsoft/vscode 0.601      0.807 -0.206
+        opencv/opencv 0.697      0.716 -0.020
+tensorflow/tensorflow 0.676      0.821 -0.145
+    projects >= SetFit-PS: 1/11
+    logged test evaluation #12 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== readout_mi3_8b: macro F1 0.8266 (evaluate.py) | recomputed 0.8266 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.836 / 0.855 / 0.788; q->bug 0.169; pred bug share 0.381
+    vs SetFit-PS (issues)                 base=0.8100  diff=+0.0166  95% CI [+0.0043, +0.0289]
+    vs FT-PA-14B                          base=0.7853  diff=+0.0412  95% CI [+0.0273, +0.0553]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=+0.0455  95% CI [+0.0333, +0.0581]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0600  95% CI [+0.0483, +0.0728]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0179  95% CI [-0.0276, -0.0085]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=+0.0273  95% CI [+0.0160, +0.0387]
+    vs RAG@K* mi3_8b                      base=0.7388  diff=+0.0877  95% CI [+0.0745, +0.1019]
+    vs ZS mi3_8b                          base=0.6376  diff=+0.1889  95% CI [+0.1735, +0.2045]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.887      0.954 -0.067
+      bitcoin/bitcoin 0.793      0.764  0.030
+        dart-lang/sdk 0.856      0.834  0.023
+        dotnet/roslyn 0.727      0.720  0.007
+       facebook/react 0.858      0.830  0.028
+      flutter/flutter 0.845      0.855 -0.010
+kubernetes/kubernetes 0.920      0.898  0.023
+ microsoft/TypeScript 0.764      0.693  0.071
+     microsoft/vscode 0.847      0.807  0.039
+        opencv/opencv 0.757      0.716  0.040
+tensorflow/tensorflow 0.827      0.821  0.006
+    projects >= SetFit-PS: 9/11
+    logged test evaluation #13 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== stateknn_mi3_8b: macro F1 0.7836 (evaluate.py) | recomputed 0.7836 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.788 / 0.835 / 0.728; q->bug 0.213; pred bug share 0.376
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0264  95% CI [-0.0398, -0.0132]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0017  95% CI [-0.0156, +0.0124]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=+0.0025  95% CI [-0.0100, +0.0147]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=+0.0171  95% CI [+0.0037, +0.0301]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.0609  95% CI [-0.0732, -0.0487]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0157  95% CI [-0.0267, -0.0041]
+    vs RAG@K* mi3_8b                      base=0.7388  diff=+0.0448  95% CI [+0.0311, +0.0584]
+    vs ZS mi3_8b                          base=0.6376  diff=+0.1460  95% CI [+0.1312, +0.1607]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.820      0.954 -0.134
+      bitcoin/bitcoin 0.769      0.764  0.005
+        dart-lang/sdk 0.842      0.834  0.008
+        dotnet/roslyn 0.686      0.720 -0.034
+       facebook/react 0.838      0.830  0.008
+      flutter/flutter 0.805      0.855 -0.050
+kubernetes/kubernetes 0.900      0.898  0.003
+ microsoft/TypeScript 0.647      0.693 -0.045
+     microsoft/vscode 0.733      0.807 -0.075
+        opencv/opencv 0.747      0.716  0.031
+tensorflow/tensorflow 0.814      0.821 -0.007
+    projects >= SetFit-PS: 5/11
+    logged test evaluation #14 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== rag_mi3_8b: macro F1 0.7388 (evaluate.py) | recomputed 0.7388 | invalid 0.0003
+    per-class F1 bug/feat/q: 0.751 / 0.836 / 0.629; q->bug 0.402; pred bug share 0.471
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0712  95% CI [-0.0861, -0.0557]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0465  95% CI [-0.0616, -0.0310]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0423  95% CI [-0.0548, -0.0295]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0277  95% CI [-0.0386, -0.0167]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.1057  95% CI [-0.1194, -0.0917]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0605  95% CI [-0.0742, -0.0469]
+    vs RAG@K* mi3_8b                      base=0.7388  diff=+0.0000  95% CI [+0.0000, +0.0000]
+    vs ZS mi3_8b                          base=0.6376  diff=+0.1012  95% CI [+0.0884, +0.1148]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.696      0.954 -0.258
+      bitcoin/bitcoin 0.709      0.764 -0.055
+        dart-lang/sdk 0.827      0.834 -0.007
+        dotnet/roslyn 0.653      0.720 -0.068
+       facebook/react 0.812      0.830 -0.018
+      flutter/flutter 0.799      0.855 -0.055
+kubernetes/kubernetes 0.815      0.898 -0.082
+ microsoft/TypeScript 0.619      0.693 -0.074
+     microsoft/vscode 0.706      0.807 -0.101
+        opencv/opencv 0.684      0.716 -0.032
+tensorflow/tensorflow 0.772      0.821 -0.050
+    projects >= SetFit-PS: 0/11
+    logged test evaluation #15 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== zs_mi3_8b: macro F1 0.6376 (evaluate.py) | recomputed 0.6376 | invalid 0.0003
+    per-class F1 bug/feat/q: 0.693 / 0.815 / 0.405; q->bug 0.625; pred bug share 0.583
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.1724  95% CI [-0.1893, -0.1554]
+    vs FT-PA-14B                          base=0.7853  diff=-0.1477  95% CI [-0.1639, -0.1306]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.1435  95% CI [-0.1589, -0.1283]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.1289  95% CI [-0.1435, -0.1146]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.2069  95% CI [-0.2226, -0.1910]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.1617  95% CI [-0.1773, -0.1460]
+    vs RAG@K* mi3_8b                      base=0.7388  diff=-0.1012  95% CI [-0.1148, -0.0884]
+    vs ZS mi3_8b                          base=0.6376  diff=+0.0000  95% CI [+0.0000, +0.0000]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.553      0.954 -0.401
+      bitcoin/bitcoin 0.647      0.764 -0.117
+        dart-lang/sdk 0.771      0.834 -0.063
+        dotnet/roslyn 0.594      0.720 -0.126
+       facebook/react 0.724      0.830 -0.107
+      flutter/flutter 0.701      0.855 -0.154
+kubernetes/kubernetes 0.713      0.898 -0.185
+ microsoft/TypeScript 0.508      0.693 -0.185
+     microsoft/vscode 0.506      0.807 -0.301
+        opencv/opencv 0.583      0.716 -0.133
+tensorflow/tensorflow 0.630      0.821 -0.192
+    projects >= SetFit-PS: 0/11
+    logged test evaluation #16 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== ragc_mi3_8b: macro F1 0.7387 (evaluate.py) | recomputed 0.7387 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.751 / 0.836 / 0.629; q->bug 0.402; pred bug share 0.471
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.0713  95% CI [-0.0862, -0.0561]
+    vs FT-PA-14B                          base=0.7853  diff=-0.0466  95% CI [-0.0618, -0.0310]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.0424  95% CI [-0.0551, -0.0298]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.0278  95% CI [-0.0386, -0.0168]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.1058  95% CI [-0.1195, -0.0919]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.0606  95% CI [-0.0745, -0.0470]
+    vs RAG@K* mi3_8b                      base=0.7388  diff=-0.0001  95% CI [-0.0004, +0.0000]
+    vs ZS mi3_8b                          base=0.6376  diff=+0.1011  95% CI [+0.0884, +0.1148]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.696      0.954 -0.258
+      bitcoin/bitcoin 0.709      0.764 -0.055
+        dart-lang/sdk 0.827      0.834 -0.007
+        dotnet/roslyn 0.653      0.720 -0.068
+       facebook/react 0.812      0.830 -0.018
+      flutter/flutter 0.799      0.855 -0.055
+kubernetes/kubernetes 0.814      0.898 -0.084
+ microsoft/TypeScript 0.619      0.693 -0.074
+     microsoft/vscode 0.706      0.807 -0.101
+        opencv/opencv 0.684      0.716 -0.032
+tensorflow/tensorflow 0.772      0.821 -0.050
+    projects >= SetFit-PS: 0/11
+    logged test evaluation #17 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv
+
+=== zsc_mi3_8b: macro F1 0.6375 (evaluate.py) | recomputed 0.6375 | invalid 0.0000
+    per-class F1 bug/feat/q: 0.693 / 0.814 / 0.405; q->bug 0.625; pred bug share 0.583
+    vs SetFit-PS (issues)                 base=0.8100  diff=-0.1725  95% CI [-0.1895, -0.1554]
+    vs FT-PA-14B                          base=0.7853  diff=-0.1478  95% CI [-0.1640, -0.1307]
+    vs BRAGTAG-PS-32B (k12)               base=0.7811  diff=-0.1436  95% CI [-0.1590, -0.1285]
+    vs RAGTAG-PS-32B (k12)                base=0.7665  diff=-0.1290  95% CI [-0.1437, -0.1147]
+    vs R-32B (Qwen2.5 read-out)           base=0.8445  diff=-0.2070  95% CI [-0.2228, -0.1910]
+    vs K-32B (Qwen2.5 kNN vote)           base=0.7993  diff=-0.1618  95% CI [-0.1775, -0.1461]
+    vs RAG@K* mi3_8b                      base=0.7388  diff=-0.1013  95% CI [-0.1148, -0.0885]
+    vs ZS mi3_8b                          base=0.6376  diff=-0.0001  95% CI [-0.0004, +0.0000]
+              project  cand  setfit_ps   diff
+      ansible/ansible 0.553      0.954 -0.401
+      bitcoin/bitcoin 0.647      0.764 -0.117
+        dart-lang/sdk 0.771      0.834 -0.063
+        dotnet/roslyn 0.594      0.720 -0.126
+       facebook/react 0.724      0.830 -0.107
+      flutter/flutter 0.701      0.855 -0.154
+kubernetes/kubernetes 0.711      0.898 -0.187
+ microsoft/TypeScript 0.508      0.693 -0.185
+     microsoft/vscode 0.506      0.807 -0.301
+        opencv/opencv 0.583      0.716 -0.133
+tensorflow/tensorflow 0.630      0.821 -0.192
+    projects >= SetFit-PS: 0/11
+    logged test evaluation #18 -> /home/ahosein/llm-labler/results/issues11k/exploration/newllms/test_eval_log.csv

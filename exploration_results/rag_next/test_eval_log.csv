@@ -1,0 +1,13 @@
+time,name,preds,macro_f1,invalid_rate
+2026-09-24T16:34:42,readout_14B,../../../results/issues11k/exploration/rag_next/test_preds/readout_14B.csv,0.8278,0.0
+2026-09-24T16:34:44,readout_7B,../../../results/issues11k/exploration/rag_next/test_preds/readout_7B.csv,0.8223,0.0
+2026-09-24T16:34:46,readout_3B,../../../results/issues11k/exploration/rag_next/test_preds/readout_3B.csv,0.8127,0.0
+2026-09-24T16:35:01,stateknn_14B,../../../results/issues11k/exploration/rag_next/test_preds/stateknn_14B.csv,0.7916,0.0
+2026-09-24T16:35:02,stateknn_7B,../../../results/issues11k/exploration/rag_next/test_preds/stateknn_7B.csv,0.7793,0.0
+2026-09-24T16:35:04,stateknn_3B,../../../results/issues11k/exploration/rag_next/test_preds/stateknn_3B.csv,0.773,0.0
+2026-09-24T17:15:23,readout_14B_n10_s0,../../../results/issues11k/exploration/rag_next/test_preds/readout_14B_n10_s0.csv,0.7866,0.0
+2026-09-24T17:15:33,readout_14B_n10_s1,../../../results/issues11k/exploration/rag_next/test_preds/readout_14B_n10_s1.csv,0.797,0.0
+2026-09-24T17:15:43,readout_14B_n10_s2,../../../results/issues11k/exploration/rag_next/test_preds/readout_14B_n10_s2.csv,0.7921,0.0
+2026-09-24T18:40:59,readout_32B,../../../results/issues11k/exploration/rag_next/test_preds/readout_32B.csv,0.8445,0.0
+2026-09-24T18:41:00,stateknn_32B,../../../results/issues11k/exploration/rag_next/test_preds/stateknn_32B.csv,0.7993,0.0
+2026-09-24T18:41:02,fusion,../../../results/issues11k/exploration/rag_next/test_preds/fusion.csv,0.8186,0.0

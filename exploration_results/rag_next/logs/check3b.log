@@ -1,0 +1,38 @@
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+Unsloth: Your Flash Attention 2 installation seems to be broken. Using Xformers instead. No performance changes will be seen.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.4.6: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    NVIDIA GeForce RTX 4090. Num GPUs = 1. Max memory: 23.505 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 8.9. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]Loading weights:  53%|█████▎    | 231/434 [00:00<00:00, 2284.50it/s]Loading weights: 100%|██████████| 434/434 [00:00<00:00, 2287.09it/s]
+`use_return_dict` is deprecated! Use `return_dict` instead!
+/home/ahosein/llm-labler/venv/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:71: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/home/ahosein/llm-labler/venv/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:281: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/home/ahosein/llm-labler/venv/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:172: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/home/ahosein/llm-labler/venv/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:202: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/home/ahosein/llm-labler/venv/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:254: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+unsloth/Qwen2.5-3B-Instruct-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+len= 1546 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 7.0673 | argmax 'bug'
+len=  128 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 4.3585 | argmax 'feature'
+len=  377 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 1.6747 | argmax 'bug'
+len=  377 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 1.3457 | argmax 'bug'
+len=  498 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 5.1583 | argmax 'bug'
+len=  184 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 8.2487 | argmax 'bug'
+len=  218 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 5.1692 | argmax 'bug'
+len=  362 | wrapper(keep=1) vs full: 0.0000 nats | lm_head(norm(hook)) vs full: 0.0000 | BARE model.model vs full: 10.2374 | argmax 'bug'
+padded batch row 0: drift vs single = 0.3750 nats
+padded batch row 1: drift vs single = 0.2472 nats
+padded batch row 2: drift vs single = 0.6163 nats
+padded batch row 3: drift vs single = 0.4965 nats
+padded batch row 4: drift vs single = 0.7472 nats
+padded batch row 5: drift vs single = 0.1248 nats
+padded batch row 6: drift vs single = 0.8762 nats
+padded batch row 7: drift vs single = 0.1250 nats

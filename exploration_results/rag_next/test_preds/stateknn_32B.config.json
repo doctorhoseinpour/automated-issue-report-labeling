@@ -1,0 +1,17 @@
+{
+ "name": "stateknn_32B",
+ "components": [
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "q32L64",
+   "k": 9
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"knn\", \"setting\": \"PS\", \"variant\": \"q32L64\", \"k\": 9}",
+   "fit_predict_s": 0.12
+  }
+ ]
+}

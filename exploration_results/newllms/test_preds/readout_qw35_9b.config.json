@@ -1,0 +1,18 @@
+{
+ "name": "readout_qw35_9b",
+ "components": [
+  {
+   "type": "probe",
+   "feat": "qw35_9b_k0",
+   "layers": [
+    20,
+    24,
+    28,
+    32
+   ],
+   "C": 0.003,
+   "scope": "AUG"
+  }
+ ],
+ "fit_predict_s": 149.5
+}

@@ -1,0 +1,2 @@
+model,top_k,total_issues,invalid_count,invalid_rate,accuracy,precision_bug,recall_bug,f1_bug,support_bug,precision_feature,recall_feature,f1_feature,support_feature,precision_question,recall_question,f1_question,support_question,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
+fusion,0,3300,0,0.0,0.8203,0.7416,0.9209,0.8216,1100,0.8759,0.8536,0.8646,1100,0.8759,0.6864,0.7696,1100,0.8311,0.8203,0.8186,0.8311,0.8203,0.8186

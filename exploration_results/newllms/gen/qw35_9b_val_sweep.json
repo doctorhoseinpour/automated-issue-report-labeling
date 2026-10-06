@@ -1,0 +1,473 @@
+{
+ "model": "Qwen/Qwen3.5-9B",
+ "tag": "qw35_9b",
+ "arch": "Qwen3_5ForConditionalGeneration",
+ "cls": "Qwen3_5ForConditionalGeneration",
+ "decoder": "Qwen3_5TextModel",
+ "n_layers": 32,
+ "hidden": 4096,
+ "softcap": null,
+ "eos": [
+  248044,
+  248046
+ ],
+ "pad": 248044,
+ "gpu": "NVIDIA A100-PCIE-40GB",
+ "torch": "2.10.0+cu128",
+ "transformers": "5.17.0",
+ "bitsandbytes": "0.50.2",
+ "quant": "bnb nf4, double quant, bf16 compute",
+ "attn": "sdpa",
+ "max_seq": 8192,
+ "max_new_tokens": 50,
+ "cudnn": 91002,
+ "tokenizer": "TokenizersBackend",
+ "cluster": "ascend",
+ "qwen_kernels": {
+  "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+  "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+  "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+  "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+ },
+ "label_ids": [
+  2238,
+  12388,
+  7593
+ ],
+ "label_tokens": [
+  "bug",
+  "feature",
+  "question"
+ ],
+ "run": "val_sweep",
+ "mode": "gen",
+ "nshards": 6,
+ "roles": "inner,dev,test",
+ "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+ "ks": "0,1,3,5,7,9,10,12,15",
+ "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+ "n_shards": 6,
+ "gpus": [
+  "NVIDIA A100-PCIE-40GB"
+ ],
+ "gpu_peak_mb": 8940.5,
+ "load_s_per_shard": [
+  33.4,
+  36.5,
+  33.4,
+  71.4,
+  71.4,
+  71.4
+ ],
+ "shards": [
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 33.4,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0106.ten.osc.edu",
+   "slurm_job": "7542230",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 0,
+   "nshards": 6,
+   "n_items": 743,
+   "n_parts": 8,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 8939.6,
+   "finished": "2026-09-24T20:04:52"
+  },
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 36.5,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0114.ten.osc.edu",
+   "slurm_job": "7542231",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 1,
+   "nshards": 6,
+   "n_items": 743,
+   "n_parts": 8,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 8940.2,
+   "finished": "2026-09-24T20:04:49"
+  },
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 33.4,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0117.ten.osc.edu",
+   "slurm_job": "7542232",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 2,
+   "nshards": 6,
+   "n_items": 743,
+   "n_parts": 8,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 8939.6,
+   "finished": "2026-09-24T20:04:48"
+  },
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 71.4,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0165.ten.osc.edu",
+   "slurm_job": "7542233",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 3,
+   "nshards": 6,
+   "n_items": 742,
+   "n_parts": 8,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 8940.5,
+   "finished": "2026-09-24T20:05:29"
+  },
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 71.4,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0165.ten.osc.edu",
+   "slurm_job": "7542234",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 4,
+   "nshards": 6,
+   "n_items": 742,
+   "n_parts": 8,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 8940.3,
+   "finished": "2026-09-24T20:05:30"
+  },
+  {
+   "model": "Qwen/Qwen3.5-9B",
+   "tag": "qw35_9b",
+   "arch": "Qwen3_5ForConditionalGeneration",
+   "cls": "Qwen3_5ForConditionalGeneration",
+   "decoder": "Qwen3_5TextModel",
+   "n_layers": 32,
+   "hidden": 4096,
+   "softcap": null,
+   "eos": [
+    248044,
+    248046
+   ],
+   "pad": 248044,
+   "load_s": 71.4,
+   "gpu": "NVIDIA A100-PCIE-40GB",
+   "torch": "2.10.0+cu128",
+   "transformers": "5.17.0",
+   "bitsandbytes": "0.50.2",
+   "quant": "bnb nf4, double quant, bf16 compute",
+   "attn": "sdpa",
+   "max_seq": 8192,
+   "max_new_tokens": 50,
+   "cudnn": 91002,
+   "tokenizer": "TokenizersBackend",
+   "node": "a0165.ten.osc.edu",
+   "slurm_job": "7542235",
+   "cluster": "ascend",
+   "qwen_kernels": {
+    "torch_chunk_gated_delta_rule": "fla.ops.gated_delta_rule.chunk.chunk_gated_delta_rule",
+    "torch_recurrent_gated_delta_rule": "fla.ops.gated_delta_rule.fused_recurrent.fused_recurrent_gated_delta_rule",
+    "causal_conv1d_fn": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_fn",
+    "causal_conv1d_update": "transformers.models.qwen3_5.modeling_qwen3_5.causal_conv1d_update"
+   },
+   "label_ids": [
+    2238,
+    12388,
+    7593
+   ],
+   "label_tokens": [
+    "bug",
+    "feature",
+    "question"
+   ],
+   "run": "val_sweep",
+   "mode": "gen",
+   "shard": 5,
+   "nshards": 6,
+   "n_items": 742,
+   "n_parts": 8,
+   "roles": "inner,dev,test",
+   "uids_csv": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/newllms/splits/val495.csv",
+   "ks": "0,1,3,5,7,9,10,12,15",
+   "neighbors": "/users/PCS0289/alirezzzhp1378/nm/repo/results/issues11k/exploration/rag_next/features/nb_PS_raw_dev.npz",
+   "gpu_peak_mb": 8940.5,
+   "finished": "2026-09-24T20:05:30"
+  }
+ ],
+ "n": 4455,
+ "compute_s": 2796.6831721600465,
+ "per_k": {
+  "0": {
+   "n": 495,
+   "compute_s": 138.30553175500245,
+   "mean_prompt_tokens": 791.3777777777777,
+   "invalid_rate": 0.0,
+   "truncated": 0.006060606060606061
+  },
+  "1": {
+   "n": 495,
+   "compute_s": 177.14774125008262,
+   "mean_prompt_tokens": 1630.9353535353534,
+   "invalid_rate": 0.0,
+   "truncated": 0.028282828282828285
+  },
+  "3": {
+   "n": 495,
+   "compute_s": 243.01946645673888,
+   "mean_prompt_tokens": 2929.919191919192,
+   "invalid_rate": 0.0,
+   "truncated": 0.06464646464646465
+  },
+  "5": {
+   "n": 495,
+   "compute_s": 298.6333726902376,
+   "mean_prompt_tokens": 4003.288888888889,
+   "invalid_rate": 0.0,
+   "truncated": 0.18181818181818182
+  },
+  "7": {
+   "n": 495,
+   "compute_s": 339.66840455748024,
+   "mean_prompt_tokens": 4805.515151515152,
+   "invalid_rate": 0.0,
+   "truncated": 0.25656565656565655
+  },
+  "9": {
+   "n": 495,
+   "compute_s": 376.5223937583942,
+   "mean_prompt_tokens": 5459.575757575758,
+   "invalid_rate": 0.0,
+   "truncated": 0.3878787878787879
+  },
+  "10": {
+   "n": 495,
+   "compute_s": 393.1515619382553,
+   "mean_prompt_tokens": 5695.341414141414,
+   "invalid_rate": 0.0,
+   "truncated": 0.4303030303030303
+  },
+  "12": {
+   "n": 495,
+   "compute_s": 408.16957693682343,
+   "mean_prompt_tokens": 6041.9070707070705,
+   "invalid_rate": 0.0,
+   "truncated": 0.5292929292929293
+  },
+  "15": {
+   "n": 495,
+   "compute_s": 422.0651228170318,
+   "mean_prompt_tokens": 6335.565656565656,
+   "invalid_rate": 0.0,
+   "truncated": 0.6707070707070707
+  }
+ }
+}

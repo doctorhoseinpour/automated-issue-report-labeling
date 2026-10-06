@@ -1,0 +1,23 @@
+{
+ "name": "readout_32B",
+ "components": [
+  {
+   "type": "probe",
+   "feat": "q32_k0",
+   "layers": [
+    40,
+    48,
+    56,
+    64
+   ],
+   "C": 0.003,
+   "scope": "AUG"
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"probe\", \"feat\": \"q32_k0\", \"layers\": [40, 48, 56, 64], \"C\": 0.003, \"scope\": \"AUG\"}",
+   "fit_predict_s": 54.71
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "name": "readout_3B",
+ "components": [
+  {
+   "type": "probe",
+   "feat": "q3_k0",
+   "layers": [
+    22,
+    27,
+    32,
+    36
+   ],
+   "C": 0.003,
+   "scope": "AUG"
+  }
+ ],
+ "timing": [
+  {
+   "component": "{\"type\": \"probe\", \"feat\": \"q3_k0\", \"layers\": [22, 27, 32, 36], \"C\": 0.003, \"scope\": \"AUG\"}",
+   "fit_predict_s": 20.47
+  }
+ ]
+}

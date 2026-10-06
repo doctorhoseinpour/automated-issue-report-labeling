@@ -1,0 +1,12 @@
+{
+ "name": "stateknn_gm4_12b",
+ "components": [
+  {
+   "type": "knn",
+   "setting": "PS",
+   "variant": "gm4_12bL48",
+   "k": 9
+  }
+ ],
+ "fit_predict_s": 0.0
+}
